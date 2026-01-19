@@ -1,10 +1,11 @@
+import 'package:blooket/app/data/model/question_model.dart';
+import 'package:blooket/app/data/model/request/create_question_request.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 // Giả định các import có sẵn từ project của bạn
 import 'package:blooket/app/core/constants/app_color.dart';
 import 'package:blooket/app/data/enum/question_type.dart';
-import 'package:blooket/app/data/model/old_model/question_model.dart';
 import 'package:blooket/app/modules/admin/question_management/widgets/answer_form/answer_multi_chose.dart';
 import 'package:blooket/app/modules/admin/question_management/widgets/answer_form/answer_rearrange.dart';
 import 'package:blooket/app/modules/admin/question_management/widgets/answer_form/answer_true_false.dart';
@@ -15,7 +16,7 @@ import 'package:blooket/app/modules/admin/question_management/widgets/time_limit
 class QuestionDialogView extends StatefulWidget {
   final String setId;
   final QuestionModel? initialData;
-  final Function(QuestionModel) onSave;
+  final Function(QuestionRequest) onSave;
 
   const QuestionDialogView({
     super.key,
@@ -34,12 +35,22 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
   int timeLimit = 30;
   bool isRandom = false;
 
+  // --- 1. THÊM BIẾN LƯU TRỮ DỮ LIỆU TRẢ LỜI ---
+  List<String> _currentOptions = [];
+  List<String> _currentAnswers = [];
+
   @override
   void initState() {
     super.initState();
     if (widget.initialData != null) {
-      selectedType = widget.initialData!.type;
-      contentCtrl.text = widget.initialData!.content;
+      selectedType = widget.initialData!.type ?? QuestionType.multipleChoice;
+      contentCtrl.text = widget.initialData!.content ?? '';
+      timeLimit = widget.initialData!.timeLimit ?? 30;
+      isRandom = widget.initialData!.isRandom ?? false;
+
+      // Init dữ liệu cũ nếu đang Edit
+      _currentOptions = widget.initialData!.options ?? [];
+      _currentAnswers = widget.initialData!.answers ?? [];
     } else {
       selectedType = QuestionType.multipleChoice;
     }
@@ -57,7 +68,17 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
     return KeyedSubtree(
       key: ValueKey(selectedType),
       child: switch (selectedType) {
-        QuestionType.multipleChoice => const AnswerMultiChose(),
+        QuestionType.multipleChoice => AnswerMultiChose(
+          initialOptions: widget.initialData?.options,
+          initialCorrectAnswers: widget.initialData?.answers,
+          // --- 2. HỨNG CALLBACK TỪ ANSWER FORM ---
+          onChanged: (options, answers) {
+            // Lưu vào biến tạm (không cần setState để tránh rebuild toàn bộ dialog)
+            _currentOptions = options;
+            _currentAnswers = answers;
+          },
+        ),
+        // Các loại khác bạn cần implement logic tương tự AnswerMultiChose
         QuestionType.rearrange => const AnswerRearrange(),
         QuestionType.trueFalse => const AnswerTrueFalse(),
         QuestionType.typing => const AnswerTyping(),
@@ -71,18 +92,15 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
-    // Tính toán width hợp lý:
-    // - Trên điện thoại: 95% màn hình
-    // - Trên Tablet/Web: Max 900px
+    // Tính toán width hợp lý
     final dialogWidth = screenWidth > 950 ? 900.0 : screenWidth * 0.95;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       backgroundColor: Colors.white,
-      insetPadding: const EdgeInsets.all(16), // Padding bên ngoài dialog
+      insetPadding: const EdgeInsets.all(16),
       child: Container(
         width: dialogWidth,
-        // Giới hạn chiều cao tối đa để tránh lỗi khi bàn phím hiện lên
         constraints: BoxConstraints(
           maxHeight: screenHeight * 0.9,
           minHeight: 400,
@@ -99,13 +117,11 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Input câu hỏi (Chỉ hiện khi không phải Rearrange)
                     if (selectedType != QuestionType.rearrange)
                       _buildInputQuestion(),
 
                     const SizedBox(height: 20),
 
-                    // Phần câu trả lời
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: _getAnswerFromType(),
@@ -132,7 +148,6 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
         ),
       ),
       child: Row(
-        // Bỏ IntrinsicHeight nếu không cần thiết, Row + Center là đủ
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // --- TIME LIMIT ---
@@ -150,19 +165,16 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
 
           const SizedBox(width: 12),
 
-          // --- RANDOM ORDER (ĐÃ FIX CHIỀU CAO) ---
+          // --- RANDOM ORDER ---
           BorderedStatWidget(
             title: 'Random',
             icon: Icons.shuffle,
-            // Checkbox được bọc trong SizedBox để cố định kích thước layout
             trailing: SizedBox(
               height: 24,
               width: 24,
               child: Checkbox(
-                // QUAN TRỌNG: Loại bỏ padding mặc định
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 visualDensity: VisualDensity.compact,
-
                 activeColor: AppColor.white,
                 checkColor: AppColor.pink,
                 side: const BorderSide(color: AppColor.white, width: 2.0),
@@ -189,20 +201,19 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
               if (type != null && type != selectedType) {
                 setState(() {
                   selectedType = type;
+                  _currentOptions = [];
+                  _currentAnswers = [];
                 });
               }
             },
           ),
-          Spacer(),
+          const Spacer(),
           // --- VẠCH NGĂN CÁCH ---
           const SizedBox(width: 20),
-          Container(
-            height: 40, // Chiều cao cố định cho vạch ngăn
-            width: 1,
-            color: Colors.white.withOpacity(0.5),
-          ),
+          Container(height: 40, width: 1, color: Colors.white.withOpacity(0.5)),
           const SizedBox(width: 20),
-          Spacer(),
+          const Spacer(),
+
           // --- CANCEL ---
           BorderedStatWidget(
             title: 'Cancel',
@@ -217,16 +228,32 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
             title: 'Save',
             icon: Icons.check_circle_outline,
             onTap: () {
-              final question = QuestionModel(
+              // Validate cơ bản
+              if (contentCtrl.text.trim().isEmpty) {
+                Get.snackbar("Lỗi", "Vui lòng nhập nội dung câu hỏi");
+                return;
+              }
+
+              // Validate answer (nếu cần thiết)
+              if (selectedType == QuestionType.multipleChoice &&
+                  _currentAnswers.isEmpty) {
+                Get.snackbar("Cảnh báo", "Bạn chưa chọn đáp án đúng");
+                // Có thể return hoặc cho phép tiếp tục tùy logic
+              }
+
+              // --- 3. TẠO REQUEST TỪ DỮ LIỆU ĐÃ HỨNG ĐƯỢC ---
+              final questionReq = QuestionRequest(
                 setId: widget.setId,
-                type: selectedType,
-                content: contentCtrl.text,
+                type: selectedType
+                    .value, // Dùng .value để lấy string "multipleChoice"
+                content: contentCtrl.text.trim(),
                 timeLimit: timeLimit,
                 isRandom: isRandom,
-                id: '',
-                answers: [],
+                options: _currentOptions, // Lấy từ biến tạm
+                answers: _currentAnswers, // Lấy từ biến tạm
               );
-              widget.onSave(question);
+
+              widget.onSave(questionReq);
               Get.back();
             },
           ),
@@ -238,14 +265,12 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
   Widget _buildInputQuestion() {
     return Container(
       alignment: Alignment.center,
-      constraints: const BoxConstraints(
-        minHeight: 150, // Chiều cao tối thiểu, không phải fixed cứng
-      ),
+      constraints: const BoxConstraints(minHeight: 150),
       padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 32.0),
       child: TextField(
         controller: contentCtrl,
         textAlign: TextAlign.center,
-        maxLines: null, // Cho phép xuống dòng tự do
+        maxLines: null,
         style: const TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w500,
@@ -257,7 +282,6 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
           hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 20),
           fillColor: Colors.grey.withOpacity(0.05),
           filled: true,
-          // Bo góc cho vùng nhập liệu để người dùng dễ nhận biết
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
@@ -271,25 +295,6 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
     );
   }
 
-  Widget _buildQuestionTypeSelector() {
-    return BorderedStatWidget(
-      title: selectedType.title, // Đảm bảo enum QuestionType có getter .title
-      icon: Icons.question_answer,
-      onTap: () async {
-        final type = await Get.dialog<QuestionType>(
-          _buildTypeSelectionDialog(),
-        );
-
-        if (type != null && type != selectedType) {
-          setState(() {
-            selectedType = type;
-          });
-        }
-      },
-    );
-  }
-
-  // Tách dialog chọn type ra hàm riêng cho gọn
   Widget _buildTypeSelectionDialog() {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

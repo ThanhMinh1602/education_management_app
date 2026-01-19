@@ -16,7 +16,10 @@ class InitialBinding extends Bindings {
     Get.lazyPut<ClassService>(() => ClassService(), fenix: true);
     Get.lazyPut<SetService>(() => SetService(Get.find()), fenix: true);
     Get.lazyPut<StudentService>(() => StudentService(), fenix: true);
-    Get.lazyPut<QuestionService>(() => QuestionService(), fenix: true);
+    Get.lazyPut<QuestionService>(
+      () => QuestionService(Get.find()),
+      fenix: true,
+    );
     Get.lazyPut<AuthService>(() => AuthService(Get.find()), fenix: true);
   }
 }

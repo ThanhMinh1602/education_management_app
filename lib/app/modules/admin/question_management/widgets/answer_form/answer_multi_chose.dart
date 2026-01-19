@@ -1,10 +1,17 @@
-import 'package:blooket/app/core/constants/app_color.dart'; // Check lại import đúng project của bạn
+import 'package:blooket/app/core/constants/app_color.dart';
 import 'package:flutter/material.dart';
 
 class AnswerMultiChose extends StatefulWidget {
-  final Function(int correctIndex, List<String> answers)? onChanged;
+  final Function(List<String> options, List<String> correctAnswers)? onChanged;
+  final List<String>? initialOptions;
+  final List<String>? initialCorrectAnswers;
 
-  const AnswerMultiChose({super.key, this.onChanged});
+  const AnswerMultiChose({
+    super.key,
+    this.onChanged,
+    this.initialOptions,
+    this.initialCorrectAnswers,
+  });
 
   @override
   State<AnswerMultiChose> createState() => _AnswerMultiChoseState();
@@ -14,24 +21,52 @@ class _AnswerMultiChoseState extends State<AnswerMultiChose> {
   int _selectedAnswerIndex = 0;
   late List<TextEditingController> _controllers;
 
-  // Biến lưu trạng thái hover cho 4 ô đáp án
+  // Biến lưu trạng thái hover
   final List<bool> _isHovering = List.generate(4, (index) => false);
 
   @override
   void initState() {
     super.initState();
-    _controllers = List.generate(4, (index) => TextEditingController());
 
-    // Lắng nghe thay đổi text
+    // 1. Khởi tạo Controllers với dữ liệu cũ (nếu có)
+    _controllers = List.generate(4, (index) {
+      String text = '';
+      if (widget.initialOptions != null &&
+          index < widget.initialOptions!.length) {
+        text = widget.initialOptions![index];
+      }
+      return TextEditingController(text: text);
+    });
+
+    // 2. Xác định đáp án đúng ban đầu (nếu có)
+    if (widget.initialCorrectAnswers != null &&
+        widget.initialCorrectAnswers!.isNotEmpty &&
+        widget.initialOptions != null) {
+      // Tìm xem đáp án đúng nằm ở index nào trong options
+      final correctText = widget.initialCorrectAnswers!.first;
+      final index = widget.initialOptions!.indexOf(correctText);
+      if (index != -1) {
+        _selectedAnswerIndex = index;
+      }
+    }
+
+    // 3. Lắng nghe thay đổi text
     for (var controller in _controllers) {
       controller.addListener(_notifyChange);
     }
   }
 
+  // Hàm notify cập nhật dữ liệu ra bên ngoài
   void _notifyChange() {
     if (widget.onChanged != null) {
-      final answers = _controllers.map((e) => e.text).toList();
-      widget.onChanged!(_selectedAnswerIndex, answers);
+      // Lấy toàn bộ text từ 4 ô nhập
+      final options = _controllers.map((e) => e.text).toList();
+
+      // Lấy text của ô đang được chọn làm đáp án đúng
+      final correctAnswerText = options[_selectedAnswerIndex];
+
+      // Trả về dữ liệu
+      widget.onChanged!(options, [correctAnswerText]);
     }
   }
 
@@ -39,7 +74,7 @@ class _AnswerMultiChoseState extends State<AnswerMultiChose> {
     setState(() {
       _selectedAnswerIndex = index;
     });
-    _notifyChange();
+    _notifyChange(); // Gọi callback khi đổi đáp án đúng
   }
 
   @override
@@ -52,31 +87,19 @@ class _AnswerMultiChoseState extends State<AnswerMultiChose> {
 
   @override
   Widget build(BuildContext context) {
-    // Trên Web, GridView.count hoặc extent thường ổn định hơn
-    // Tuy nhiên, để kiểm soát chiều cao (Height) của item mà không phụ thuộc Width
-    // Ta dùng: childAspectRatio = (Width / Height).
-    // Mẹo: Dùng LayoutBuilder để tính ratio động.
-
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Giả sử ta muốn 2 cột.
         final crossAxisCount = 2;
         final spacing = 20.0;
         final totalSpacing = spacing * (crossAxisCount - 1);
-
-        // Tính chiều rộng thực tế của 1 item
         final itemWidth =
             (constraints.maxWidth - totalSpacing) / crossAxisCount;
-
-        // Chiều cao mong muốn cho Web (đủ để hiển thị đẹp): 80px
         const itemHeight = 80.0;
-
         final ratio = itemWidth / itemHeight;
 
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          // Bỏ padding cứng ở đây, để cha quản lý sẽ linh hoạt hơn
           padding: EdgeInsets.zero,
           itemCount: 4,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -97,11 +120,6 @@ class _AnswerMultiChoseState extends State<AnswerMultiChose> {
     final isSelected = _selectedAnswerIndex == index;
     final isHovering = _isHovering[index];
 
-    // Logic màu sắc cho Web:
-    // - Selected: Viền hồng đậm, nền hồng nhạt.
-    // - Hover: Viền xám đậm hơn chút, nền xám siêu nhạt.
-    // - Normal: Viền xám, nền trắng.
-
     Color borderColor;
     double borderWidth;
     Color backgroundColor;
@@ -121,13 +139,13 @@ class _AnswerMultiChoseState extends State<AnswerMultiChose> {
     }
 
     return MouseRegion(
-      cursor: SystemMouseCursors.click, // Hiển thị con trỏ tay khi hover khung
+      cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _isHovering[index] = true),
       onExit: (_) => setState(() => _isHovering[index] = false),
       child: GestureDetector(
         onTap: () => _onSelectAnswer(index),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200), // Hiệu ứng mượt mà
+          duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           decoration: BoxDecoration(
             color: backgroundColor,
@@ -145,26 +163,20 @@ class _AnswerMultiChoseState extends State<AnswerMultiChose> {
           ),
           child: Row(
             children: [
-              // --- RADIO BUTTON ---
-              // Trên web nên làm to ra một chút
               Transform.scale(
                 scale: 1.2,
                 child: Radio<int>(
                   value: index,
                   groupValue: _selectedAnswerIndex,
                   activeColor: AppColor.pink,
-                  // Tắt hiệu ứng ripple mặc định để tránh rối mắt trên web
                   splashRadius: 20,
                   onChanged: (val) => _onSelectAnswer(val!),
                 ),
               ),
               const SizedBox(width: 12),
-
-              // --- INPUT FIELD ---
               Expanded(
                 child: TextField(
                   controller: _controllers[index],
-                  // Quan trọng: Khi hover vào text field thì trỏ thành I-Beam (soạn thảo)
                   mouseCursor: SystemMouseCursors.text,
                   style: TextStyle(
                     fontSize: 16,
@@ -176,7 +188,7 @@ class _AnswerMultiChoseState extends State<AnswerMultiChose> {
                   decoration: InputDecoration(
                     border: InputBorder.none,
                     isDense: true,
-                    hintText: 'Answer ${index + 1}',
+                    hintText: 'Option ${index + 1}',
                     hintStyle: TextStyle(
                       color: Colors.grey.shade400,
                       fontSize: 15,
@@ -185,9 +197,6 @@ class _AnswerMultiChoseState extends State<AnswerMultiChose> {
                   ),
                 ),
               ),
-
-              // --- OPTIONAL: ICON TRẠNG THÁI ---
-              // Hiển thị icon check nếu đang chọn (visual feedback tốt cho web)
               if (isSelected)
                 const Icon(Icons.check_circle, color: AppColor.pink, size: 20),
             ],

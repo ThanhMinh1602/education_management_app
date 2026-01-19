@@ -1,9 +1,6 @@
 import 'package:blooket/app/core/components/appbar/app_header.dart';
-import 'package:blooket/app/core/components/appbar/custom_app_bar.dart';
-import 'package:blooket/app/core/components/button/custom_action_button.dart';
 import 'package:blooket/app/core/components/header/custom_page_header.dart';
 import 'package:blooket/app/core/components/sidebar/side_bar.dart';
-import 'package:blooket/app/core/constants/app_color.dart';
 import 'package:blooket/app/modules/admin/question_management/controller/question_management_controller.dart';
 import 'package:blooket/app/core/utils/dialogs.dart';
 import 'package:blooket/app/core/utils/ui_dialogs.dart';
@@ -108,22 +105,10 @@ class QuestionManagementView extends GetView<QuestionManagementController> {
                               }
                             },
                             onEdit: () async {
-                              // controller.openDetail(item.id, item.name);
+                              controller.openDetail(item.id, item.name ?? "");
                             },
                             onDelete: () {
-                              AppDialogs.showConfirm(
-                                title: "Xóa bộ đề?",
-                                titleStyle: TextStyle(
-                                  color: controller.primaryColor,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                middleText:
-                                    "Hành động này sẽ xóa vĩnh viễn bộ câu hỏi này.",
-                                textConfirm: "Xóa ngay",
-                                textCancel: "Hủy",
-                                confirmTextColor: Colors.white,
-                                buttonColor: Colors.redAccent,
-                                cancelTextColor: Colors.grey,
+                              AppDialogs.showDeleteConfirm(
                                 onConfirm: () async {
                                   await Future.delayed(
                                     const Duration(milliseconds: 300),

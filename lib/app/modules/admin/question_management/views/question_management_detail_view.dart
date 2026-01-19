@@ -1,14 +1,14 @@
-import 'dart:ui'; // Bắt buộc import để dùng ImageFilter
-import 'package:blooket/app/core/components/button/custom_icon_button.dart';
+import 'dart:ui';
 import 'package:blooket/app/core/components/header/custom_page_header.dart';
-import 'package:blooket/app/core/constants/app_colors.dart';
-import 'package:blooket/app/data/model/old_model/question_model.dart';
+import 'package:blooket/app/core/utils/dialogs.dart';
+import 'package:blooket/app/core/utils/ui_dialogs.dart';
+import 'package:blooket/app/data/model/question_model.dart';
+import 'package:blooket/app/data/model/request/create_question_request.dart';
 import 'package:blooket/app/modules/admin/question_management/views/question_dialog_view.dart';
-import 'package:blooket/app/modules/admin/question_management/widgets/up_down_controls.dart';
+import 'package:blooket/app/modules/admin/question_management/widgets/question_list_item.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-// Các import từ project của bạn (giữ nguyên)
 import 'package:blooket/app/core/components/button/custom_action_button.dart';
 import 'package:blooket/app/core/constants/app_color.dart';
 import 'package:blooket/app/core/components/appbar/custom_app_bar.dart';
@@ -53,9 +53,11 @@ class QuestionManagementDetailView
               borderRadius: BorderRadius.circular(12),
               color: Colors.white,
             ),
-            child: const Text(
-              '15 câu hỏi',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+            child: Obx(
+              () => Text(
+                '${controller.questions.length} câu hỏi',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+              ),
             ),
           ),
           subtitle: 'Quản lý các câu hỏi trong bộ đề',
@@ -63,96 +65,58 @@ class QuestionManagementDetailView
           onButtonPressed: () {
             Get.dialog(
               barrierDismissible: false,
-              QuestionDialogView(setId: '', onSave: (QuestionModel p1) {}),
+              QuestionDialogView(
+                setId: controller.setId,
+                onSave: (questionModel) {
+                  controller.addQuestion(questionModel);
+                },
+              ),
             );
           },
         ),
         const SizedBox(height: 20),
         Expanded(
-          child: ListView.separated(
-            itemCount: 3,
-            itemBuilder: (context, index) {
-              return Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  // Căn giữa theo chiều dọc để nút Up/Down nằm giữa
-                  spacing: 8.0,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // --- PHẦN SỬA LỖI Ở ĐÂY ---
-                    // Bọc Column trong Expanded để nó chiếm hết chiều ngang còn lại
-                    Expanded(
-                      flex: 1,
-                      child: Column(
-                        spacing: 8,
-                        // Kéo dãn các nút con cho bằng chiều ngang
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // 1. Nút Edit: Bỏ Expanded bao ngoài, để nó tự tính chiều cao
-                          CustomIconButton(
-                            icon: Icons.edit_outlined,
-                            iconColor: Colors.white,
-                            backgroundColor: AppColor.pink,
-                            label: 'Edit', // Có label nên nút sẽ dài ra
-                            onTap: () {
-                              // Logic edit
-                            },
-                          ),
+          child: Obx(
+            () => ListView.separated(
+              itemCount: controller.questions.length,
+              itemBuilder: (context, index) {
+                final question = controller.questions[index];
 
-                          // 2. Hàng nút Delete/Copy
-                          Row(
-                            spacing: 8,
-                            children: [
-                              // Dùng Expanded để 2 nút này chia đều 50-50 chiều rộng
-                              Expanded(
-                                child: CustomIconButton(
-                                  icon: Icons.delete_outline,
-                                  iconColor: Colors.white,
-                                  backgroundColor: AppColors.primary,
-                                  onTap: () {
-                                    // Logic xóa
-                                  },
-                                ),
-                              ),
-                              Expanded(
-                                child: CustomIconButton(
-                                  icon: Icons.copy_outlined,
-                                  iconColor: Colors.white,
-                                  backgroundColor: AppColors.primary,
-                                  onTap: () {
-                                    // Logic copy
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                return QuestionListItem(
+                  index: index,
+                  questionModel: question,
+                  onEdit: () {
+                    Get.dialog(
+                      barrierDismissible: false,
+                      QuestionDialogView(
+                        setId: controller.setId,
+                        initialData: question,
+                        onSave: (formData) {
+                          final updateRequest = QuestionRequest(
+                            content: formData.content,
+                            timeLimit: formData.timeLimit,
+                            isRandom: formData.isRandom,
+                            options: formData.options,
+                            answers: formData.answers,
+                            type: formData.type,
+                          );
+                          controller.updateQuestion(updateRequest, question.id);
+                        },
                       ),
-                    ),
-                    Expanded(
-                      flex: 8,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text("Câu hỏi số ${index + 1}"),
-                          SizedBox(height: 8),
-                          Text(
-                            'Nội dung câu hỏi sẽ hiển thị ở đây.',
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ),
-                    UpDownControls(onUp: () {}, onDown: () {}),
-                  ],
-                ),
-              );
-            },
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    );
+                  },
+                  onDelete: () {
+                    AppDialogs.showDeleteConfirm(
+                      onConfirm: () => controller.deleteQuestion(question.id),
+                    );
+                  },
+                  onCopy: () {},
+                  onUp: () {},
+                  onDown: () {},
+                );
+              },
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+            ),
           ),
         ),
       ],
@@ -192,7 +156,7 @@ class QuestionManagementDetailView
           // 2. Nút Save (Nút chính)
           CustomActionButton(
             width: double.infinity, // Tự động giãn full chiều ngang
-            onTap: () {},
+            onTap: () => Get.back(),
             icon: Icons.save_outlined,
             text: 'SAVE',
           ),
@@ -207,7 +171,10 @@ class QuestionManagementDetailView
                   icon: Icons.edit_outlined,
                   text: 'Chỉnh sửa',
                   onTap: () async {
-                    // Logic edit
+                    final result = await UiDialogs.showQuestionSetName(
+                      title: 'Sửa tên bộ đề',
+                      initial: controller.setName,
+                    );
                   },
                 ),
               ),
@@ -219,7 +186,7 @@ class QuestionManagementDetailView
                   icon: Icons.timer_outlined,
                   text: 'Thời gian',
                   onTap: () {
-                    // Logic time limit
+                    AppDialogs.showDeveloping();
                   },
                 ),
               ),

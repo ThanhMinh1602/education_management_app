@@ -1,7 +1,7 @@
 enum QuestionType {
   // 1. Khai báo các trường hợp (Cases)
-  multipleChoice('Trắc nghiệm', 'multiple_choice'),
-  trueFalse('Đúng / Sai', 'true_false'),
+  multipleChoice('Trắc nghiệm', 'multipleChoice'),
+  trueFalse('Đúng / Sai', 'trueFalse'),
   typing('Nhập câu trả lời', 'typing'),
   rearrange('Sắp xếp câu', 'rearrange');
 

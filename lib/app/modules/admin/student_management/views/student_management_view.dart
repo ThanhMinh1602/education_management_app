@@ -223,8 +223,7 @@ class StudentManagementView extends GetView<StudentManagementController> {
                     middleText: "Mật khẩu sẽ quay về: 123456",
                     textConfirm: "Đồng ý",
                     textCancel: "Hủy",
-                    confirmTextColor: Colors.white,
-                    buttonColor: Colors.orange,
+
                     onConfirm: () async {
                       await Future.delayed(const Duration(milliseconds: 300));
                       await controller.resetPassword(student.id);
@@ -244,13 +243,7 @@ class StudentManagementView extends GetView<StudentManagementController> {
                 tooltip: "Xóa tài khoản",
                 icon: const Icon(Icons.delete_outline, color: Colors.grey),
                 onPressed: () {
-                  AppDialogs.showConfirm(
-                    title: "Xóa tài khoản?",
-                    middleText: "Hành động này không thể hoàn tác.",
-                    textConfirm: "Xóa vĩnh viễn",
-                    textCancel: "Hủy",
-                    confirmTextColor: Colors.white,
-                    buttonColor: Colors.red,
+                  AppDialogs.showDeleteConfirm(
                     onConfirm: () async {
                       await Future.delayed(const Duration(milliseconds: 300));
                       await controller.deleteStudent(student.id);

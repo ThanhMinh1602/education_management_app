@@ -1,164 +1,73 @@
-import 'package:blooket/app/data/model/old_model/assignment_model.dart';
-import 'package:blooket/app/data/model/old_model/question_model.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:blooket/app/data/model/old_model/question_set_model.dart';
+import 'package:blooket/app/config/network/api_client.dart';
+import 'package:blooket/app/config/network/api_endpoints.dart';
+import 'package:blooket/app/data/model/question_model.dart';
+import 'package:blooket/app/data/model/request/create_question_request.dart';
+import 'package:blooket/app/data/model/response/api_response.dart';
+import 'package:blooket/app/data/model/response/api_response_list.dart';
 
 class QuestionService {
-  final _firestore = FirebaseFirestore.instance;
+  final ApiClient _apiClient;
 
-  // Reference tới collection cha
-  final CollectionReference _setRef = FirebaseFirestore.instance.collection(
-    'question_sets',
-  );
+  QuestionService(this._apiClient);
 
-  // --- 1. QUẢN LÝ BỘ ĐỀ (CHA) ---
+  Future<ApiResponseList<QuestionModel>> getQuestions({String? setId}) async {
+    final queryParams = setId != null ? {'setId': setId} : null;
 
-  // Lấy danh sách bộ đề
-  Stream<List<QuestionSetModel>> getQuestionSetsStream() {
-    return _setRef
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => QuestionSetModel.fromSnapshot(doc))
-              .toList(),
-        );
+    final response = await _apiClient.get(
+      ApiEndpoints.questions,
+      query: queryParams,
+    );
+
+    return ApiResponseList<QuestionModel>.fromJson(
+      response.data,
+      (json) => QuestionModel.fromJson(json as Map<String, dynamic>),
+    );
   }
 
-  // Thêm bộ đề mới
-  Future<bool> createQuestionSet(String name) async {
-    try {
-      await _setRef.add({
-        'name': name,
-        'questionCount': 0,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-      return true;
-    } catch (e) {
-      print("Error creating set: $e");
-      return false;
-    }
+  Future<ApiResponse<QuestionModel>> getQuestionById(String id) async {
+    final response = await _apiClient.get(ApiEndpoints.questionById(id));
+
+    return ApiResponse<QuestionModel>.fromJson(
+      response.data,
+      (json) => QuestionModel.fromJson(json as Map<String, dynamic>),
+    );
   }
 
-  // Sửa tên bộ đề
-  Future<bool> updateQuestionSet(String id, String newName) async {
-    try {
-      await _setRef.doc(id).update({'name': newName});
-      return true;
-    } catch (e) {
-      print("Error updating set: $e");
-      return false;
-    }
+  Future<ApiResponse<QuestionModel>> createQuestion(
+    QuestionRequest question,
+  ) async {
+    final response = await _apiClient.post(
+      ApiEndpoints.questions,
+      data: question.toJson(),
+    );
+
+    return ApiResponse<QuestionModel>.fromJson(
+      response.data,
+      (json) => QuestionModel.fromJson(json as Map<String, dynamic>),
+    );
   }
 
-  // Xóa bộ đề
-  Future<bool> deleteQuestionSet(String id) async {
-    try {
-      // Lưu ý: Firestore KHÔNG tự động xóa sub-collection khi xóa doc cha.
-      // Tuy nhiên, trên UI app sẽ không thấy nữa.
-      // Để xóa sạch hoàn toàn (cả câu hỏi con), bạn cần dùng Cloud Function hoặc xóa thủ công từng câu hỏi trước.
-      await _setRef.doc(id).delete();
-      return true;
-    } catch (e) {
-      print("Error deleting set: $e");
-      return false;
-    }
+  Future<ApiResponse<QuestionModel>> updateQuestion(
+    String id,
+    QuestionRequest question,
+  ) async {
+    final response = await _apiClient.put(
+      ApiEndpoints.questionById(id),
+      data: question.toJson(),
+    );
+
+    return ApiResponse<QuestionModel>.fromJson(
+      response.data,
+      (json) => QuestionModel.fromJson(json as Map<String, dynamic>),
+    );
   }
 
-  // --- 2. GIAO BÀI (ASSIGN) ---
-  // (Giữ nguyên vì assignments thường là collection riêng biệt để dễ query)
-  Future<bool> createAssignment(AssignmentModel assignment) async {
-    try {
-      await _firestore.collection('assignments').add(assignment.toJson());
-      return true;
-    } catch (e) {
-      print("Error assigning task: $e");
-      return false;
-    }
-  }
+  Future<ApiResponse<QuestionModel>> deleteQuestion(String id) async {
+    final response = await _apiClient.delete(ApiEndpoints.questionById(id));
 
-  // --- 3. QUẢN LÝ CÂU HỎI CON (SUB-COLLECTION) ---
-
-  // Lấy danh sách câu hỏi (Đi vào trong doc của bộ đề -> vào collection questions)
-  Stream<List<QuestionModel>> getQuestionsStream(String setId) {
-    return _setRef
-        .doc(setId) // Chọn bộ đề cha
-        .collection('questions') // Vào sub-collection
-        .orderBy('createdAt', descending: false) // Sắp xếp theo ngày tạo
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => QuestionModel.fromSnapshot(doc))
-              .toList(),
-        );
-  }
-
-  // Thêm câu hỏi mới trong Sub-collection - new
-  Future<bool> addQuestion(QuestionModel question) async {
-    try {
-      final batch = FirebaseFirestore.instance.batch();
-
-      // Tham chiếu đến document câu hỏi mới
-      final questionDocRef = _setRef
-          .doc(question.setId)
-          .collection('questions')
-          .doc(question.id);
-
-      // Tham chiếu đến bộ đề (để tăng count)
-      final setDocRef = _setRef.doc(question.setId);
-
-      // 1. Thêm lệnh set câu hỏi vào batch
-      batch.set(questionDocRef, question.toJson());
-
-      // 2. Thêm lệnh update count vào batch
-      batch.update(setDocRef, {
-        'questionCount': FieldValue.increment(1),
-        // Có thể update thêm updatedAt cho bộ đề nếu cần
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-
-      // 3. Thực thi tất cả cùng lúc
-      await batch.commit();
-
-      return true;
-    } catch (e) {
-      print("Add question error: $e");
-      return false;
-    }
-  }
-
-  // Xóa câu hỏi trong Sub-collection
-  Future<bool> deleteQuestion(String questionId, String setId) async {
-    try {
-      // 1. Tìm đúng đường dẫn để xóa
-      await _setRef.doc(setId).collection('questions').doc(questionId).delete();
-
-      // 2. Giảm số lượng câu hỏi ở bộ đề cha
-      await _setRef.doc(setId).update({
-        'questionCount': FieldValue.increment(-1),
-      });
-
-      return true;
-    } catch (e) {
-      print("Delete question error: $e");
-      return false;
-    }
-  }
-
-  // Cập nhật câu hỏi trong Sub-collection
-  Future<bool> updateQuestion(QuestionModel question) async {
-    try {
-      // Tìm đúng đường dẫn: question_sets -> setId -> questions -> questionId
-      await _setRef
-          .doc(question.setId)
-          .collection('questions')
-          .doc(question.id)
-          .update(question.toJson());
-
-      return true;
-    } catch (e) {
-      print("Update error: $e");
-      return false;
-    }
+    return ApiResponse<QuestionModel>.fromJson(
+      response.data,
+      (json) => QuestionModel.fromJson(json as Map<String, dynamic>),
+    );
   }
 }

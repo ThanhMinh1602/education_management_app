@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:blooket/app/core/utils/dialogs.dart';
 
-class ClassManagementDetailView extends GetView<ClassManagementDetailController> {
+class ClassManagementDetailView
+    extends GetView<ClassManagementDetailController> {
   const ClassManagementDetailView({super.key});
 
   @override
@@ -28,7 +29,11 @@ class ClassManagementDetailView extends GetView<ClassManagementDetailController>
                     fontWeight: FontWeight.w900,
                     fontSize: 32,
                     shadows: [
-                      const Shadow(offset: Offset(0, 2), blurRadius: 4, color: Colors.black12),
+                      const Shadow(
+                        offset: Offset(0, 2),
+                        blurRadius: 4,
+                        color: Colors.black12,
+                      ),
                     ],
                   ),
                 ),
@@ -43,18 +48,27 @@ class ClassManagementDetailView extends GetView<ClassManagementDetailController>
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.05), offset: const Offset(0, 4), blurRadius: 10),
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    offset: const Offset(0, 4),
+                    blurRadius: 10,
+                  ),
                 ],
               ),
               padding: const EdgeInsets.all(20),
               child: Obx(() {
-                 if (controller.studentsInClass.isEmpty) {
-                   return const Padding(
-                     padding: EdgeInsets.all(40),
-                     child: Center(child: Text("Lớp chưa có học viên nào.", style: TextStyle(color: Colors.grey))),
-                   );
-                 }
-                 return _buildDataTable(context);
+                if (controller.studentsInClass.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.all(40),
+                    child: Center(
+                      child: Text(
+                        "Lớp chưa có học viên nào.",
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                  );
+                }
+                return _buildDataTable(context);
               }),
             ),
           ],
@@ -79,45 +93,70 @@ class ClassManagementDetailView extends GetView<ClassManagementDetailController>
       rows: controller.studentsInClass.map((student) {
         return DataRow(
           cells: [
-            DataCell(Row(
-              children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: controller.primaryColor.withOpacity(0.2),
-                  child: Text(student.fullName.isNotEmpty ? student.fullName[0] : '?',
-                      style: TextStyle(color: controller.primaryColor, fontWeight: FontWeight.bold)),
-                ),
-                const SizedBox(width: 10),
-                Text(student.fullName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-              ],
-            )),
-            DataCell(Text(student.username, style: const TextStyle(color: Colors.grey))),
+            DataCell(
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: controller.primaryColor.withOpacity(0.2),
+                    child: Text(
+                      student.fullName.isNotEmpty ? student.fullName[0] : '?',
+                      style: TextStyle(
+                        color: controller.primaryColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    student.fullName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            DataCell(
+              Text(
+                student.username,
+                style: const TextStyle(color: Colors.grey),
+              ),
+            ),
             DataCell(_buildScoreBadge(student.avgScore)),
-            DataCell(Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                 // Nút xóa khỏi lớp (khác với xóa tài khoản vĩnh viễn)
-                 IconButton(
-                   icon: const Icon(Icons.person_remove_rounded, color: Colors.redAccent),
-                   tooltip: "Xóa khỏi lớp",
-                   onPressed: () {
-                     AppDialogs.showConfirm(
-                       title: "Xóa khỏi lớp?",
-                       middleText: "Học viên sẽ bị xóa khỏi danh sách lớp này (Tài khoản vẫn tồn tại).",
-                       textConfirm: "Xóa",
-                       textCancel: "Hủy",
-                       confirmTextColor: Colors.white,
-                       buttonColor: Colors.redAccent,
-                       onConfirm: () async {
-                         // Wait for dialog to dismiss
-                         await Future.delayed(const Duration(milliseconds: 300));
-                         await controller.removeStudentFromClass(student.id);
-                       },
-                     );
-                   }
-                 )
-              ],
-            )),
+            DataCell(
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  // Nút xóa khỏi lớp (khác với xóa tài khoản vĩnh viễn)
+                  IconButton(
+                    icon: const Icon(
+                      Icons.person_remove_rounded,
+                      color: Colors.redAccent,
+                    ),
+                    tooltip: "Xóa khỏi lớp",
+                    onPressed: () {
+                      AppDialogs.showConfirm(
+                        title: "Xóa khỏi lớp?",
+                        middleText:
+                            "Học viên sẽ bị xóa khỏi danh sách lớp này (Tài khoản vẫn tồn tại).",
+                        textConfirm: "Xóa",
+                        textCancel: "Hủy",
+
+                        onConfirm: () async {
+                          // Wait for dialog to dismiss
+                          await Future.delayed(
+                            const Duration(milliseconds: 300),
+                          );
+                          await controller.removeStudentFromClass(student.id);
+                        },
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
           ],
         );
       }).toList(),
@@ -143,13 +182,22 @@ class ClassManagementDetailView extends GetView<ClassManagementDetailController>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("CHỌN HỌC VIÊN", 
-                    style: TextStyle(color: controller.primaryColor, fontSize: 24, fontWeight: FontWeight.w900)),
-                  IconButton(onPressed: () => Get.back(), icon: const Icon(Icons.close, color: Colors.grey))
+                  Text(
+                    "CHỌN HỌC VIÊN",
+                    style: TextStyle(
+                      color: controller.primaryColor,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Get.back(),
+                    icon: const Icon(Icons.close, color: Colors.grey),
+                  ),
                 ],
               ),
               const Divider(height: 30),
-              
+
               // Search Bar (Optional - UI only for now)
               TextField(
                 decoration: InputDecoration(
@@ -157,7 +205,10 @@ class ClassManagementDetailView extends GetView<ClassManagementDetailController>
                   hintText: "Tìm kiếm tên hoặc username...",
                   filled: true,
                   fillColor: Colors.grey.shade100,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
                   contentPadding: const EdgeInsets.symmetric(vertical: 0),
                 ),
               ),
@@ -165,33 +216,60 @@ class ClassManagementDetailView extends GetView<ClassManagementDetailController>
 
               // List View Học viên có sẵn
               Expanded(
-                child: availableStudents.isEmpty 
-                  ? const Center(child: Text("Không có học viên nào khả dụng", style: TextStyle(color: Colors.grey)))
-                  : ListView.separated(
-                      itemCount: availableStudents.length,
-                      separatorBuilder: (_, __) => const Divider(height: 1),
-                      itemBuilder: (ctx, index) {
-                        final student = availableStudents[index];
-                        return ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          leading: CircleAvatar(
-                            backgroundColor: controller.primaryColor.withOpacity(0.1),
-                            child: Text(student.fullName[0], style: TextStyle(color: controller.primaryColor, fontWeight: FontWeight.bold)),
-                          ),
-                          title: Text(student.fullName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text("@${student.username}"),
-                          trailing: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: controller.accentColor, // Màu hồng
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              elevation: 0,
+                child: availableStudents.isEmpty
+                    ? const Center(
+                        child: Text(
+                          "Không có học viên nào khả dụng",
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      )
+                    : ListView.separated(
+                        itemCount: availableStudents.length,
+                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        itemBuilder: (ctx, index) {
+                          final student = availableStudents[index];
+                          return ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
                             ),
-                            onPressed: () => controller.addStudentToClass(student.id),
-                            child: const Text("Thêm", style: TextStyle(color: Colors.white)),
-                          ),
-                        );
-                      },
-                    ),
+                            leading: CircleAvatar(
+                              backgroundColor: controller.primaryColor
+                                  .withOpacity(0.1),
+                              child: Text(
+                                student.fullName[0],
+                                style: TextStyle(
+                                  color: controller.primaryColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            title: Text(
+                              student.fullName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text("@${student.username}"),
+                            trailing: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    controller.accentColor, // Màu hồng
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                elevation: 0,
+                              ),
+                              onPressed: () =>
+                                  controller.addStudentToClass(student.id),
+                              child: const Text(
+                                "Thêm",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
               ),
             ],
           ),
@@ -204,8 +282,14 @@ class ClassManagementDetailView extends GetView<ClassManagementDetailController>
   DataColumn _buildHeader(String text, {bool alignEnd = false}) {
     return DataColumn(
       numeric: alignEnd,
-      label: Text(text.toUpperCase(),
-        style: TextStyle(color: controller.primaryColor, fontWeight: FontWeight.w900, fontSize: 14)),
+      label: Text(
+        text.toUpperCase(),
+        style: TextStyle(
+          color: controller.primaryColor,
+          fontWeight: FontWeight.w900,
+          fontSize: 14,
+        ),
+      ),
     );
   }
 
@@ -213,7 +297,10 @@ class ClassManagementDetailView extends GetView<ClassManagementDetailController>
     return ElevatedButton.icon(
       onPressed: () => _showAddDialog(context),
       icon: const Icon(Icons.person_add_alt_1_rounded, color: Colors.white),
-      label: const Text('THÊM VÀO LỚP', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      label: const Text(
+        'THÊM VÀO LỚP',
+        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+      ),
       style: ElevatedButton.styleFrom(
         backgroundColor: controller.accentColor,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -224,11 +311,19 @@ class ClassManagementDetailView extends GetView<ClassManagementDetailController>
   }
 
   Widget _buildScoreBadge(double score) {
-    Color color = score >= 8 ? Colors.green : (score >= 5 ? Colors.orange : Colors.red);
+    Color color = score >= 8
+        ? Colors.green
+        : (score >= 5 ? Colors.orange : Colors.red);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-      child: Text(score.toString(), style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        score.toString(),
+        style: TextStyle(color: color, fontWeight: FontWeight.bold),
+      ),
     );
   }
 }

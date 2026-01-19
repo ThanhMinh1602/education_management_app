@@ -111,17 +111,11 @@ class ClassManagementView extends GetView<ClassManagementController> {
                                 onDelete: () {
                                   AppDialogs.showConfirm(
                                     title: "Xác nhận xóa",
-                                    titleStyle: const TextStyle(
-                                      color: Color(0xFF909CC2),
-                                      fontWeight: FontWeight.bold,
-                                    ),
+
                                     middleText:
                                         "Bạn có chắc muốn xóa lớp học này không?\nDữ liệu không thể khôi phục.",
                                     textConfirm: "Xóa ngay",
                                     textCancel: "Hủy",
-                                    confirmTextColor: Colors.white,
-                                    buttonColor: Colors.redAccent,
-                                    cancelTextColor: Colors.grey,
                                     onConfirm: () async {
                                       await Future.delayed(
                                         const Duration(milliseconds: 300),

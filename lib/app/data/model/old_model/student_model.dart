@@ -4,8 +4,8 @@ class StudentModel {
   final String id;
   final String fullName;
   final String username;
-  final String password; // Thêm field này để check login (Lưu ý: Thực tế nên hash)
-  final String role;     // Thêm field này: 'admin' hoặc 'student'
+  final String password;
+  final String role;
   final String classId;
   final double avgScore;
   final bool isActive;
@@ -29,7 +29,7 @@ class StudentModel {
       id: doc.id,
       fullName: data['fullName'] ?? '',
       username: data['username'] ?? '',
-      password: data['password'] ?? '', 
+      password: data['password'] ?? '',
       role: data['role'] ?? 'student',
       classId: data['classId'] ?? '',
       avgScore: (data['avgScore'] ?? 0).toDouble(),

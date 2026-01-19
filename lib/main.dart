@@ -3,7 +3,7 @@ import 'package:blooket/app/data/binding/initial_binding.dart';
 import 'package:blooket/app/routes/app_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart'; // 1. Import gói này
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 

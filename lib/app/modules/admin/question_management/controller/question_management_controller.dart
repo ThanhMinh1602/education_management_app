@@ -23,7 +23,7 @@ class QuestionManagementController extends BaseController {
   @override
   void onInit() {
     super.onInit();
-    // Thay vì bindStream, chúng ta gọi API lấy dữ liệu lần đầu
+
     fetchData();
   }
 
@@ -82,8 +82,9 @@ class QuestionManagementController extends BaseController {
 
     if (response.success) {
       showSuccess("Đã tạo bộ đề mới");
-      if (response.data != null)
+      if (response.data != null) {
         questionSets.insert(0, response.data!); // Thêm vào đầu danh sách
+      }
       return true;
     } else {
       showError(response.message);
