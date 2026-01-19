@@ -79,9 +79,24 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
           },
         ),
         // Các loại khác bạn cần implement logic tương tự AnswerMultiChose
-        QuestionType.rearrange => const AnswerRearrange(),
-        QuestionType.trueFalse => const AnswerTrueFalse(),
-        QuestionType.typing => const AnswerTyping(),
+        QuestionType.rearrange => AnswerRearrange(
+          initialWords: widget.initialData?.answers,
+          onChanged: (words) {
+            setState(() {
+              contentCtrl.text = words.join(' - ');
+              _currentAnswers = words;
+            });
+          },
+        ),
+        QuestionType.trueFalse => AnswerTrueFalse(
+          initialValue: bool.parse(
+            widget.initialData?.answers?.first ?? 'true',
+          ),
+          onChanged: (isTrue) {
+            setState(() => _currentAnswers = [isTrue.toString()]);
+          },
+        ),
+        QuestionType.typing => AnswerTyping(onChanged: (answers) {}),
       },
     );
   }
@@ -190,23 +205,24 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
           const SizedBox(width: 12),
 
           // --- QUESTION TYPE ---
-          BorderedStatWidget(
-            title: selectedType.title,
-            icon: Icons.category_outlined,
-            onTap: () async {
-              final type = await Get.dialog<QuestionType>(
-                _buildTypeSelectionDialog(),
-              );
+          if (widget.initialData == null)
+            BorderedStatWidget(
+              title: selectedType.title,
+              icon: Icons.category_outlined,
+              onTap: () async {
+                final type = await Get.dialog<QuestionType>(
+                  _buildTypeSelectionDialog(),
+                );
 
-              if (type != null && type != selectedType) {
-                setState(() {
-                  selectedType = type;
-                  _currentOptions = [];
-                  _currentAnswers = [];
-                });
-              }
-            },
-          ),
+                if (type != null && type != selectedType) {
+                  setState(() {
+                    selectedType = type;
+                    _currentOptions = [];
+                    _currentAnswers = [];
+                  });
+                }
+              },
+            ),
           const Spacer(),
           // --- VẠCH NGĂN CÁCH ---
           const SizedBox(width: 20),
