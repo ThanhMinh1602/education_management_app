@@ -40,6 +40,7 @@ class AppPages {
         GetPage(
           name: AppRoutes.CLASS_MANAGEMENT_DETAIL,
           page: () => const ClassManagementDetailView(),
+          transition: Transition.rightToLeft,
           binding: ClassManagementDetailBinding(),
         ),
       ],
@@ -52,6 +53,7 @@ class AppPages {
         GetPage(
           name: AppRoutes.QUESTION_MANAGEMENT_DETAIL,
           page: () => const QuestionManagementDetailView(),
+          transition: Transition.rightToLeft,
           binding: QuestionManagementDetailBinding(),
         ),
       ],
@@ -64,6 +66,7 @@ class AppPages {
         GetPage(
           name: AppRoutes.EXERCISES_DETAIL,
           page: () => const ExercisesDetailView(),
+          transition: Transition.rightToLeft,
           binding: ExercisesDetailBinding(),
         ),
       ],

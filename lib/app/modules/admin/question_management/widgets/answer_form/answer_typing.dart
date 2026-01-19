@@ -1,12 +1,19 @@
 import 'package:blooket/app/core/components/button/custom_button.dart';
-import 'package:blooket/app/core/constants/app_color.dart'; // Đảm bảo import đúng
+import 'package:blooket/app/core/constants/app_color.dart';
 import 'package:flutter/material.dart';
 
 class AnswerTyping extends StatefulWidget {
   // Callback trả dữ liệu về cha để lưu
   final Function(List<String> answers)? onChanged;
 
-  const AnswerTyping({super.key, this.onChanged});
+  // [NEW] Dữ liệu khởi tạo (dành cho Edit)
+  final List<String>? initialAnswers;
+
+  const AnswerTyping({
+    super.key,
+    this.onChanged,
+    this.initialAnswers, // Nhận data từ cha
+  });
 
   @override
   State<AnswerTyping> createState() => _AnswerTypingState();
@@ -19,7 +26,20 @@ class _AnswerTypingState extends State<AnswerTyping> {
   @override
   void initState() {
     super.initState();
-    _addNewLine(); // Khởi tạo dòng đầu tiên
+    _initData();
+  }
+
+  // [NEW] Hàm khởi tạo dữ liệu
+  void _initData() {
+    if (widget.initialAnswers != null && widget.initialAnswers!.isNotEmpty) {
+      // Nếu có data cũ (Edit), loop qua và tạo các dòng
+      for (var answer in widget.initialAnswers!) {
+        _addItem(answer);
+      }
+    } else {
+      // Nếu không có data (Create mới), tạo 1 dòng trống
+      _addNewLine();
+    }
   }
 
   @override
@@ -42,6 +62,18 @@ class _AnswerTypingState extends State<AnswerTyping> {
     }
     // Cập nhật lại UI để check trạng thái nút Add
     setState(() {});
+  }
+
+  // [NEW] Hàm helper để tạo item mà không validate dòng cuối (dùng cho init)
+  void _addItem(String content) {
+    final controller = TextEditingController(text: content);
+    final focusNode = FocusNode();
+
+    // Lắng nghe thay đổi text
+    controller.addListener(_notifyChange);
+
+    _items.add((ctrl: controller, node: focusNode));
+    // Không cần setState ở đây vì initState được gọi trước build
   }
 
   void _addNewLine() {
@@ -232,7 +264,7 @@ class _AnswerTypingState extends State<AnswerTyping> {
                   hoverColor: Colors.red.withOpacity(0.1),
                   splashRadius: 20,
                 )
-              : null, // Null sẽ không hiện gì, layout vẫn cân đối nhờ SizedBox width 40
+              : null,
         ),
       ],
     );

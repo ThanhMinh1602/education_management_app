@@ -5,7 +5,7 @@ class QuestionManagementDetailBinding extends Bindings {
   @override
   void dependencies() {
     Get.lazyPut<QuestionManagementDetailController>(
-      () => QuestionManagementDetailController(Get.find()),
+      () => QuestionManagementDetailController(Get.find(), Get.find()),
       fenix: true,
     );
   }

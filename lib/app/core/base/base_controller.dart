@@ -4,9 +4,8 @@ import 'package:get/get.dart';
 
 // Abstract class để không ai có thể khởi tạo trực tiếp BaseController
 abstract class BaseController extends GetxController {
-
   // --- QUẢN LÝ LOADING ---
-  
+
   void showLoading() {
     EasyLoading.show();
   }
@@ -76,7 +75,7 @@ abstract class BaseController extends GetxController {
       icon: Icon(icon, color: Colors.white),
       margin: const EdgeInsets.all(10),
       borderRadius: 10,
-      duration: const Duration(seconds: 3),
+      duration: const Duration(seconds: 1),
       isDismissible: true,
       forwardAnimationCurve: Curves.easeOutBack,
     );

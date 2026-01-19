@@ -1,9 +1,9 @@
+import 'package:blooket/app/core/utils/dialogs.dart';
 import 'package:blooket/app/data/model/question_model.dart';
 import 'package:blooket/app/data/model/request/create_question_request.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-// Giả định các import có sẵn từ project của bạn
 import 'package:blooket/app/core/constants/app_color.dart';
 import 'package:blooket/app/data/enum/question_type.dart';
 import 'package:blooket/app/modules/admin/question_management/widgets/answer_form/answer_multi_chose.dart';
@@ -35,7 +35,6 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
   int timeLimit = 30;
   bool isRandom = false;
 
-  // --- 1. THÊM BIẾN LƯU TRỮ DỮ LIỆU TRẢ LỜI ---
   List<String> _currentOptions = [];
   List<String> _currentAnswers = [];
 
@@ -48,7 +47,6 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
       timeLimit = widget.initialData!.timeLimit ?? 30;
       isRandom = widget.initialData!.isRandom ?? false;
 
-      // Init dữ liệu cũ nếu đang Edit
       _currentOptions = widget.initialData!.options ?? [];
       _currentAnswers = widget.initialData!.answers ?? [];
     } else {
@@ -62,29 +60,100 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
     super.dispose();
   }
 
-  // Factory method để lấy widget trả lời
+  // --- 1. Hàm hiển thị Dialog Cảnh Báo ---
+  void _showWarningDialog(String message) {
+    AppDialogs.showWarning(message);
+  }
+
+  // --- 2. Hàm Validate và Save ---
+  void _validateAndSave() {
+    // 2.1 Kiểm tra nội dung câu hỏi (trừ loại sắp xếp vì nội dung nằm trong options)
+    if (selectedType != QuestionType.rearrange &&
+        contentCtrl.text.trim().isEmpty) {
+      _showWarningDialog("Vui lòng nhập nội dung câu hỏi.");
+      return;
+    }
+
+    // 2.2 Kiểm tra logic từng loại câu hỏi
+    switch (selectedType) {
+      case QuestionType.multipleChoice:
+        // Phải có ít nhất 2 lựa chọn không rỗng
+        final validOptions = _currentOptions
+            .where((op) => op.trim().isNotEmpty)
+            .toList();
+        if (validOptions.length < 4) {
+          _showWarningDialog("Cần nhập đủ 4 phương án lựa chọn.");
+          return;
+        }
+        // Phải chọn ít nhất 1 đáp án đúng
+        if (_currentAnswers.isEmpty) {
+          _showWarningDialog("Vui lòng tích chọn ít nhất 1 đáp án đúng.");
+          return;
+        }
+        break;
+
+      case QuestionType.typing:
+        // Phải nhập ít nhất 1 đáp án chấp nhận
+        final validAnswers = _currentAnswers
+            .where((ans) => ans.trim().isNotEmpty)
+            .toList();
+        if (validAnswers.isEmpty) {
+          _showWarningDialog("Vui lòng nhập câu trả lời đúng.");
+          return;
+        }
+        break;
+
+      case QuestionType.rearrange:
+        // Với loại sắp xếp, answers chính là các từ cần sắp xếp
+        if (_currentAnswers.isEmpty || _currentAnswers.length < 2) {
+          _showWarningDialog("Vui lòng nhập ít nhất 2 từ để sắp xếp.");
+          return;
+        }
+        break;
+
+      case QuestionType.trueFalse:
+        // True/False thường mặc định là True nếu chưa chọn, nên ít lỗi
+        if (_currentAnswers.isEmpty) {
+          _currentAnswers = ["true"];
+        }
+        break;
+    }
+
+    // 2.3 Save nếu tất cả hợp lệ
+    final questionReq = QuestionRequest(
+      setId: widget.setId,
+      type: selectedType.value,
+      content: contentCtrl.text.trim(),
+      timeLimit: timeLimit,
+      isRandom: isRandom,
+      options: _currentOptions,
+      answers: _currentAnswers,
+    );
+
+    widget.onSave(questionReq);
+    Get.back(); // Đóng dialog chính
+  }
+
   Widget _getAnswerFromType() {
-    // Key giúp Flutter nhận diện widget thay đổi khi type thay đổi để rebuild đúng
     return KeyedSubtree(
       key: ValueKey(selectedType),
       child: switch (selectedType) {
         QuestionType.multipleChoice => AnswerMultiChose(
           initialOptions: widget.initialData?.options,
           initialCorrectAnswers: widget.initialData?.answers,
-          // --- 2. HỨNG CALLBACK TỪ ANSWER FORM ---
           onChanged: (options, answers) {
-            // Lưu vào biến tạm (không cần setState để tránh rebuild toàn bộ dialog)
             _currentOptions = options;
             _currentAnswers = answers;
           },
         ),
-        // Các loại khác bạn cần implement logic tương tự AnswerMultiChose
         QuestionType.rearrange => AnswerRearrange(
           initialWords: widget.initialData?.answers,
           onChanged: (words) {
             setState(() {
               contentCtrl.text = words.join(' - ');
               _currentAnswers = words;
+              // Rearrange không dùng options, có thể clear hoặc gán giống answer
+              _currentOptions = [];
             });
           },
         ),
@@ -93,21 +162,28 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
             widget.initialData?.answers?.first ?? 'true',
           ),
           onChanged: (isTrue) {
-            setState(() => _currentAnswers = [isTrue.toString()]);
+            // True/False không cần options, chỉ cần answers
+            _currentAnswers = [isTrue.toString()];
+            _currentOptions = [];
           },
         ),
-        QuestionType.typing => AnswerTyping(onChanged: (answers) {}),
+        // Sửa lại đoạn này để hứng dữ liệu từ Typing Form
+        QuestionType.typing => AnswerTyping(
+          initialAnswers: widget.initialData?.answers, // Truyền data cũ nếu có
+          onChanged: (answers) {
+            _currentAnswers = answers;
+            _currentOptions = []; // Typing không có options
+          },
+        ),
       },
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Lấy kích thước màn hình
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
-    // Tính toán width hợp lý
     final dialogWidth = screenWidth > 950 ? 900.0 : screenWidth * 0.95;
 
     return Dialog(
@@ -122,10 +198,7 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
         ),
         child: Column(
           children: [
-            // 1. Header (Cố định ở trên cùng)
             _buildDialogHeaderControl(),
-
-            // 2. Nội dung (Scroll được)
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.only(bottom: 20),
@@ -134,9 +207,7 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
                   children: [
                     if (selectedType != QuestionType.rearrange)
                       _buildInputQuestion(),
-
                     const SizedBox(height: 20),
-
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: _getAnswerFromType(),
@@ -165,7 +236,6 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // --- TIME LIMIT ---
           BorderedStatWidget(
             title: 'Time Limit',
             value: '${timeLimit}s',
@@ -174,13 +244,12 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
               final newTimeLimit = await showTimeLimitDialog(
                 defaultValue: timeLimit,
               );
-              setState(() => timeLimit = newTimeLimit);
+              if (newTimeLimit != null) {
+                setState(() => timeLimit = newTimeLimit);
+              }
             },
           ),
-
           const SizedBox(width: 12),
-
-          // --- RANDOM ORDER ---
           BorderedStatWidget(
             title: 'Random',
             icon: Icons.shuffle,
@@ -201,10 +270,7 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
               ),
             ),
           ),
-
           const SizedBox(width: 12),
-
-          // --- QUESTION TYPE ---
           if (widget.initialData == null)
             BorderedStatWidget(
               title: selectedType.title,
@@ -224,60 +290,28 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
               },
             ),
           const Spacer(),
-          // --- VẠCH NGĂN CÁCH ---
           const SizedBox(width: 20),
           Container(height: 40, width: 1, color: Colors.white.withOpacity(0.5)),
           const SizedBox(width: 20),
           const Spacer(),
-
-          // --- CANCEL ---
           BorderedStatWidget(
             title: 'Cancel',
             icon: Icons.close,
             onTap: () => Get.back(),
           ),
-
           const SizedBox(width: 12),
-
-          // --- SAVE ---
           BorderedStatWidget(
             title: 'Save',
             icon: Icons.check_circle_outline,
-            onTap: () {
-              // Validate cơ bản
-              if (contentCtrl.text.trim().isEmpty) {
-                Get.snackbar("Lỗi", "Vui lòng nhập nội dung câu hỏi");
-                return;
-              }
-
-              // Validate answer (nếu cần thiết)
-              if (selectedType == QuestionType.multipleChoice &&
-                  _currentAnswers.isEmpty) {
-                Get.snackbar("Cảnh báo", "Bạn chưa chọn đáp án đúng");
-                // Có thể return hoặc cho phép tiếp tục tùy logic
-              }
-
-              // --- 3. TẠO REQUEST TỪ DỮ LIỆU ĐÃ HỨNG ĐƯỢC ---
-              final questionReq = QuestionRequest(
-                setId: widget.setId,
-                type: selectedType
-                    .value, // Dùng .value để lấy string "multipleChoice"
-                content: contentCtrl.text.trim(),
-                timeLimit: timeLimit,
-                isRandom: isRandom,
-                options: _currentOptions, // Lấy từ biến tạm
-                answers: _currentAnswers, // Lấy từ biến tạm
-              );
-
-              widget.onSave(questionReq);
-              Get.back();
-            },
+            // GỌI HÀM VALIDATE MỚI Ở ĐÂY
+            onTap: _validateAndSave,
           ),
         ],
       ),
     );
   }
 
+  // ... (Giữ nguyên _buildInputQuestion và _buildTypeSelectionDialog)
   Widget _buildInputQuestion() {
     return Container(
       alignment: Alignment.center,
