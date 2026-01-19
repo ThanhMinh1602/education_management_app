@@ -5,10 +5,10 @@ import 'package:get/get.dart';
 import 'package:blooket/app/core/base/base_controller.dart'; // Kế thừa BaseController để có loading/snackbar xịn
 // Controller must not import UI/dialog helpers; views handle confirmations.
 import 'package:blooket/app/data/model/old_model/student_model.dart';
-import 'package:blooket/app/data/service/student_service.dart';
+import 'package:blooket/app/data/service/user_service.dart';
 
 class ClassManagementDetailController extends BaseController {
-  final StudentService _studentService; // Đảm bảo đã put service này ở binding
+  final UserService _studentService; // Đảm bảo đã put service này ở binding
 
   // Danh sách học viên TRONG LỚP (Hiển thị ra bảng)
   final studentsInClass = <StudentModel>[].obs;
@@ -27,18 +27,6 @@ class ClassManagementDetailController extends BaseController {
   @override
   void onInit() {
     super.onInit();
-    // Lấy ID lớp được truyền từ màn hình trước
-    currentClassId = Get.parameters['id'] ?? '';
-
-    if (currentClassId.isNotEmpty) {
-      // 1. Bind stream học viên trong lớp
-      studentsInClass.bindStream(
-        _studentService.getStudentsByClassStream(currentClassId),
-      );
-
-      // 2. Bind stream tất cả học viên (để dành cho dialog chọn)
-      allStudents.bindStream(_studentService.getAllStudentsStream());
-    }
   }
 
   // --- HÀNH ĐỘNG ---
@@ -49,31 +37,19 @@ class ClassManagementDetailController extends BaseController {
   }
 
   // Thêm học viên vào lớp
-  Future<bool> addStudentToClass(String studentId) async {
+  Future<void> addStudentToClass(String studentId) async {
     // Logic-only: view should close any dialog before calling this.
     showLoading();
-    bool success = await _studentService.assignStudentToClass(
-      studentId,
-      currentClassId,
-    );
-    hideLoading();
 
-    if (success) {
-      showSuccess("Đã thêm học viên vào lớp");
-    } else {
-      showError("Thất bại, vui lòng thử lại");
-    }
-    return success;
+    hideLoading();
   }
 
   // Xóa học viên khỏi lớp
-  Future<bool> removeStudentFromClass(String studentId) async {
+  Future<void> removeStudentFromClass(String studentId) async {
     // Controller performs deletion; view must ask for confirmation.
     showLoading();
-    bool success = await _studentService.removeStudentFromClass(studentId);
+
     hideLoading();
-    if (success) showSuccess("Đã xóa khỏi lớp");
-    return success;
   }
 
   // Các chức năng phụ

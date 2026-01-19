@@ -1,12 +1,16 @@
 import 'package:blooket/app/core/components/appbar/app_header.dart';
 import 'package:blooket/app/core/components/header/custom_page_header.dart';
 import 'package:blooket/app/core/components/sidebar/side_bar.dart';
+import 'package:blooket/app/core/components/status/custom_status_badge.dart';
+import 'package:blooket/app/core/constants/app_color.dart';
+import 'package:blooket/app/data/enum/user_role.dart';
+import 'package:blooket/app/data/model/user_model.dart';
+import 'package:blooket/app/modules/admin/student_management/widgets/create_user_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:blooket/app/core/utils/dialogs.dart';
 import 'package:blooket/app/core/utils/ui_dialogs.dart';
 import 'package:blooket/app/modules/admin/student_management/controllers/student_management_controller.dart';
-import 'package:blooket/app/data/model/old_model/student_model.dart';
 
 class StudentManagementView extends GetView<StudentManagementController> {
   const StudentManagementView({super.key});
@@ -14,7 +18,7 @@ class StudentManagementView extends GetView<StudentManagementController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFDCD6F7),
+      backgroundColor: AppColor.secondary,
       appBar: AppHeader(),
       body: Row(
         children: [
@@ -28,26 +32,15 @@ class StudentManagementView extends GetView<StudentManagementController> {
               padding: const EdgeInsets.all(40.0),
               child: Column(
                 children: [
-                  // 1. Header
                   CustomPageHeader(
                     title: 'Quản lý tài khoản',
                     subtitle: 'Danh sách toàn bộ học viên trong hệ thống',
                     buttonLabel: 'Cấp tài khoản',
-                    onButtonPressed: () async {
-                      final res = await UiDialogs.showAddStudentForm();
-                      if (res != null) {
-                        await Future.delayed(const Duration(milliseconds: 300));
-                        await controller.addStudent(
-                          fullName: res['fullName']!,
-                          username: res['username']!,
-                          role: res['role']!,
-                          password: '123456',
-                        );
-                      }
+                    onButtonPressed: () {
+                      Get.dialog(CreateUserDialog());
                     },
                   ),
                   const SizedBox(height: 30),
-                  // 2. Data Table
                   Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
@@ -107,7 +100,7 @@ class StudentManagementView extends GetView<StudentManagementController> {
                                 fontWeight: FontWeight.w900,
                               ),
                             ),
-                          ), // 🔥 THÊM CỘT NÀY
+                          ),
                           DataColumn(
                             label: Text(
                               'TRẠNG THÁI',
@@ -143,25 +136,24 @@ class StudentManagementView extends GetView<StudentManagementController> {
     );
   }
 
-  DataRow _buildDataRow(StudentModel student) {
+  DataRow _buildDataRow(UserModel userModel) {
     return DataRow(
       cells: [
-        // 1. Họ tên
         DataCell(
           Row(
             children: [
               CircleAvatar(
                 radius: 16,
-                // Nếu là Admin thì avatar màu khác cho dễ nhìn
-                backgroundColor: student.role == 'admin'
+
+                backgroundColor: userModel.role == UserRole.admin
                     ? Colors.orangeAccent.withOpacity(0.2)
                     : const Color(0xFF909CC2).withOpacity(0.2),
                 child: Text(
-                  student.fullName.isNotEmpty
-                      ? student.fullName[0].toUpperCase()
+                  userModel.name != null
+                      ? userModel.name![0].toUpperCase()
                       : '?',
                   style: TextStyle(
-                    color: student.role == 'admin'
+                    color: userModel.role == UserRole.admin
                         ? Colors.orange
                         : const Color(0xFF909CC2),
                     fontWeight: FontWeight.bold,
@@ -170,7 +162,7 @@ class StudentManagementView extends GetView<StudentManagementController> {
               ),
               const SizedBox(width: 12),
               Text(
-                student.fullName,
+                userModel.name ?? '',
                 style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 15,
@@ -179,26 +171,27 @@ class StudentManagementView extends GetView<StudentManagementController> {
             ],
           ),
         ),
-
-        // 2. Username
         DataCell(
-          Text(student.username, style: TextStyle(color: Colors.grey[600])),
+          Text(
+            userModel.username ?? '',
+            style: TextStyle(color: Colors.grey[600]),
+          ),
         ),
-
-        // 3. Vai trò (Role) - 🔥 MỚI
         DataCell(
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: student.role == 'admin'
+              color: userModel.role == UserRole.admin
                   ? Colors.blue.withOpacity(0.1)
                   : Colors.grey.withOpacity(0.1),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
-              student.role == 'admin' ? 'Quản trị viên' : 'Học viên',
+              userModel.role == UserRole.admin ? 'Quản trị viên' : 'Học viên',
               style: TextStyle(
-                color: student.role == 'admin' ? Colors.blue : Colors.grey[700],
+                color: userModel.role == UserRole.admin
+                    ? Colors.blue
+                    : Colors.grey[700],
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
               ),
@@ -206,10 +199,8 @@ class StudentManagementView extends GetView<StudentManagementController> {
           ),
         ),
 
-        // 4. Trạng thái
-        DataCell(_buildStatusBadge(student.isActive)),
+        DataCell(CustomStatusBadge(isActive: userModel.isActive ?? false)),
 
-        // 5. Hành động
         DataCell(
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
@@ -226,18 +217,37 @@ class StudentManagementView extends GetView<StudentManagementController> {
 
                     onConfirm: () async {
                       await Future.delayed(const Duration(milliseconds: 300));
-                      await controller.resetPassword(student.id);
+                      await controller.resetPassword(userModel.id);
                     },
                   );
                 },
               ),
               IconButton(
-                tooltip: student.isActive ? "Khóa" : "Mở khóa",
+                tooltip: userModel.isActive! ? "Khóa" : "Mở khóa",
                 icon: Icon(
-                  student.isActive ? Icons.block : Icons.check_circle_outline,
-                  color: student.isActive ? Colors.redAccent : Colors.green,
+                  userModel.isActive!
+                      ? Icons.block
+                      : Icons.check_circle_outline,
+                  color: userModel.isActive! ? Colors.redAccent : Colors.green,
                 ),
-                onPressed: () => controller.toggleStatus(student),
+                onPressed: () {
+                  AppDialogs.showConfirm(
+                    title: userModel.isActive!
+                        ? "Khóa tài khoản?"
+                        : "Mở khóa tài khoản?",
+                    textConfirm: "Đồng ý",
+                    textCancel: "Hủy",
+                    middleText:
+                        'Bạn có chắc chắn muốn ${userModel.isActive! ? 'khóa' : 'mở'} tài khoản của ${userModel.name} không?',
+                    confirmColor: AppColor.falseRed,
+                    onConfirm: () {
+                      controller.toggleStatus(
+                        userModel.id,
+                        userModel.isActive!,
+                      );
+                    },
+                  );
+                },
               ),
               IconButton(
                 tooltip: "Xóa tài khoản",
@@ -245,8 +255,7 @@ class StudentManagementView extends GetView<StudentManagementController> {
                 onPressed: () {
                   AppDialogs.showDeleteConfirm(
                     onConfirm: () async {
-                      await Future.delayed(const Duration(milliseconds: 300));
-                      await controller.deleteStudent(student.id);
+                      await controller.deleteStudent(userModel.id);
                     },
                   );
                 },
@@ -255,26 +264,6 @@ class StudentManagementView extends GetView<StudentManagementController> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildStatusBadge(bool isActive) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: isActive
-            ? Colors.green.withOpacity(0.1)
-            : Colors.red.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        isActive ? 'Active' : 'Locked',
-        style: TextStyle(
-          color: isActive ? Colors.green : Colors.red,
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
     );
   }
 }

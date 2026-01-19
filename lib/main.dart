@@ -9,7 +9,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   try {
     await dotenv.load(fileName: ".env");
   } catch (e) {

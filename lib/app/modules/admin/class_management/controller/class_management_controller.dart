@@ -1,5 +1,5 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'package:blooket/app/data/service/student_service.dart';
+import 'package:blooket/app/data/service/user_service.dart';
 // UI widgets moved to View files; controller is logic-only.
 import 'package:get/get.dart';
 
@@ -13,7 +13,7 @@ class ClassManagementController extends BaseController {
   // Dependency Injection thông qua constructor hoặc Get.find() đều được
   // Ở đây mình khởi tạo trực tiếp cho đơn giản, hoặc bạn có thể inject qua Binding
   final ClassService _classService;
-  final StudentService _studentService;
+  final UserService _studentService;
   ClassManagementController(this._classService, this._studentService);
 
   final classList = <ClassModel>[].obs;
@@ -66,7 +66,7 @@ class ClassManagementController extends BaseController {
   }
 
   Stream<int> getClassStudentCount(String classId) {
-    return _studentService.getStudentCountByClassStream(classId);
+    return Stream.value(1);
   }
 
   // --- XÓA LỚP (logic only, no UI) ---

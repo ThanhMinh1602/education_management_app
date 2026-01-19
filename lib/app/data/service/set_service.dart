@@ -9,8 +9,6 @@ class SetService {
 
   SetService(this._apiClient);
 
-  /// Lấy danh sách tất cả các bộ câu hỏi
-  /// GET /api/sets
   Future<ApiResponse<List<SetModel>>> listSets() async {
     final response = await _apiClient.get(ApiEndpoints.sets);
 
@@ -20,8 +18,6 @@ class SetService {
     );
   }
 
-  /// Lấy thông tin chi tiết một bộ câu hỏi theo ID
-  /// GET /api/sets/{id}
   Future<ApiResponse<SetModel>> getSetById(String id) async {
     final response = await _apiClient.get('${ApiEndpoints.sets}/$id');
 
@@ -31,8 +27,6 @@ class SetService {
     );
   }
 
-  /// Tạo một bộ câu hỏi mới
-  /// POST /api/sets
   Future<ApiResponse<SetModel>> createSet(CreateSetRequest request) async {
     final response = await _apiClient.post(
       ApiEndpoints.sets,
@@ -45,8 +39,6 @@ class SetService {
     );
   }
 
-  /// Cập nhật tên của một bộ câu hỏi
-  /// PUT /api/sets/{id}
   Future<ApiResponse<SetModel>> updateSet(String id, String newName) async {
     final response = await _apiClient.put(
       '${ApiEndpoints.sets}/$id',
@@ -59,8 +51,6 @@ class SetService {
     );
   }
 
-  /// Xóa một bộ câu hỏi và các câu hỏi thuộc bộ đó
-  /// DELETE /api/sets/{id}
   Future<ApiResponse<bool>> deleteSet(String id) async {
     final response = await _apiClient.delete('${ApiEndpoints.sets}/$id');
 

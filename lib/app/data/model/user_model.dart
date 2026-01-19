@@ -32,7 +32,7 @@ class UserModel {
       name: json['name'],
       username: json['username'],
       role: UserRole.fromValue(json['role']),
-      isActive: json['isActive'],
+      isActive: json['isActive'] ?? false,
       classId: json['classId'],
       // Ép kiểu double an toàn nếu giá trị không null
       avgScore: json['avgScore'] != null

@@ -1,82 +1,114 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'package:blooket/app/data/model/request/register_request.dart';
+import 'package:blooket/app/data/model/user_model.dart';
 import 'package:get/get.dart';
 
 import 'package:blooket/app/core/base/base_controller.dart';
-// UI/dialogs are shown by Views; controller exposes logic-only actions.
-import 'package:blooket/app/data/model/old_model/student_model.dart';
-import 'package:blooket/app/data/service/student_service.dart';
+import 'package:blooket/app/data/service/user_service.dart';
 
 class StudentManagementController extends BaseController {
-  final StudentService _studentService;
-  StudentManagementController(this._studentService);
-  final studentList = <StudentModel>[].obs;
-  String selectedRole = 'student';
+  final UserService _userService;
+  StudentManagementController(this._userService);
+  final studentList = <UserModel>[].obs;
 
   @override
-  void onInit() {
+  void onInit() async {
     super.onInit();
-    // Load toàn bộ danh sách ngay khi vào màn hình
-    studentList.bindStream(_studentService.getAllStudentsStream());
+    await getAllUsers();
   }
 
-  // --- ACTIONS ---
+  Future<void> getAllUsers({int? page, int? limit}) async {
+    showLoading();
+    final res = await _userService.getAllUsers(page: page, limit: limit);
+    hideLoading();
+    if (res.success) {
+      studentList.value = res.data;
+    }
+  }
 
-  // Views handle the dialog UI; controller provides addStudent logic-only method.
-  Future<bool> addStudent({
+  Future<bool> createUser({
     required String fullName,
     required String username,
     required String role,
     String password = '123456',
   }) async {
-    showLoading();
-    bool success = await _studentService.addStudent(
-      fullName: fullName,
-      username: username,
-      role: role,
-      password: password,
-    );
-    hideLoading();
-    if (success) {
-      showSuccess("Đã cấp tài khoản thành công");
-    } else {
-      showError("Thất bại. Username đã tồn tại.");
+    final nameClean = fullName.trim();
+    final userClean = username.trim();
+
+    if (nameClean.isEmpty || userClean.isEmpty) {
+      showError("Vui lòng điền đầy đủ thông tin");
+      return false;
     }
-    return success;
+
+    showLoading();
+
+    try {
+      final registerRequest = RegisterRequest(
+        name: nameClean,
+        username: userClean,
+        password: password,
+        role: role,
+      );
+
+      final res = await _userService.createUser(registerRequest);
+
+      if (res.success && res.data != null) {
+        studentList.insert(0, res.data!);
+        return true;
+      } else {
+        showError(res.message);
+        return false;
+      }
+    } catch (e) {
+      print("Error createUser: $e");
+      showError("Đã xảy ra lỗi: $e");
+      return false;
+    } finally {
+      hideLoading();
+    }
   }
 
-  void toggleStatus(StudentModel student) async {
+  void toggleStatus(String id, bool isActive) async {
     showLoading();
-    bool success = await _studentService.toggleStatus(
-      student.id,
-      student.isActive,
-    );
-    hideLoading();
-
-    if (success) {
-      showSuccess(
-        student.isActive ? "Đã khóa tài khoản" : "Đã mở khóa tài khoản",
-      );
+    try {
+      final res = await _userService.updateUser(id, isActive: !isActive);
+      hideLoading();
+      if (res.success && res.data != null) {
+        final index = studentList.indexWhere((element) => element.id == id);
+        if (index != -1) {
+          studentList[index] = res.data!;
+        }
+      } else {
+        showError(res.message);
+      }
+    } catch (e) {
+      print("Error toggleStatus: $e");
+      showError("Đã xảy ra lỗi: $e");
     }
   }
 
   Future<bool> resetPassword(String id) async {
-    // View should confirm action before calling this.
-    await Future.delayed(const Duration(milliseconds: 300));
     showLoading();
-    bool success = await _studentService.resetPassword(id);
+    bool success = true;
+
     hideLoading();
     if (success) showSuccess("Đã reset mật khẩu thành công");
     return success;
   }
 
-  Future<bool> deleteStudent(String id) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    showLoading();
-    bool success = await _studentService.deleteStudent(id);
-    hideLoading();
-    if (success) showSuccess("Đã xóa tài khoản");
-    return success;
+  Future<void> deleteStudent(String id) async {
+    try {
+      showLoading();
+      final res = await _userService.deleteUser(id);
+      hideLoading();
+      if (res.success) {
+        studentList.removeWhere((element) => element.id == id);
+        showSuccess("Xóa tài khoản thành công");
+      } else {
+        showError(res.message);
+      }
+    } catch (e) {
+      print("Error deleteStudent: $e");
+      showError("Đã xảy ra lỗi: $e");
+    }
   }
-
-  // UI helper removed from controller; views should provide input widgets.
 }
