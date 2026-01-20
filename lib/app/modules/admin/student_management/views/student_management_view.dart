@@ -9,7 +9,6 @@ import 'package:blooket/app/modules/admin/student_management/widgets/create_user
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:blooket/app/core/utils/dialogs.dart';
-import 'package:blooket/app/core/utils/ui_dialogs.dart';
 import 'package:blooket/app/modules/admin/student_management/controllers/student_management_controller.dart';
 
 class StudentManagementView extends GetView<StudentManagementController> {
@@ -216,7 +215,6 @@ class StudentManagementView extends GetView<StudentManagementController> {
                     textCancel: "Hủy",
 
                     onConfirm: () async {
-                      await Future.delayed(const Duration(milliseconds: 300));
                       await controller.resetPassword(userModel.id);
                     },
                   );
@@ -247,6 +245,13 @@ class StudentManagementView extends GetView<StudentManagementController> {
                       );
                     },
                   );
+                },
+              ),
+              IconButton(
+                tooltip: "Sưa tài khoản",
+                icon: const Icon(Icons.edit_outlined, color: Colors.grey),
+                onPressed: () {
+                  Get.dialog(CreateUserDialog(userModel: userModel));
                 },
               ),
               IconButton(

@@ -82,4 +82,14 @@ class UserService {
       (json) => UserModel.fromJson(json as Map<String, dynamic>),
     );
   }
+
+  Future<ApiResponse<UserModel>> resetPassword(String id) async {
+    final response = await _apiClient.put(
+      ApiEndpoints.resetStudentPassword(id),
+    );
+    return ApiResponse<UserModel>.fromJson(
+      response.data,
+      (json) => UserModel.fromJson(json as Map<String, dynamic>),
+    );
+  }
 }

@@ -88,11 +88,21 @@ class StudentManagementController extends BaseController {
 
   Future<bool> resetPassword(String id) async {
     showLoading();
-    bool success = true;
-
-    hideLoading();
-    if (success) showSuccess("Đã reset mật khẩu thành công");
-    return success;
+    try {
+      final res = await _userService.resetPassword(id);
+      hideLoading();
+      if (res.success) {
+        showSuccess("Đặt lại mật khẩu thành công");
+        return true;
+      } else {
+        showError(res.message);
+        return false;
+      }
+    } catch (e) {
+      print("Error resetPassword: $e");
+      showError("Đã xảy ra lỗi: $e");
+      return false;
+    }
   }
 
   Future<void> deleteStudent(String id) async {
@@ -109,6 +119,32 @@ class StudentManagementController extends BaseController {
     } catch (e) {
       print("Error deleteStudent: $e");
       showError("Đã xảy ra lỗi: $e");
+    }
+  }
+
+  Future<bool> updateStudent(String id, {String? name, String? role}) async {
+    showLoading();
+    try {
+      final res = await _userService.updateUser(id, name: name, role: role);
+      hideLoading();
+      if (res.success && res.data != null) {
+        hideLoading();
+        final index = studentList.indexWhere((element) => element.id == id);
+        if (index != -1) {
+          studentList[index] = res.data!;
+        }
+        return true;
+      } else {
+        showError(res.message);
+        return false;
+      }
+    } catch (e) {
+      print("Error updateStudent: $e");
+      showError("Đã xảy ra lỗi: $e");
+      hideLoading();
+      return false;
+    } finally {
+      hideLoading();
     }
   }
 }
