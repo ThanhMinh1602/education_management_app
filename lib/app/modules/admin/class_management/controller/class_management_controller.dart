@@ -1,17 +1,15 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'package:blooket/app/data/model/class_model.dart';
 import 'package:blooket/app/data/service/user_service.dart';
 // UI widgets moved to View files; controller is logic-only.
 import 'package:get/get.dart';
 
 import 'package:blooket/app/core/base/base_controller.dart';
-// Controller should not show UI dialogs; views handle confirmations.
-import 'package:blooket/app/data/model/old_model/class_model.dart';
+// Controller should not show UI dialogs; views handle confirmat
 import 'package:blooket/app/data/service/class_service.dart';
 // routes import removed (unused here)
 
 class ClassManagementController extends BaseController {
-  // Dependency Injection thông qua constructor hoặc Get.find() đều được
-  // Ở đây mình khởi tạo trực tiếp cho đơn giản, hoặc bạn có thể inject qua Binding
   final ClassService _classService;
   final UserService _studentService;
   ClassManagementController(this._classService, this._studentService);
@@ -19,10 +17,9 @@ class ClassManagementController extends BaseController {
   final classList = <ClassModel>[].obs;
 
   @override
-  void onInit() {
+  void onInit() async {
     super.onInit();
-    // Tự động lắng nghe dữ liệu
-    classList.bindStream(_classService.getClassesStream());
+    fetchClasses();
   }
 
   // --- NAVIGATION ---
@@ -30,57 +27,77 @@ class ClassManagementController extends BaseController {
     Get.toNamed('${Get.currentRoute}/$id');
   }
 
-  // --- PUBLIC ACTIONS (logic-only) ---
-  Future<bool> createClass({
-    required String className,
-    required String subject,
-    required String schedule,
-  }) async {
+  Future<void> fetchClasses() async {
     showLoading();
-    bool success = await _classService.addClass(
-      className: className,
-      subject: subject,
-      schedule: schedule,
-    );
-    hideLoading();
-    if (success) showSuccess("Tạo lớp thành công");
-    return success;
+    try {
+      final res = await _classService.getAllClasses();
+      hideLoading();
+      if (!res.success) {
+        showError(res.message);
+        return;
+      }
+      classList.value = res.data;
+    } catch (e) {
+      hideLoading();
+      showError("Không thể tải danh sách lớp học, vui lòng thử lại");
+    }
+  }
+
+  // --- PUBLIC ACTIONS (logic-only) ---
+  Future<bool> createClass(ClassModel classModel) async {
+    showLoading();
+    try {
+      final res = await _classService.createClass(classModel);
+      hideLoading();
+      if (!res.success || res.data == null) {
+        showError(res.message);
+        return false;
+      }
+      classList.insert(0, res.data!);
+      return true;
+    } catch (e) {
+      hideLoading();
+      showError("Không thể tạo lớp học, vui lòng thử lại");
+      return false;
+    }
   }
 
   Future<bool> updateClass({
     required String id,
-    required String className,
-    required String subject,
-    required String schedule,
+    required ClassModel classModel,
   }) async {
     showLoading();
-    bool success = await _classService.updateClass(
-      id: id,
-      className: className,
-      subject: subject,
-      schedule: schedule,
-    );
-    hideLoading();
-    if (success) showSuccess("Cập nhật thành công");
-    return success;
+    try {
+      final res = await _classService.updateClass(classModel, id);
+      hideLoading();
+      if (!res.success) {
+        showError(res.message);
+        return false;
+      }
+      final index = classList.indexWhere((element) => element.id == id);
+      if (index != -1) {
+        classList[index] = res.data!;
+      }
+      return true;
+    } catch (e) {
+      showError('Không thể tạo lớp học, vui lòng thử lại');
+      return false;
+    }
   }
 
-  Stream<int> getClassStudentCount(String classId) {
-    return Stream.value(1);
-  }
-
-  // --- XÓA LỚP (logic only, no UI) ---
   Future<void> deleteClass(String id) async {
-    // Controller only performs the deletion and reports results via
-    // BaseController helpers. The confirmation dialog must be shown
-    // by the view that calls this method.
     showLoading(); // 1. Hiện loading
-    bool success = await _classService.deleteClass(id);
-    hideLoading(); // 2. Tắt loading
-
-    if (success) {
-      showSuccess("Đã xóa lớp học thành công");
-    } else {
+    try {
+      final res = await _classService.deleteClass(id);
+      hideLoading(); // 2. Ẩn loading
+      if (!res.success) {
+        showError(res.message);
+        return;
+      }
+      showSuccess("Xóa lớp học thành công");
+      classList.removeWhere((element) => element.id == id);
+    } catch (e) {
+      hideLoading();
       showError("Không thể xóa lớp học, vui lòng thử lại");
     }
   }

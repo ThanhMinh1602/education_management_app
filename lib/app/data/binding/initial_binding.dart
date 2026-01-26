@@ -13,7 +13,7 @@ class InitialBinding extends Bindings {
     Get.lazyPut<ApiClient>(() => ApiClient(), fenix: true);
     // Khởi tạo các Service tại đây
     Get.lazyPut<StorageService>(() => StorageService(), fenix: true);
-    Get.lazyPut<ClassService>(() => ClassService(), fenix: true);
+    Get.lazyPut<ClassService>(() => ClassService(Get.find()), fenix: true);
     Get.lazyPut<SetService>(() => SetService(Get.find()), fenix: true);
     Get.lazyPut<UserService>(() => UserService(Get.find()), fenix: true);
     Get.lazyPut<QuestionService>(

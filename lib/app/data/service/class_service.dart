@@ -1,82 +1,66 @@
-import 'package:blooket/app/data/model/old_model/class_model.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:blooket/app/config/network/api_endpoints.dart';
+import 'package:blooket/app/data/model/class_model.dart';
+import 'package:blooket/app/data/model/response/api_response.dart';
+import 'package:blooket/app/data/model/response/api_response_list.dart';
+import 'package:blooket/app/data/service/base/base_service.dart';
 
-class ClassService {
-  final CollectionReference _classCollection = FirebaseFirestore.instance
-      .collection('classes');
+class ClassService extends BaseService {
+  ClassService(super.apiClient);
 
-  Future<List<ClassModel>> getClasses() async {
-    try {
-      QuerySnapshot snapshot = await _classCollection.get();
-
-      return snapshot.docs.map((doc) {
-        return ClassModel.fromSnapshot(doc);
-      }).toList();
-    } catch (e) {
-      print("Lỗi lấy danh sách lớp: $e");
-      return [];
-    }
-  }
-
-  Stream<List<ClassModel>> getClassesStream() {
-    return _classCollection.snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) => ClassModel.fromSnapshot(doc)).toList();
-    });
-  }
-
-  Future<bool> addClass({
-    required String className,
-    required String subject,
-    required String schedule,
-    int studentCount = 0,
+  Future<ApiResponseList<ClassModel>> getAllClasses({
+    int? page,
+    int? limit,
   }) async {
-    try {
-      final newClassData = {
-        'className': className,
-        'subject': subject,
-        'schedule': schedule,
-        'studentCount': studentCount,
-        'createdAt': FieldValue.serverTimestamp(),
-      };
+    final response = await apiClient.get(ApiEndpoints.classes);
 
-      await _classCollection.add(newClassData);
-      return true;
-    } catch (e) {
-      print("Lỗi thêm lớp: $e");
-      return false;
-    }
+    return ApiResponseList<ClassModel>.fromJson(
+      response.data,
+      (json) => ClassModel.fromJson(json as Map<String, dynamic>),
+    );
   }
 
-  Future<bool> updateClass({
-    required String id,
-    String? className,
-    String? subject,
-    String? schedule,
-    int? studentCount,
-  }) async {
-    try {
-      final Map<String, dynamic> updateData = {};
+  Future<ApiResponse<ClassModel>> createClass(ClassModel classModel) async {
+    final response = await apiClient.post(
+      ApiEndpoints.classes,
+      data: classModel.toCreateBody(),
+    );
 
-      if (className != null) updateData['className'] = className;
-      if (subject != null) updateData['subject'] = subject;
-      if (schedule != null) updateData['schedule'] = schedule;
-      if (studentCount != null) updateData['studentCount'] = studentCount;
-
-      await _classCollection.doc(id).update(updateData);
-      return true;
-    } catch (e) {
-      print("Lỗi sửa lớp: $e");
-      return false;
-    }
+    return ApiResponse<ClassModel>.fromJson(
+      response.data,
+      (json) => ClassModel.fromJson(json as Map<String, dynamic>),
+    );
   }
 
-  Future<bool> deleteClass(String id) async {
-    try {
-      await _classCollection.doc(id).delete();
-      return true;
-    } catch (e) {
-      print("Lỗi xóa lớp: $e");
-      return false;
-    }
+  Future<ApiResponse<ClassModel>> getClassById(String id) async {
+    final response = await apiClient.get(ApiEndpoints.classById(id));
+
+    return ApiResponse<ClassModel>.fromJson(
+      response.data,
+      (json) => ClassModel.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
+  Future<ApiResponse<ClassModel>> updateClass(
+    ClassModel classModel,
+    String id,
+  ) async {
+    final response = await apiClient.put(
+      ApiEndpoints.classById(id),
+      data: classModel.toCreateBody(),
+    );
+
+    return ApiResponse<ClassModel>.fromJson(
+      response.data,
+      (json) => ClassModel.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
+  Future<ApiResponse<ClassModel>> deleteClass(String id) async {
+    final response = await apiClient.delete(ApiEndpoints.classById(id));
+
+    return ApiResponse<ClassModel>.fromJson(
+      response.data,
+      (json) => ClassModel.fromJson(json as Map<String, dynamic>),
+    );
   }
 }
