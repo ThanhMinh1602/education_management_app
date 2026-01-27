@@ -92,4 +92,32 @@ class UserService {
       (json) => UserModel.fromJson(json as Map<String, dynamic>),
     );
   }
+
+  Future<ApiResponse<UserModel>> addStudentToClass(
+    String studentId,
+    String classId,
+  ) async {
+    final response = await _apiClient.put(
+      ApiEndpoints.addStudentToClass(classId),
+      data: {'studentId': studentId},
+    );
+    return ApiResponse<UserModel>.fromJson(
+      response.data,
+      (json) => UserModel.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> removeStudentFromClass(
+    String studentId,
+    String classId,
+  ) async {
+    final response = await _apiClient.put(
+      ApiEndpoints.removeStudentFromClass(classId),
+      data: {'studentId': studentId},
+    );
+    return ApiResponse<Map<String, dynamic>>.fromJson(
+      response.data,
+      (json) => json as Map<String, dynamic>,
+    );
+  }
 }

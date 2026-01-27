@@ -7,6 +7,10 @@ class ApiEndpoints {
   static String setById(String id) => "/api/sets/$id";
 
   static const String classes = "/api/classes";
+  static String addStudentToClass(String id) => "/api/classes/$id/add-student";
+  static String removeStudentFromClass(String id) =>
+      "/api/classes/$id/remove-student";
+
   static String classById(String id) => "/api/classes/$id";
 
   static const String questions = "/api/questions";
@@ -15,8 +19,6 @@ class ApiEndpoints {
   static const String user = "/api/user";
   static String studentById(String id) => "/api/user/$id";
   static String assignStudent(String id) => "/api/user/$id/assign";
-  static String removeStudentFromClass(String id) =>
-      "/api/user/$id/remove-class";
   static String toggleusertatus(String id) => "/api/user/$id/toggle-status";
   static String resetStudentPassword(String id) =>
       "/api/user/$id/reset-password";

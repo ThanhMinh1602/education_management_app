@@ -89,7 +89,7 @@ class AddUserToClass extends StatelessWidget {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            subtitle: Text("@${user.username}"),
+                            subtitle: Text("${user.username}"),
                             trailing: ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: controller.accentColor,

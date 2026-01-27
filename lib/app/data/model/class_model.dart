@@ -7,6 +7,7 @@ class ClassModel {
   final int? studentCount;
   final String? schedule;
   final String? subject;
+  final List<UserModel>? students;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -17,6 +18,7 @@ class ClassModel {
     this.studentCount,
     this.schedule,
     this.subject,
+    this.students,
     this.createdAt,
     this.updatedAt,
   });
@@ -47,7 +49,11 @@ class ClassModel {
       studentCount: json['studentCount'] is int
           ? json['studentCount']
           : int.tryParse(json['studentCount']?.toString() ?? ''),
-
+      students: json['students'] != null
+          ? List<UserModel>.from(
+              json['students'].map((x) => UserModel.fromJson(x)),
+            )
+          : null,
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'])
           : null,

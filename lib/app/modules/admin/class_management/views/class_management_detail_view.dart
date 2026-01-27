@@ -134,13 +134,7 @@ class ClassManagementDetailView
                     ),
                     tooltip: "Xóa khỏi lớp",
                     onPressed: () {
-                      AppDialogs.showConfirm(
-                        title: "Xóa khỏi lớp?",
-                        middleText:
-                            "Học viên sẽ bị xóa khỏi danh sách lớp này (Tài khoản vẫn tồn tại).",
-                        textConfirm: "Xóa",
-                        textCancel: "Hủy",
-
+                      AppDialogs.showDeleteConfirm(
                         onConfirm: () async {
                           await Future.delayed(
                             const Duration(milliseconds: 300),
