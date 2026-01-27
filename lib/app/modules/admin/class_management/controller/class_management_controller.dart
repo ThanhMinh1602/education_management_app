@@ -1,18 +1,11 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:blooket/app/data/model/class_model.dart';
-import 'package:blooket/app/data/service/user_service.dart';
-// UI widgets moved to View files; controller is logic-only.
 import 'package:get/get.dart';
-
 import 'package:blooket/app/core/base/base_controller.dart';
-// Controller should not show UI dialogs; views handle confirmat
 import 'package:blooket/app/data/service/class_service.dart';
-// routes import removed (unused here)
 
 class ClassManagementController extends BaseController {
   final ClassService _classService;
-  final UserService _studentService;
-  ClassManagementController(this._classService, this._studentService);
+  ClassManagementController(this._classService);
 
   final classList = <ClassModel>[].obs;
 
@@ -22,7 +15,6 @@ class ClassManagementController extends BaseController {
     fetchClasses();
   }
 
-  // --- NAVIGATION ---
   void enterClass(String id) {
     Get.toNamed('${Get.currentRoute}/$id');
   }
@@ -43,7 +35,6 @@ class ClassManagementController extends BaseController {
     }
   }
 
-  // --- PUBLIC ACTIONS (logic-only) ---
   Future<bool> createClass(ClassModel classModel) async {
     showLoading();
     try {
@@ -86,10 +77,10 @@ class ClassManagementController extends BaseController {
   }
 
   Future<void> deleteClass(String id) async {
-    showLoading(); // 1. Hiện loading
+    showLoading();
     try {
       final res = await _classService.deleteClass(id);
-      hideLoading(); // 2. Ẩn loading
+      hideLoading();
       if (!res.success) {
         showError(res.message);
         return;
@@ -101,6 +92,4 @@ class ClassManagementController extends BaseController {
       showError("Không thể xóa lớp học, vui lòng thử lại");
     }
   }
-
-  // Note: Form dialog UI moved to View files. Controller keeps logic methods above.
 }
