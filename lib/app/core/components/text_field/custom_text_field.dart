@@ -7,8 +7,8 @@ class CustomTextField extends StatefulWidget {
   final TextEditingController? controller;
   final String? Function(String?)? validator;
   final TextInputType keyboardType;
-  final Widget? suffixIcon; // Dùng cho các icon khác (nếu không phải password)
-  final bool isPassword; // Thêm cờ này để xác định là ô mật khẩu
+  final Widget? suffixIcon;
+  final bool isPassword;
   final TextInputAction? textInputAction;
   final void Function(String)? onSubmitted;
   final bool autofocus;
@@ -21,7 +21,7 @@ class CustomTextField extends StatefulWidget {
     this.validator,
     this.keyboardType = TextInputType.text,
     this.suffixIcon,
-    this.isPassword = false, // Mặc định là false (nhập văn bản thường)
+    this.isPassword = false,
     this.textInputAction,
     this.onSubmitted,
     this.autofocus = false,
@@ -32,19 +32,17 @@ class CustomTextField extends StatefulWidget {
 }
 
 class _CustomTextFieldState extends State<CustomTextField> {
-  // Biến trạng thái để quản lý ẩn/hiện
   bool _obscureText = false;
 
   @override
   void initState() {
     super.initState();
-    // Nếu là password thì mặc định ban đầu sẽ ẩn text
+
     _obscureText = widget.isPassword;
   }
 
   @override
   Widget build(BuildContext context) {
-    // Định nghĩa border
     final outlineInputBorder = OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
       borderSide: const BorderSide(color: Colors.grey),
@@ -61,7 +59,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
       textInputAction: widget.textInputAction,
       onFieldSubmitted: widget.onSubmitted,
       autofocus: widget.autofocus,
-      // Sử dụng biến state nội bộ để ẩn hiện
+
       obscureText: _obscureText,
 
       keyboardType: widget.keyboardType,
@@ -73,18 +71,13 @@ class _CustomTextFieldState extends State<CustomTextField> {
             ? Icon(widget.prefixIcon, color: AppColors.primary)
             : null,
 
-        // LOGIC QUAN TRỌNG Ở ĐÂY:
-        // Nếu là password -> Hiện nút con mắt để toggle
-        // Nếu không phải -> Hiện suffixIcon do người dùng truyền (nếu có)
         suffixIcon: widget.isPassword
             ? IconButton(
                 icon: Icon(
-                  // Đổi icon dựa trên trạng thái _obscureText
                   _obscureText ? Icons.visibility_off : Icons.visibility,
                   color: AppColors.primary,
                 ),
                 onPressed: () {
-                  // Cập nhật lại giao diện khi bấm nút
                   setState(() {
                     _obscureText = !_obscureText;
                   });

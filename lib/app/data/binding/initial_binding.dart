@@ -1,4 +1,5 @@
 import 'package:blooket/app/config/network/api_client.dart';
+import 'package:blooket/app/data/service/assignment_service.dart';
 import 'package:blooket/app/data/service/auth_service.dart';
 import 'package:blooket/app/data/service/class_service.dart';
 import 'package:blooket/app/data/service/question_service.dart';
@@ -21,5 +22,9 @@ class InitialBinding extends Bindings {
       fenix: true,
     );
     Get.lazyPut<AuthService>(() => AuthService(Get.find()), fenix: true);
+    Get.lazyPut<AssignmentService>(
+      () => AssignmentService(Get.find()),
+      fenix: true,
+    );
   }
 }

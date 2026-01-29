@@ -65,45 +65,9 @@ class QuestionManagementView extends GetView<QuestionManagementController> {
                         itemBuilder: (context, index) {
                           final item = controller.questionSets[index];
                           return QuestionSetCard(
-                            // name: String?, questionCount: int?, createdAt: DateTime? từ SetModel
                             name: item.name ?? "Không có tên",
                             questionCount: item.questionCount ?? 0,
                             createdAt: item.createdAt ?? DateTime.now(),
-
-                            onAssign: () async {
-                              // classList.obs sẽ tự động cập nhật từ API thông qua fetchData() của controller
-                              if (controller.classList.isEmpty) {
-                                controller.showWarning(
-                                  "Bạn cần tạo Lớp học trước khi giao bài!",
-                                );
-                                return;
-                              }
-
-                              final r = await UiDialogs.showAssignDialog(
-                                classes: controller.classList,
-                                actionColor: controller.actionColor,
-                                title: 'GIAO BÀI TẬP',
-                                questionSetName: item.name ?? "",
-                              );
-
-                              if (r != null) {
-                                final cls = r['class'];
-                                final start = r['start'] as DateTime;
-                                final end = r['end'] as DateTime;
-
-                                final assignment = AssignmentModel(
-                                  id: '',
-                                  questionSetId: item.id,
-                                  questionSetName: item.name ?? "",
-                                  classId: cls.id,
-                                  className: cls.className,
-                                  startDate: start,
-                                  endDate: end,
-                                  createdAt: DateTime.now(),
-                                );
-                                await controller.createAssignment(assignment);
-                              }
-                            },
                             onEdit: () async {
                               controller.openDetail(item.id, item.name ?? "");
                             },

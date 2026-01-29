@@ -8,4 +8,6 @@ class AppRoutes {
   static const STUDENT_MANAGEMENT_DETAIL = '/:id';
   static const EXERCISES = '/exercises';
   static const EXERCISES_DETAIL = '/:id';
+  static const SETTINGS = '/settings';
+  static const ASSIGNMENT = '/assignment';
 }

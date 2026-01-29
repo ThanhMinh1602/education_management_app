@@ -1,3 +1,5 @@
+import 'package:blooket/app/modules/admin/assignment/bindings/assignment_binding.dart';
+import 'package:blooket/app/modules/admin/assignment/views/assignment_view.dart';
 import 'package:blooket/app/modules/user/exercises/binding/exercises_binding.dart';
 import 'package:blooket/app/modules/user/exercises/views/exercises_view.dart';
 import 'package:blooket/app/modules/user/exercises_detail/binding/exercises_detail_binding.dart';
@@ -70,6 +72,11 @@ class AppPages {
           binding: ExercisesDetailBinding(),
         ),
       ],
+    ),
+    GetPage(
+      name: AppRoutes.ASSIGNMENT,
+      page: () => const AssignmentView(),
+      binding: AssignmentBinding(),
     ),
   ];
 }

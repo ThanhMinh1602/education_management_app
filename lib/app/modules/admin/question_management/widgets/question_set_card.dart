@@ -5,7 +5,6 @@ class QuestionSetCard extends StatelessWidget {
   final String name;
   final int questionCount;
   final DateTime createdAt;
-  final VoidCallback onAssign;
   final VoidCallback onDelete;
   final VoidCallback onEdit;
   final VoidCallback onDetail;
@@ -15,7 +14,6 @@ class QuestionSetCard extends StatelessWidget {
     required this.name,
     required this.questionCount,
     required this.createdAt,
-    required this.onAssign,
     required this.onDelete,
     required this.onEdit,
     required this.onDetail,
@@ -104,12 +102,6 @@ class QuestionSetCard extends StatelessWidget {
                     color: actionButtonColor,
                     onTap: onEdit,
                     tooltip: 'Sửa',
-                  ),
-                  _buildCircleButton(
-                    icon: Icons.send_rounded,
-                    color: actionButtonColor,
-                    onTap: onAssign,
-                    tooltip: 'Giao bài',
                   ),
                 ],
               ),

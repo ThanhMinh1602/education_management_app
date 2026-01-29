@@ -2,7 +2,13 @@ import 'package:blooket/app/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 
 // 1. Định nghĩa Enum
-enum SideBarItem { userManagement, question, classManagement, settings }
+enum SideBarItem {
+  userManagement,
+  question,
+  classManagement,
+  settings,
+  assignment,
+}
 
 class SideBarWidget extends StatelessWidget {
   final SideBarItem currentItem; // Chỉ cần truyền vào item hiện tại
@@ -28,11 +34,12 @@ class SideBarWidget extends StatelessWidget {
         routeName = AppRoutes.CLASS_MANAGEMENT;
         break;
       case SideBarItem.settings:
-        routeName = '/settings';
+        routeName = AppRoutes.SETTINGS;
         break;
+      case SideBarItem.assignment:
+        routeName = AppRoutes.ASSIGNMENT;
     }
 
-    // Thực hiện chuyển trang (Dùng pushReplacement để không bị chồng Stack)
     if (routeName.isNotEmpty) {
       Navigator.of(context).pushReplacementNamed(routeName);
     }
@@ -69,6 +76,13 @@ class SideBarWidget extends StatelessWidget {
                   context,
                   SideBarItem.classManagement,
                   'Quản lý lớp học',
+                  Icons.class_outlined,
+                  Icons.class_,
+                ),
+                _buildMenuItem(
+                  context,
+                  SideBarItem.assignment,
+                  'Bài tập',
                   Icons.class_outlined,
                   Icons.class_,
                 ),

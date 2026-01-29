@@ -70,7 +70,7 @@ class ClassManagementView extends GetView<ClassManagementController> {
                             className: item.name ?? '',
                             subject: item.subject ?? '',
                             schedule: item.schedule ?? '',
-                            studentCount: item.studentCount ?? 0,
+                            studentCount: item.students?.length ?? 0,
                             onEnterClass: () => controller.enterClass(item.id),
                             onEdit: () {
                               Get.dialog(

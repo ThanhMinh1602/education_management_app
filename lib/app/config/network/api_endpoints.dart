@@ -22,4 +22,7 @@ class ApiEndpoints {
   static String toggleusertatus(String id) => "/api/user/$id/toggle-status";
   static String resetStudentPassword(String id) =>
       "/api/user/$id/reset-password";
+
+  static const String assignments = "/api/assignments";
+  static String assignmentById(String id) => "/api/assignments/$id";
 }
