@@ -43,7 +43,6 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'Flutter Demo',
       defaultTransition: Transition.noTransition,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(textTheme: GoogleFonts.paytoneOneTextTheme()),
