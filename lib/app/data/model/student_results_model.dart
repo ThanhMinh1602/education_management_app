@@ -1,72 +1,71 @@
-// import 'package:blooket/app/data/model/assignment_model.dart';
+class StudentResultsModel {
+  final String id;
+  final String studentId;
+  final String? studentName;
+  final String status; // assigned, started, submitted, missed
+  final int? score;
+  final int? totalCorrect;
+  final List<dynamic>? answers;
+  final DateTime? startedAt;
+  final DateTime? submittedAt;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
-// class StudentResultModel {
-//   final String id;
-//   final AssignmentModel? assignmentId;
-//   final String? studentId;
-//   final String? status;
-//   final double? score;
-//   final int? totalCorrect;
-//   final List<dynamic>? answers;
-//   final DateTime? createdAt;
-//   final DateTime? updatedAt;
+  StudentResultsModel({
+    required this.id,
+    required this.studentId,
+    this.studentName,
+    required this.status,
+    this.score,
+    this.totalCorrect,
+    this.answers,
+    this.startedAt,
+    this.submittedAt,
+    this.createdAt,
+    this.updatedAt,
+  });
 
-//   StudentResultModel({
-//     required this.id,
-//     this.assignmentId,
-//     this.studentId,
-//     this.status,
-//     this.score,
-//     this.totalCorrect,
-//     this.answers,
-//     this.createdAt,
-//     this.updatedAt,
-//   });
+  factory StudentResultsModel.fromJson(Map<String, dynamic> json) {
+    return StudentResultsModel(
+      id: json['id']?.toString() ?? json['_id']?.toString() ?? '',
+      studentId: json['studentId']?.toString() ?? '',
+      studentName: json['studentId'] is Map
+          ? json['studentId']['name']?.toString()
+          : null,
+      status: json['status']?.toString() ?? 'assigned',
+      score: json['score'],
+      totalCorrect: json['totalCorrect'],
+      answers: json['answers'] != null
+          ? List<dynamic>.from(json['answers'])
+          : [],
+      startedAt: json['startedAt'] != null
+          ? DateTime.tryParse(json['startedAt'].toString())
+          : null,
+      submittedAt: json['submittedAt'] != null
+          ? DateTime.tryParse(json['submittedAt'].toString())
+          : null,
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt'].toString())
+          : null,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.tryParse(json['updatedAt'].toString())
+          : null,
+    );
+  }
 
-//   factory StudentResultModel.fromJson(Map<String, dynamic> json) {
-//     return StudentResultModel(
-//       id: json['id']?.toString() ?? '',
-
-//       assignmentId:
-//           json['assignmentId'] != null &&
-//               json['assignmentId'] is Map<String, dynamic>
-//           ? AssignmentModel.fromJson(json['assignmentId'])
-//           : null,
-
-//       studentId: json['studentId']?.toString(),
-//       status: json['status']?.toString(),
-
-//       score: json['score'] != null ? (json['score'] as num).toDouble() : 0.0,
-
-//       totalCorrect: json['totalCorrect'] is int
-//           ? json['totalCorrect']
-//           : int.tryParse(json['totalCorrect']?.toString() ?? '0'),
-
-//       answers: json['answers'] != null
-//           ? List<dynamic>.from(json['answers'])
-//           : [],
-
-//       createdAt: json['createdAt'] != null
-//           ? DateTime.tryParse(json['createdAt'])
-//           : null,
-
-//       updatedAt: json['updatedAt'] != null
-//           ? DateTime.tryParse(json['updatedAt'])
-//           : null,
-//     );
-//   }
-
-//   Map<String, dynamic> toJson() {
-//     return {
-//       'id': id,
-//       'assignmentId': assignmentId?.toJson(),
-//       'studentId': studentId,
-//       'status': status,
-//       'score': score,
-//       'totalCorrect': totalCorrect,
-//       'answers': answers,
-//       'createdAt': createdAt?.toIso8601String(),
-//       'updatedAt': updatedAt?.toIso8601String(),
-//     };
-//   }
-// }
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'studentId': studentId,
+      'studentName': studentName,
+      'status': status,
+      'score': score,
+      'totalCorrect': totalCorrect,
+      'answers': answers,
+      'startedAt': startedAt?.toIso8601String(),
+      'submittedAt': submittedAt?.toIso8601String(),
+      'createdAt': createdAt?.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
+    };
+  }
+}

@@ -102,4 +102,12 @@ class AssignmentController extends BaseController {
       hideLoading();
     }
   }
+
+  /// Xem kết quả bài tập
+  void viewAssignmentResults(AssignmentModel assignment) {
+    Get.toNamed(
+      '/assignment_results/${assignment.id}',
+      arguments: {'assignment': assignment},
+    );
+  }
 }

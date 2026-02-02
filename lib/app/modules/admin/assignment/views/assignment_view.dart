@@ -132,7 +132,7 @@ class AssignmentView extends GetView<AssignmentController> {
   }
 
   DataRow _buildDataRow(AssignmentModel item) {
-    final isExpired = item.deadline.isBefore(DateTime.now()) ?? true;
+    final isExpired = item.dueDate.isBefore(DateTime.now()) ?? true;
 
     return DataRow(
       cells: [
@@ -142,7 +142,7 @@ class AssignmentView extends GetView<AssignmentController> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                item.assignmentName,
+                item.title,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               if (item.description != null)
@@ -181,7 +181,7 @@ class AssignmentView extends GetView<AssignmentController> {
               ),
               const SizedBox(width: 4),
               Text(
-                DateFormat('dd/MM HH:mm').format(item.deadline),
+                DateFormat('dd/MM HH:mm').format(item.dueDate),
                 style: TextStyle(
                   color: isExpired ? Colors.red : Colors.black87,
                 ),
@@ -194,10 +194,10 @@ class AssignmentView extends GetView<AssignmentController> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               IconButton(
-                tooltip: "Xem chi tiết tiến độ",
+                tooltip: "Xem kết quả",
                 icon: const Icon(Icons.analytics_outlined, color: Colors.blue),
                 onPressed: () {
-                  // TODO: Navigate to Detail page
+                  controller.viewAssignmentResults(item);
                 },
               ),
               IconButton(

@@ -25,4 +25,8 @@ class ApiEndpoints {
 
   static const String assignments = "/api/assignments";
   static String assignmentById(String id) => "/api/assignments/$id";
+  static String assignToStudents(String id) =>
+      "/api/assignments/$id/assign-students";
+  static String assignmentResults(String id) => "/api/assignments/$id/results";
+  static String closeAssignment(String id) => "/api/assignments/$id/close";
 }
