@@ -3,7 +3,6 @@ import 'package:blooket/app/data/model/user_model.dart';
 class ClassModel {
   final String id;
   final String? name;
-  final UserModel? teacherId;
   final int? studentCount;
   final String? schedule;
   final String? subject;
@@ -14,7 +13,6 @@ class ClassModel {
   ClassModel({
     required this.id,
     this.name,
-    this.teacherId,
     this.studentCount,
     this.schedule,
     this.subject,
@@ -40,10 +38,6 @@ class ClassModel {
       id: json['id']?.toString() ?? '',
 
       name: json['name']?.toString(),
-
-      teacherId: json['teacherId'] != null
-          ? UserModel.fromJson(json['teacherId'])
-          : null,
       schedule: json['schedule']?.toString() ?? '',
       subject: json['subject']?.toString() ?? '',
       studentCount: json['studentCount'] is int
@@ -68,7 +62,6 @@ class ClassModel {
     return {
       'id': id,
       'name': name,
-      'teacherId': teacherId,
       'studentCount': studentCount,
       'schedule': schedule,
       'subject': subject,

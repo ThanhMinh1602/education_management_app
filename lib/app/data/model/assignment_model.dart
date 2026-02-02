@@ -1,14 +1,15 @@
-import 'package:blooket/app/data/model/user_model.dart'; // Import để dùng class User/Class nếu cần
+import 'package:blooket/app/data/model/class_model.dart';
+import 'package:blooket/app/data/model/set_model.dart';
 
 class AssignmentModel {
   final String? id;
   final String? title;
   final String? description;
   final DateTime? dueDate;
-  final String? classId;
-  final String? setId; // ID bộ câu hỏi
-  final String? className; // Field phụ để hiển thị tên lớp (populate từ BE)
-  final String? setTitle; // Field phụ để hiển thị tên bộ đề (populate từ BE)
+  final ClassModel? classId;
+  final SetModel? setId;
+  final String? className;
+  final String? setTitle;
   final DateTime? createdAt;
 
   AssignmentModel({
@@ -31,12 +32,9 @@ class AssignmentModel {
       dueDate: json['dueDate'] != null
           ? DateTime.parse(json['dueDate'])
           : DateTime.now(),
-      classId: json['classId'] is Map
-          ? json['classId']['id']
-          : json['classId'], // Xử lý trường hợp BE trả về object populate
-      setId: json['setId'] is Map ? json['setId']['id'] : json['setId'],
+      classId: ClassModel.fromJson(json['classId']),
+      setId: json['setId'] is Map ? SetModel.fromJson(json['setId']) : null,
 
-      // Lấy tên lớp/bộ đề nếu BE đã populate
       className: json['classId'] is Map ? json['classId']['name'] : null,
       setTitle: json['setId'] is Map ? json['setId']['title'] : null,
 

@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:blooket/app/core/components/appbar/custom_app_bar.dart';
 import 'package:blooket/app/core/constants/app_color.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
-
 // Import các widget con đã tách ở dưới
 // import 'path/to/exercise_card.dart';
 
@@ -16,51 +14,65 @@ class ExercisesView extends StatefulWidget {
 }
 
 class _ExercisesViewState extends State<ExercisesView> {
-  
   @override
   Widget build(BuildContext context) {
+    // Lấy chiều rộng màn hình
+    double screenWidth = MediaQuery.of(context).size.width;
+
+    // Tính toán số lượng cột: Mobile (2), Tablet (3-4), Desktop (5-6)
+    int crossAxisCount = screenWidth < 600 ? 2 : (screenWidth < 1000 ? 4 : 6);
+
+    // Tính toán tỷ lệ khung hình của Card để tránh bị quá dài hoặc quá ngắn
+    double childAspectRatio = screenWidth < 600 ? 0.85 : 1.1;
+
     return Scaffold(
       backgroundColor: AppColor.secondary,
       appBar: CustomAppBar(
         title: 'Exercises',
         showBackButton: false,
-        actions: [
-          const _UserAvatar(), // Tách nhỏ phần Avatar luôn cho gọn
-        ],
+        actions: [const _UserAvatar()],
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const SizedBox(height: 20),
-          Text(
-            'Bài Tập',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Expanded(
-            child: GridView.builder(
-              itemCount: 10,
-              padding: const EdgeInsets.all(20),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 15, // Tăng khoảng cách cho thoáng
-                crossAxisSpacing: 15,
+      body: Center(
+        // Căn giữa để trên màn hình lớn không bị lệch
+        child: Container(
+          constraints: const BoxConstraints(
+            maxWidth: 1200,
+          ), // Giới hạn chiều rộng tối đa cho Desktop
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(height: 20),
+              Text(
+                'Bài Tập',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              itemBuilder: (context, index) {
-                // Truyền dữ liệu động vào đây
-                return ExerciseCard(
-                  level: 'SƠ CẤP',
-                  range: '${index * 5 + 1} - ${(index + 1) * 5}',
-                  onStart: () {
-                     Get.toNamed('${Get.currentRoute}/$index'); // Điều hướng đến trang chi tiết bài tập
+              Expanded(
+                child: GridView.builder(
+                  itemCount: 10,
+                  padding: const EdgeInsets.all(20),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    mainAxisSpacing: 15,
+                    crossAxisSpacing: 15,
+                    childAspectRatio: childAspectRatio, // Giữ card cân đối
+                  ),
+                  itemBuilder: (context, index) {
+                    return ExerciseCard(
+                      level: 'SƠ CẤP',
+                      range: '${index * 5 + 1} - ${(index + 1) * 5}',
+                      onStart: () {
+                        Get.toNamed('${Get.currentRoute}/$index');
+                      },
+                    );
                   },
-                );
-              },
-            ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

@@ -3,9 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class AssignmentModel {
   final String id;
   final String questionSetId;
-  final String questionSetName; // Lưu tên để hiển thị cho nhanh
+  final String questionSetName;
   final String classId;
-  final String className;       // Lưu tên lớp để hiển thị
+  final String className;
   final DateTime startDate;
   final DateTime endDate;
   final DateTime createdAt;
@@ -21,7 +21,6 @@ class AssignmentModel {
     required this.createdAt,
   });
 
-  // Convert to JSON để lưu lên Firestore
   Map<String, dynamic> toJson() => {
     'questionSetId': questionSetId,
     'questionSetName': questionSetName,
@@ -32,17 +31,16 @@ class AssignmentModel {
     'createdAt': FieldValue.serverTimestamp(),
   };
 
-  // Consistent mapping for local usage / persistence
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'questionSetId': questionSetId,
-        'questionSetName': questionSetName,
-        'classId': classId,
-        'className': className,
-        'startDate': startDate.toIso8601String(),
-        'endDate': endDate.toIso8601String(),
-        'createdAt': createdAt.toIso8601String(),
-      };
+    'id': id,
+    'questionSetId': questionSetId,
+    'questionSetName': questionSetName,
+    'classId': classId,
+    'className': className,
+    'startDate': startDate.toIso8601String(),
+    'endDate': endDate.toIso8601String(),
+    'createdAt': createdAt.toIso8601String(),
+  };
 
   factory AssignmentModel.fromMap(Map<String, dynamic> map) {
     return AssignmentModel(
@@ -51,9 +49,15 @@ class AssignmentModel {
       questionSetName: map['questionSetName'] ?? '',
       classId: map['classId'] ?? '',
       className: map['className'] ?? '',
-      startDate: DateTime.parse(map['startDate'] ?? DateTime.now().toIso8601String()),
-      endDate: DateTime.parse(map['endDate'] ?? DateTime.now().toIso8601String()),
-      createdAt: DateTime.parse(map['createdAt'] ?? DateTime.now().toIso8601String()),
+      startDate: DateTime.parse(
+        map['startDate'] ?? DateTime.now().toIso8601String(),
+      ),
+      endDate: DateTime.parse(
+        map['endDate'] ?? DateTime.now().toIso8601String(),
+      ),
+      createdAt: DateTime.parse(
+        map['createdAt'] ?? DateTime.now().toIso8601String(),
+      ),
     );
   }
 }

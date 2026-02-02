@@ -161,7 +161,7 @@ class AssignmentView extends GetView<AssignmentController> {
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
-              item.className ?? item.classId ?? 'Lớp không rõ',
+              item.classId?.name ?? 'Lớp học không rõ',
               style: const TextStyle(
                 color: Colors.blue,
                 fontWeight: FontWeight.bold,
@@ -170,7 +170,7 @@ class AssignmentView extends GetView<AssignmentController> {
             ),
           ),
         ),
-        DataCell(Text(item.setTitle ?? item.setId ?? 'Bộ đề không rõ')),
+        DataCell(Text(item.setId?.name ?? 'Bộ đề không rõ')),
         DataCell(
           Row(
             children: [

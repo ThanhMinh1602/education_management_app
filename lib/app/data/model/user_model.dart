@@ -1,7 +1,7 @@
 import 'package:blooket/app/data/enum/user_role.dart';
 
 class UserModel {
-  final String id; // Trường duy nhất không được null
+  final String id;
   final String? name;
   final String? username;
   final UserRole role;
@@ -13,7 +13,7 @@ class UserModel {
   final DateTime? updatedAt;
 
   UserModel({
-    required this.id, // Bắt buộc truyền id
+    required this.id,
     this.name,
     this.username,
     required this.role,
@@ -25,16 +25,15 @@ class UserModel {
     this.updatedAt,
   });
 
-  // Chuyển từ JSON sang Object với xử lý null an toàn
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['id']?.toString() ?? '', // Đảm bảo id luôn có giá trị
+      id: json['id']?.toString() ?? '',
       name: json['name'],
       username: json['username'],
       role: UserRole.fromValue(json['role']),
       isActive: json['isActive'] ?? false,
       classId: json['classId'],
-      // Ép kiểu double an toàn nếu giá trị không null
+
       avgScore: json['avgScore'] != null
           ? (json['avgScore'] as num).toDouble()
           : null,
@@ -48,7 +47,6 @@ class UserModel {
     );
   }
 
-  // Chuyển sang Map để lưu trữ cục bộ
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -64,7 +62,6 @@ class UserModel {
     };
   }
 
-  // Các Helper getters sử dụng null-safety (mặc định false nếu null)
   bool get isAdmin => role == 'admin';
   bool get isTeacher => role == 'teacher';
   bool get isStudent => role == 'student';
