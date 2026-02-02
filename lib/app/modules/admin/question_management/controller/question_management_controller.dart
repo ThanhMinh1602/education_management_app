@@ -1,12 +1,11 @@
-import 'package:blooket/app/data/model/request/create_set_request.dart';
+import 'package:blooket/app/data/model/assignment_model.dart';
+import 'package:blooket/app/data/model/class_model.dart';
+import 'package:blooket/app/data/model/request/set_request.dart';
 import 'package:blooket/app/data/model/set_model.dart';
-import 'package:blooket/app/data/service/class_service.dart';
 import 'package:blooket/app/data/service/set_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:blooket/app/core/base/base_controller.dart';
-import 'package:blooket/app/data/model/old_model/assignment_model.dart';
-import 'package:blooket/app/data/model/old_model/class_model.dart';
 
 class QuestionManagementController extends BaseController {
   final SetService _setService;
@@ -14,7 +13,6 @@ class QuestionManagementController extends BaseController {
   QuestionManagementController(this._setService);
 
   final questionSets = <SetModel>[].obs;
-  final classList = <ClassModel>[].obs;
 
   final primaryColor = const Color(0xFF909CC2);
   final actionColor = const Color(0xFFEDBBC6);
@@ -22,7 +20,6 @@ class QuestionManagementController extends BaseController {
   @override
   void onInit() {
     super.onInit();
-
     fetchData();
   }
 
@@ -58,14 +55,18 @@ class QuestionManagementController extends BaseController {
     }
   }
 
-  void openDetail(String id, String name) {
-    Get.toNamed('${Get.currentRoute}/$id');
+  Future<void> openDetail(String id, String name) async {
+    final result = await Get.toNamed('${Get.currentRoute}/$id');
+    if (result == true) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      await fetchData();
+    }
   }
 
   Future<bool> createQuestionSet(String name) async {
     showLoading();
 
-    final request = CreateSetRequest(name: name.trim());
+    final request = SetRequest(name: name.trim());
     final response = await _setService.createSet(request);
     hideLoading();
 
@@ -79,10 +80,5 @@ class QuestionManagementController extends BaseController {
       showError(response.message);
       return false;
     }
-  }
-
-  Future<bool> createAssignment(AssignmentModel assignment) async {
-    showWarning("Chức năng giao bài đang được đồng bộ Backend");
-    return false;
   }
 }

@@ -132,7 +132,7 @@ class AssignmentView extends GetView<AssignmentController> {
   }
 
   DataRow _buildDataRow(AssignmentModel item) {
-    final isExpired = item.dueDate?.isBefore(DateTime.now()) ?? true;
+    final isExpired = item.deadline.isBefore(DateTime.now()) ?? true;
 
     return DataRow(
       cells: [
@@ -142,7 +142,7 @@ class AssignmentView extends GetView<AssignmentController> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                item.title ?? 'Bài tập không tên',
+                item.assignmentName,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               if (item.description != null)
@@ -161,7 +161,7 @@ class AssignmentView extends GetView<AssignmentController> {
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
-              item.classId?.name ?? 'Lớp học không rõ',
+              item.className,
               style: const TextStyle(
                 color: Colors.blue,
                 fontWeight: FontWeight.bold,
@@ -170,7 +170,7 @@ class AssignmentView extends GetView<AssignmentController> {
             ),
           ),
         ),
-        DataCell(Text(item.setId?.name ?? 'Bộ đề không rõ')),
+        DataCell(Text(item.setName)),
         DataCell(
           Row(
             children: [
@@ -181,9 +181,7 @@ class AssignmentView extends GetView<AssignmentController> {
               ),
               const SizedBox(width: 4),
               Text(
-                DateFormat(
-                  'dd/MM HH:mm',
-                ).format(item.dueDate ?? DateTime.now()),
+                DateFormat('dd/MM HH:mm').format(item.deadline),
                 style: TextStyle(
                   color: isExpired ? Colors.red : Colors.black87,
                 ),
@@ -208,9 +206,7 @@ class AssignmentView extends GetView<AssignmentController> {
                 onPressed: () {
                   AppDialogs.showDeleteConfirm(
                     onConfirm: () {
-                      if (item.id != null) {
-                        controller.deleteAssignment(item.id!);
-                      }
+                      controller.deleteAssignment(item.id!);
                     },
                   );
                 },

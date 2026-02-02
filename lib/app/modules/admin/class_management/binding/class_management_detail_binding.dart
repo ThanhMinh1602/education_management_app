@@ -5,10 +5,7 @@ class ClassManagementDetailBinding extends Bindings {
   @override
   void dependencies() {
     Get.lazyPut<ClassManagementDetailController>(
-      () => ClassManagementDetailController(
-        Get.find(), // Lấy StudentService đã được đăng ký trong InitialBinding
-        Get.find(),
-      ),
+      () => ClassManagementDetailController(Get.find(), Get.find()),
     );
   }
 }

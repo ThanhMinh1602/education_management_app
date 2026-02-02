@@ -1,27 +1,26 @@
 import 'package:blooket/app/data/enum/question_type.dart';
-import 'package:blooket/app/data/model/set_model.dart';
 
 class QuestionModel {
   final String id;
-  final SetModel? setId;
-  final QuestionType? type;
-  final String? content;
-  final int? timeLimit;
-  final bool? isRandom;
-  final List<String>? options;
-  final List<String>? answers;
+  final String setId;
+  final QuestionType type;
+  final String content;
+  final int timeLimit;
+  final bool isRandom;
+  final List<String> options;
+  final List<String> answers;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
   QuestionModel({
     required this.id,
-    this.setId,
-    this.type,
-    this.content,
-    this.timeLimit,
-    this.isRandom,
-    this.options,
-    this.answers,
+    required this.setId,
+    required this.type,
+    required this.content,
+    required this.timeLimit,
+    required this.isRandom,
+    required this.options,
+    required this.answers,
     this.createdAt,
     this.updatedAt,
   });
@@ -29,34 +28,26 @@ class QuestionModel {
   factory QuestionModel.fromJson(Map<String, dynamic> json) {
     return QuestionModel(
       id: json['id']?.toString() ?? '',
-
-      setId: json['setId'] != null
-          ? SetModel.fromJson(Map<String, dynamic>.from(json['setId']))
-          : null,
-
+      setId: json['setId'] is Map
+          ? json['setId']['id']?.toString() ?? ''
+          : json['setId']?.toString() ?? '',
       type: QuestionType.fromValue(json['type']),
-      content: json['content'],
-
+      content: json['content']?.toString() ?? '',
       timeLimit: json['timeLimit'] is int
           ? json['timeLimit']
-          : int.tryParse(json['timeLimit']?.toString() ?? ''),
-
-      isRandom: json['isRandom'],
-
+          : int.tryParse(json['timeLimit']?.toString() ?? '0') ?? 0,
+      isRandom: json['isRandom'] == true,
       options: json['options'] != null
           ? List<String>.from(json['options'].map((x) => x.toString()))
-          : null,
-
+          : [],
       answers: json['answers'] != null
           ? List<String>.from(json['answers'].map((x) => x.toString()))
-          : null,
-
+          : [],
       createdAt: json['createdAt'] != null
-          ? DateTime.tryParse(json['createdAt'])
+          ? DateTime.tryParse(json['createdAt'].toString())
           : null,
-
       updatedAt: json['updatedAt'] != null
-          ? DateTime.tryParse(json['updatedAt'])
+          ? DateTime.tryParse(json['updatedAt'].toString())
           : null,
     );
   }
@@ -64,8 +55,8 @@ class QuestionModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'setId': setId?.toJson(),
-      'type': type,
+      'setId': setId,
+      'type': type.value,
       'content': content,
       'timeLimit': timeLimit,
       'isRandom': isRandom,

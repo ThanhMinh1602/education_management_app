@@ -1,57 +1,58 @@
-import 'package:blooket/app/data/model/class_model.dart';
-import 'package:blooket/app/data/model/set_model.dart';
-
 class AssignmentModel {
-  final String? id;
-  final String? title;
+  final String id;
+  final String assignmentName;
+  final String className;
+  final String setName;
+  final DateTime deadline;
   final String? description;
-  final DateTime? dueDate;
-  final ClassModel? classId;
-  final SetModel? setId;
-  final String? className;
-  final String? setTitle;
   final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   AssignmentModel({
     required this.id,
-    required this.title,
+    required this.assignmentName,
+    required this.className,
+    required this.setName,
+    required this.deadline,
     this.description,
-    required this.dueDate,
-    required this.classId,
-    required this.setId,
-    this.className,
-    this.setTitle,
     this.createdAt,
+    this.updatedAt,
   });
 
   factory AssignmentModel.fromJson(Map<String, dynamic> json) {
     return AssignmentModel(
+      // Chuyển đổi an toàn sang String
       id: json['id']?.toString() ?? '',
-      title: json['title'] ?? 'Bài tập không tên',
-      description: json['description'],
-      dueDate: json['dueDate'] != null
-          ? DateTime.parse(json['dueDate'])
-          : DateTime.now(),
-      classId: ClassModel.fromJson(json['classId']),
-      setId: json['setId'] is Map ? SetModel.fromJson(json['setId']) : null,
+      assignmentName: json['assignmentName']?.toString() ?? 'Bài tập không tên',
+      className: json['className']?.toString() ?? '',
+      setName: json['setName']?.toString() ?? '',
 
-      className: json['classId'] is Map ? json['classId']['name'] : null,
-      setTitle: json['setId'] is Map ? json['setId']['title'] : null,
+      deadline: json['deadLine'] != null
+          ? DateTime.tryParse(json['deadLine'].toString()) ?? DateTime.now()
+          : DateTime.now(),
+
+      description: json['description']?.toString(),
 
       createdAt: json['createdAt'] != null
-          ? DateTime.tryParse(json['createdAt'])
+          ? DateTime.tryParse(json['createdAt'].toString())
+          : null,
+
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.tryParse(json['updatedAt'].toString())
           : null,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      if (id != null) 'id': id,
-      if (title != null) 'title': title,
-      if (description != null) 'description': description,
-      if (dueDate != null) 'dueDate': dueDate?.toIso8601String(),
-      if (classId != null) 'classId': classId,
-      if (setId != null) 'setId': setId,
+      'id': id,
+      'assignmentName': assignmentName,
+      'className': className,
+      'setName': setName,
+      'deadLine': deadline.toIso8601String(),
+      'description': description,
+      'createdAt': createdAt?.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
     };
   }
 }

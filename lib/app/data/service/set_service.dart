@@ -2,7 +2,7 @@ import 'package:blooket/app/config/network/api_client.dart';
 import 'package:blooket/app/config/network/api_endpoints.dart';
 import 'package:blooket/app/data/model/set_model.dart';
 import 'package:blooket/app/data/model/response/api_response.dart';
-import 'package:blooket/app/data/model/request/create_set_request.dart';
+import 'package:blooket/app/data/model/request/set_request.dart';
 
 class SetService {
   final ApiClient _apiClient;
@@ -27,7 +27,7 @@ class SetService {
     );
   }
 
-  Future<ApiResponse<SetModel>> createSet(CreateSetRequest request) async {
+  Future<ApiResponse<SetModel>> createSet(SetRequest request) async {
     final response = await _apiClient.post(
       ApiEndpoints.sets,
       data: request.toJson(),

@@ -1,4 +1,4 @@
-import 'package:blooket/app/data/model/request/create_question_request.dart';
+import 'package:blooket/app/data/model/request/question_request.dart';
 import 'package:blooket/app/data/service/set_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -14,18 +14,20 @@ class QuestionManagementDetailController extends BaseController {
   final questions = <QuestionModel>[].obs;
   final setName = ''.obs;
   late String setId;
+  bool isDataChanged = false;
 
   final primaryColor = const Color(0xFF909CC2);
   final accentColor = const Color(0xFF88D8B0);
   final bgColor = const Color(0xFFDCD6F7);
 
   @override
-  void onInit() {
+  void onInit() async {
     super.onInit();
 
     setId = Get.parameters['id'] ?? '';
 
     if (setId.isNotEmpty) {
+      await Future.delayed(const Duration(milliseconds: 300));
       fetchQuestions();
       getSetById();
     }
@@ -69,7 +71,7 @@ class QuestionManagementDetailController extends BaseController {
       if (response.success && response.data != null) {
         questions.insert(0, response.data!);
         questions.refresh();
-
+        isDataChanged = true;
         showSuccess("Thêm câu hỏi thành công");
       } else {
         Get.snackbar(
@@ -141,6 +143,7 @@ class QuestionManagementDetailController extends BaseController {
 
       if (response.success) {
         questions.removeWhere((q) => q.id == questionId);
+        isDataChanged = true;
         showSuccess("Đã xóa câu hỏi");
       } else {
         Get.snackbar(
@@ -180,7 +183,7 @@ class QuestionManagementDetailController extends BaseController {
     try {
       final response = await _setService.getSetById(setId);
       if (response.success) {
-        setName.value = response.data?.name ?? '';
+        setName.value = response.data?.setName ?? '';
       }
     } catch (e) {
       print("Error fetching set: $e");

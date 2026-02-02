@@ -1,7 +1,7 @@
 import 'package:blooket/app/config/network/api_client.dart';
 import 'package:blooket/app/config/network/api_endpoints.dart';
 import 'package:blooket/app/data/model/question_model.dart';
-import 'package:blooket/app/data/model/request/create_question_request.dart';
+import 'package:blooket/app/data/model/request/question_request.dart';
 import 'package:blooket/app/data/model/response/api_response.dart';
 import 'package:blooket/app/data/model/response/api_response_list.dart';
 

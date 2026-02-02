@@ -1,5 +1,7 @@
 import 'package:blooket/app/config/network/api_endpoints.dart';
+import 'package:blooket/app/data/model/class_detail_model.dart';
 import 'package:blooket/app/data/model/class_model.dart';
+import 'package:blooket/app/data/model/request/class_request.dart';
 import 'package:blooket/app/data/model/response/api_response.dart';
 import 'package:blooket/app/data/model/response/api_response_list.dart';
 import 'package:blooket/app/data/service/base/base_service.dart';
@@ -19,10 +21,10 @@ class ClassService extends BaseService {
     );
   }
 
-  Future<ApiResponse<ClassModel>> createClass(ClassModel classModel) async {
+  Future<ApiResponse<ClassModel>> createClass(ClassRequest classRequest) async {
     final response = await apiClient.post(
       ApiEndpoints.classes,
-      data: classModel.toCreateBody(),
+      data: classRequest.toJson(),
     );
 
     return ApiResponse<ClassModel>.fromJson(
@@ -31,22 +33,22 @@ class ClassService extends BaseService {
     );
   }
 
-  Future<ApiResponse<ClassModel>> getClassById(String id) async {
+  Future<ApiResponse<ClassDetailModel>> getClassById(String id) async {
     final response = await apiClient.get(ApiEndpoints.classById(id));
 
-    return ApiResponse<ClassModel>.fromJson(
+    return ApiResponse<ClassDetailModel>.fromJson(
       response.data,
-      (json) => ClassModel.fromJson(json as Map<String, dynamic>),
+      (json) => ClassDetailModel.fromJson(json as Map<String, dynamic>),
     );
   }
 
   Future<ApiResponse<ClassModel>> updateClass(
-    ClassModel classModel,
+    ClassRequest classRequest,
     String id,
   ) async {
     final response = await apiClient.put(
       ApiEndpoints.classById(id),
-      data: classModel.toCreateBody(),
+      data: classRequest.toJson(),
     );
 
     return ApiResponse<ClassModel>.fromJson(

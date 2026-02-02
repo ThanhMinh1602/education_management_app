@@ -1,6 +1,6 @@
 import 'package:blooket/app/core/utils/dialogs.dart';
 import 'package:blooket/app/data/model/question_model.dart';
-import 'package:blooket/app/data/model/request/create_question_request.dart';
+import 'package:blooket/app/data/model/request/question_request.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

@@ -18,7 +18,7 @@ class StudentManagementController extends BaseController {
 
   Future<void> getAllUsers({int? page, int? limit}) async {
     showLoading();
-    final res = await _userService.getAllUsers(page: page, limit: limit);
+    final res = await _userService.getUsers(page: page, limit: limit);
     hideLoading();
     if (res.success) {
       studentList.value = res.data;

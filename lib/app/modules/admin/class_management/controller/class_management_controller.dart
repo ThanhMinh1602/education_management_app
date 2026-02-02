@@ -1,4 +1,5 @@
 import 'package:blooket/app/data/model/class_model.dart';
+import 'package:blooket/app/data/model/request/class_request.dart';
 import 'package:get/get.dart';
 import 'package:blooket/app/core/base/base_controller.dart';
 import 'package:blooket/app/data/service/class_service.dart';
@@ -15,8 +16,11 @@ class ClassManagementController extends BaseController {
     fetchClasses();
   }
 
-  void enterClass(String id) {
-    Get.toNamed('${Get.currentRoute}/$id');
+  void enterClass(String id) async {
+    final result = await Get.toNamed('${Get.currentRoute}/$id');
+    if (result == true) {
+      fetchClasses();
+    }
   }
 
   Future<void> fetchClasses() async {
@@ -35,10 +39,10 @@ class ClassManagementController extends BaseController {
     }
   }
 
-  Future<bool> createClass(ClassModel classModel) async {
+  Future<bool> createClass(ClassRequest classRequest) async {
     showLoading();
     try {
-      final res = await _classService.createClass(classModel);
+      final res = await _classService.createClass(classRequest);
       hideLoading();
       if (!res.success || res.data == null) {
         showError(res.message);
@@ -55,11 +59,11 @@ class ClassManagementController extends BaseController {
 
   Future<bool> updateClass({
     required String id,
-    required ClassModel classModel,
+    required ClassRequest classRequest,
   }) async {
     showLoading();
     try {
-      final res = await _classService.updateClass(classModel, id);
+      final res = await _classService.updateClass(classRequest, id);
       hideLoading();
       if (!res.success) {
         showError(res.message);

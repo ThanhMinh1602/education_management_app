@@ -67,10 +67,10 @@ class ClassManagementView extends GetView<ClassManagementController> {
                           final item = controller.classList[index];
 
                           return ClassCard(
-                            className: item.name ?? '',
-                            subject: item.subject ?? '',
-                            schedule: item.schedule ?? '',
-                            studentCount: item.students?.length ?? 0,
+                            className: item.classRoomName,
+                            subject: 'Chưa có',
+                            schedule: item.schedule,
+                            studentCount: item.studentCount,
                             onEnterClass: () => controller.enterClass(item.id),
                             onEdit: () {
                               Get.dialog(

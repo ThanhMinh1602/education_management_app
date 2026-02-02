@@ -28,19 +28,27 @@ class UserModel {
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['id']?.toString() ?? '',
-      name: json['name'],
-      username: json['username'],
+
+      name: json['fullName'] ?? json['name'],
+
+      username: json['userName'] ?? json['username'],
+
       role: UserRole.fromValue(json['role']),
-      isActive: json['isActive'] ?? false,
+
+      isActive: json['status'] ?? json['isActive'] ?? false,
+
       classId: json['classId'],
 
       avgScore: json['avgScore'] != null
           ? (json['avgScore'] as num).toDouble()
           : null,
+
       subject: json['subject'],
+
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'])
           : null,
+
       updatedAt: json['updatedAt'] != null
           ? DateTime.tryParse(json['updatedAt'])
           : null,
@@ -50,10 +58,11 @@ class UserModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'name': name,
-      'username': username,
+
+      'fullName': name,
+      'userName': username,
       'role': role.value,
-      'isActive': isActive,
+      'status': isActive,
       'classId': classId,
       'avgScore': avgScore,
       'subject': subject,
@@ -62,8 +71,8 @@ class UserModel {
     };
   }
 
-  bool get isAdmin => role == 'admin';
-  bool get isTeacher => role == 'teacher';
-  bool get isStudent => role == 'student';
+  bool get isAdmin => role == UserRole.admin;
+  bool get isTeacher => role == UserRole.teacher;
+  bool get isStudent => role == UserRole.student;
   bool get accountActive => isActive ?? false;
 }

@@ -4,7 +4,6 @@ import 'package:blooket/app/core/components/sidebar/side_bar.dart';
 import 'package:blooket/app/modules/admin/question_management/controller/question_management_controller.dart';
 import 'package:blooket/app/core/utils/dialogs.dart';
 import 'package:blooket/app/core/utils/ui_dialogs.dart';
-import 'package:blooket/app/data/model/old_model/assignment_model.dart';
 import 'package:blooket/app/modules/admin/question_management/widgets/question_set_card.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -65,11 +64,14 @@ class QuestionManagementView extends GetView<QuestionManagementController> {
                         itemBuilder: (context, index) {
                           final item = controller.questionSets[index];
                           return QuestionSetCard(
-                            name: item.name ?? "Không có tên",
+                            name: item.setName ?? "Không có tên",
                             questionCount: item.questionCount ?? 0,
                             createdAt: item.createdAt ?? DateTime.now(),
                             onEdit: () async {
-                              controller.openDetail(item.id, item.name ?? "");
+                              await controller.openDetail(
+                                item.id,
+                                item.setName ?? "",
+                              );
                             },
                             onDelete: () {
                               AppDialogs.showDeleteConfirm(

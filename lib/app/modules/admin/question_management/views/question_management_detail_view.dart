@@ -2,7 +2,7 @@ import 'dart:ui';
 import 'package:blooket/app/core/components/header/custom_page_header.dart';
 import 'package:blooket/app/core/utils/dialogs.dart';
 import 'package:blooket/app/core/utils/ui_dialogs.dart';
-import 'package:blooket/app/data/model/request/create_question_request.dart';
+import 'package:blooket/app/data/model/request/question_request.dart';
 import 'package:blooket/app/modules/admin/question_management/views/question_dialog_view.dart';
 import 'package:blooket/app/modules/admin/question_management/widgets/question_list_item.dart';
 import 'package:flutter/material.dart';
@@ -148,7 +148,7 @@ class QuestionManagementDetailView
           const SizedBox(height: 24),
           CustomActionButton(
             width: double.infinity,
-            onTap: () => Get.back(),
+            onTap: () => Get.back<bool>(result: controller.isDataChanged),
             icon: Icons.save_outlined,
             text: 'SAVE',
           ),

@@ -13,7 +13,12 @@ class ClassManagementDetailView
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: controller.bgColor,
-      appBar: const CustomAppBar(title: 'Chi Tiết Lớp Học'),
+      appBar: CustomAppBar(
+        title: 'Chi Tiết Lớp Học',
+        onLeadingPressed: () {
+          Get.back(result: controller.isDataChanged);
+        },
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(40.0),
         child: Column(
@@ -77,79 +82,81 @@ class ClassManagementDetailView
   }
 
   Widget _buildDataTable(BuildContext context) {
-    return DataTable(
-      headingRowColor: MaterialStateProperty.all(Colors.transparent),
-      dataRowColor: MaterialStateProperty.all(Colors.transparent),
-      columnSpacing: 30,
-      horizontalMargin: 10,
-      columns: [
-        _buildHeader('Họ và tên'),
-        _buildHeader('Username'),
-        _buildHeader('Điểm TB'),
-        _buildHeader('Hành động', alignEnd: true),
-      ],
-      rows: controller.studentsInClass.map((user) {
-        return DataRow(
-          cells: [
-            DataCell(
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 16,
-                    backgroundColor: controller.primaryColor.withOpacity(0.2),
-                    child: Text(
-                      user.name ?? '',
-                      style: TextStyle(
-                        color: controller.primaryColor,
-                        fontWeight: FontWeight.bold,
+    return Obx(
+      () => DataTable(
+        headingRowColor: MaterialStateProperty.all(Colors.transparent),
+        dataRowColor: MaterialStateProperty.all(Colors.transparent),
+        columnSpacing: 30,
+        horizontalMargin: 10,
+        columns: [
+          _buildHeader('Họ và tên'),
+          _buildHeader('Username'),
+          _buildHeader('Điểm TB'),
+          _buildHeader('Hành động', alignEnd: true),
+        ],
+        rows: controller.studentsInClass.map((user) {
+          return DataRow(
+            cells: [
+              DataCell(
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 16,
+                      backgroundColor: controller.primaryColor.withOpacity(0.2),
+                      child: Text(
+                        user.name ?? '',
+                        style: TextStyle(
+                          color: controller.primaryColor,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    user.name ?? '',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
+                    const SizedBox(width: 10),
+                    Text(
+                      user.name ?? '',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            DataCell(
-              Text(
-                user.username ?? '',
-                style: const TextStyle(color: Colors.grey),
+              DataCell(
+                Text(
+                  user.username ?? '',
+                  style: const TextStyle(color: Colors.grey),
+                ),
               ),
-            ),
-            DataCell(_buildScoreBadge(user.avgScore ?? 0)),
-            DataCell(
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.person_remove_rounded,
-                      color: Colors.redAccent,
+              DataCell(_buildScoreBadge(user.avgScore ?? 0)),
+              DataCell(
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.person_remove_rounded,
+                        color: Colors.redAccent,
+                      ),
+                      tooltip: "Xóa khỏi lớp",
+                      onPressed: () {
+                        AppDialogs.showDeleteConfirm(
+                          onConfirm: () async {
+                            await Future.delayed(
+                              const Duration(milliseconds: 300),
+                            );
+                            await controller.removeStudentFromClass(user.id);
+                          },
+                        );
+                      },
                     ),
-                    tooltip: "Xóa khỏi lớp",
-                    onPressed: () {
-                      AppDialogs.showDeleteConfirm(
-                        onConfirm: () async {
-                          await Future.delayed(
-                            const Duration(milliseconds: 300),
-                          );
-                          await controller.removeStudentFromClass(user.id);
-                        },
-                      );
-                    },
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
-        );
-      }).toList(),
+            ],
+          );
+        }).toList(),
+      ),
     );
   }
 

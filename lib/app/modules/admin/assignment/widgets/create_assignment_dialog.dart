@@ -127,7 +127,7 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
                             return DropdownMenuItem<String>(
                               value: e.id,
                               child: Text(
-                                e.name ?? 'Lớp không rõ',
+                                e.classRoomName,
                                 style: const TextStyle(fontSize: 16),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -151,7 +151,7 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
                                 (e) => DropdownMenuItem(
                                   value: e.id,
                                   child: Text(
-                                    e.name ?? '',
+                                    e.setName ?? '',
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),

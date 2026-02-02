@@ -10,7 +10,7 @@ class UserService {
 
   UserService(this._apiClient);
 
-  Future<ApiResponseList<UserModel>> getAllUsers({
+  Future<ApiResponseList<UserModel>> getUsers({
     String? classId,
     String? role,
     int? page,
