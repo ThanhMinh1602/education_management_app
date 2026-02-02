@@ -37,9 +37,9 @@ class AssignmentResultsController extends BaseController {
         skip: skip,
       );
       if (res.success) {
-        resultsList.value = res.data ?? [];
+        resultsList.value = res.data;
       } else {
-        showError(res.message ?? 'Lỗi khi tải kết quả');
+        showError(res.message);
       }
     } catch (e) {
       showError('Lỗi: $e');

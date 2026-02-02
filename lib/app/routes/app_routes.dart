@@ -1,5 +1,6 @@
 class AppRoutes {
   static const LOGIN = '/login';
+  static const USER_DASHBOARD = '/user_dashboard';
   static const QUESTION_MANAGEMENT = '/question_management';
   static const QUESTION_MANAGEMENT_DETAIL = '/:id';
   static const CLASS_MANAGEMENT = '/class_management';

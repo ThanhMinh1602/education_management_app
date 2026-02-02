@@ -6,6 +6,8 @@ import 'package:blooket/app/modules/user/assignments/binding/assignments_binding
 import 'package:blooket/app/modules/user/assignments/views/assignments_view.dart';
 import 'package:blooket/app/modules/user/do_assignment/binding/do_assignment_binding.dart';
 import 'package:blooket/app/modules/user/do_assignment/views/do_assignment_view.dart';
+import 'package:blooket/app/modules/user/user_dashboard/binding/user_dashboard_binding.dart';
+import 'package:blooket/app/modules/user/user_dashboard/views/user_dashboard_view.dart';
 import 'package:blooket/app/modules/user/exercises/binding/exercises_binding.dart';
 import 'package:blooket/app/modules/user/exercises/views/exercises_view.dart';
 import 'package:blooket/app/modules/user/exercises_detail/binding/exercises_detail_binding.dart';
@@ -34,6 +36,11 @@ class AppPages {
       name: AppRoutes.LOGIN,
       page: () => const LoginView(),
       binding: AuthBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.USER_DASHBOARD,
+      page: () => const UserDashboardView(),
+      binding: UserDashboardBinding(),
     ),
     GetPage(
       name: AppRoutes.STUDENT_MANAGEMENT,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:blooket/app/core/constants/app_color.dart';
 import '../controller/assignments_controller.dart';
 
 class AssignmentFilter extends GetView<AssignmentsController> {
@@ -13,9 +14,10 @@ class AssignmentFilter extends GetView<AssignmentsController> {
         children: controller.filterOptions
             .map(
               (status) => Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: Obx(
-                  () => FilterChip(
+                padding: const EdgeInsets.only(right: 10),
+                child: Obx(() {
+                  final isSelected = controller.selectedStatus.value == status;
+                  return FilterChip(
                     label: Text(
                       status == 'all'
                           ? 'Tất cả'
@@ -27,12 +29,19 @@ class AssignmentFilter extends GetView<AssignmentsController> {
                           ? 'Đã nộp'
                           : 'Quá hạn',
                     ),
-                    selected: controller.selectedStatus.value == status,
+                    selected: isSelected,
                     onSelected: (_) => controller.changeFilter(status),
-                    selectedColor: Colors.blue[100],
-                    backgroundColor: Colors.grey[200],
-                  ),
-                ),
+                    selectedColor: AppColor.pink.withOpacity(0.8),
+                    backgroundColor: Colors.grey[300],
+                    labelStyle: TextStyle(
+                      color: isSelected ? Colors.white : Colors.black87,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    side: BorderSide(
+                      color: isSelected ? AppColor.pink : Colors.transparent,
+                    ),
+                  );
+                }),
               ),
             )
             .toList(),

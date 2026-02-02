@@ -38,7 +38,7 @@ class QuestionCard extends GetView<DoAssignmentController> {
             const SizedBox(height: 12),
             // Nội dung câu hỏi
             Text(
-              question.content ?? 'Câu hỏi không tên',
+              question.content,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
@@ -62,16 +62,14 @@ class QuestionCard extends GetView<DoAssignmentController> {
 
       return Column(
         children: [
-          if (question.options != null && question.options!.isNotEmpty)
+          if (question.options.isNotEmpty)
             Column(
-              children: question.options!.asMap().entries.map((entry) {
-                final index = entry.key;
+              children: question.options.asMap().entries.map((entry) {
                 final option = entry.value;
                 final isSelected = selectedAnswer == option;
 
                 return GestureDetector(
-                  onTap: () =>
-                      controller.selectAnswer(question.id ?? '', option),
+                  onTap: () => controller.selectAnswer(question.id, option),
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 10),
                     padding: const EdgeInsets.all(16),
@@ -141,7 +139,7 @@ class QuestionCard extends GetView<DoAssignmentController> {
       ),
       maxLines: 3,
       onChanged: (value) {
-        controller.selectAnswer(question.id ?? '', value);
+        controller.selectAnswer(question.id, value);
       },
     );
   }

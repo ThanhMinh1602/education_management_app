@@ -114,7 +114,7 @@ class AuthController extends BaseController {
         break;
       case UserRole.student:
       default:
-        Get.offAllNamed(AppRoutes.EXERCISES);
+        Get.offAllNamed(AppRoutes.USER_DASHBOARD);
         break;
     }
   }

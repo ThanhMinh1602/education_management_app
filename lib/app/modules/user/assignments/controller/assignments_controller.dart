@@ -28,10 +28,10 @@ class AssignmentsController extends BaseController {
         status: status,
       );
       if (res.success) {
-        assignmentList.value = res.data ?? [];
+        assignmentList.value = res.data;
         filterAssignments();
       } else {
-        showError(res.message ?? 'Lỗi khi tải bài tập');
+        showError(res.message);
       }
     } catch (e) {
       showError('Lỗi: $e');

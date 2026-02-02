@@ -2,15 +2,13 @@ import 'dart:async';
 import 'package:blooket/app/core/base/base_controller.dart';
 import 'package:blooket/app/data/model/assignment_model.dart';
 import 'package:blooket/app/data/model/question_model.dart';
-import 'package:blooket/app/data/service/assignment_service.dart';
 import 'package:blooket/app/data/service/question_service.dart';
 import 'package:get/get.dart';
 
 class DoAssignmentController extends BaseController {
-  final AssignmentService _assignmentService;
   final QuestionService _questionService;
 
-  DoAssignmentController(this._assignmentService, this._questionService);
+  DoAssignmentController(this._questionService);
 
   // Data
   final assignment = Rxn<AssignmentModel>();
@@ -48,11 +46,11 @@ class DoAssignmentController extends BaseController {
       // Gọi API để lấy câu hỏi từ setId
       final res = await _questionService.getQuestions(setId: setId);
       if (res.success) {
-        questions.value = res.data ?? [];
+        questions.value = res.data;
         // Update trạng thái bài tập thành 'started'
         updateAssignmentStatus('started');
       } else {
-        showError(res.message ?? 'Lỗi tải câu hỏi');
+        showError(res.message);
       }
     } catch (e) {
       showError('Lỗi: $e');
@@ -130,22 +128,20 @@ class DoAssignmentController extends BaseController {
       for (var question in questions) {
         final selectedAnswer = answers[question.id];
         if (selectedAnswer != null &&
-            question.answers?.contains(selectedAnswer) == true) {
+            question.answers.contains(selectedAnswer)) {
           correctCount++;
         }
       }
 
       final score = (correctCount / questions.length * 100).toInt();
 
-      // Chuẩn bị dữ liệu để submit
-      final submissionData = {
-        'assignmentId': assignment.id,
-        'answers': answers,
-        'score': score,
-        'totalCorrect': correctCount,
-      };
-
       // TODO: Call API to submit assignment
+      // final submissionData = {
+      //   'assignmentId': assignment.id,
+      //   'answers': answers,
+      //   'score': score,
+      //   'totalCorrect': correctCount,
+      // };
       // await _assignmentService.submitAssignment(submissionData);
 
       showSuccess('Nộp bài thành công! Điểm: $score/100');
