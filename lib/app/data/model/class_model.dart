@@ -1,82 +1,59 @@
+import 'user_model.dart';
+
 class ClassModel {
   final String id;
-  final String classRoomName;
-  final String setName;
-  final String schedule;
+  final String name;
+  final String code;
+  final String description;
+  final String thumbnail;
+
+  // Teacher có thể null hoặc object (dựa vào logic populate)
+  final UserModel? teacher;
+
   final int studentCount;
-  final String? teacherName;
+  final List<UserModel> students;
+  final bool isActive;
   final DateTime? createdAt;
-  final DateTime? updatedAt;
 
   ClassModel({
     required this.id,
-    required this.classRoomName,
-    required this.setName,
-    required this.schedule,
-    required this.studentCount,
-    this.teacherName,
+    required this.name,
+    required this.code,
+    this.description = '',
+    this.thumbnail = '',
+    this.teacher,
+    this.studentCount = 0,
+    this.students = const [],
+    required this.isActive,
     this.createdAt,
-    this.updatedAt,
   });
 
   factory ClassModel.fromJson(Map<String, dynamic> json) {
     return ClassModel(
-      id: json['id']?.toString() ?? '',
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      code: json['code'] ?? '',
+      description: json['description'] ?? '',
+      thumbnail: json['thumbnail'] ?? '',
 
-      classRoomName: json['classRoomName']?.toString() ?? '',
+      // Check kỹ nếu teacher là object hay null
+      teacher:
+          (json['teacher'] != null &&
+              json['teacher'] is Map<String, dynamic> &&
+              json['teacher']['name'] != null)
+          ? UserModel.fromJson(json['teacher'])
+          : null,
 
-      setName: json['setName']?.toString() ?? '',
-
-      schedule: json['schedule']?.toString() ?? '',
-
-      studentCount: json['studentCount'] is int
-          ? json['studentCount']
-          : int.tryParse(json['studentCount']?.toString() ?? '0') ?? 0,
-
-      teacherName: json['teacherName']?.toString(),
-
+      studentCount: json['studentCount'] ?? 0,
+      students: json['students'] != null
+          ? (json['students'] as List)
+                .map((e) => UserModel.fromJson(e))
+                .toList()
+          : [],
+      isActive: json['isActive'] ?? false,
       createdAt: json['createdAt'] != null
-          ? DateTime.tryParse(json['createdAt'].toString())
+          ? DateTime.parse(json['createdAt'])
           : null,
-
-      updatedAt: json['updatedAt'] != null
-          ? DateTime.tryParse(json['updatedAt'].toString())
-          : null,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'classRoomName': classRoomName,
-      'setName': setName,
-      'schedule': schedule,
-      'studentCount': studentCount,
-      'teacherName': teacherName,
-      'createdAt': createdAt?.toIso8601String(),
-      'updatedAt': updatedAt?.toIso8601String(),
-    };
-  }
-
-  ClassModel copyWith({
-    String? id,
-    String? classRoomName,
-    String? setName,
-    String? schedule,
-    int? studentCount,
-    String? teacherName,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  }) {
-    return ClassModel(
-      id: id ?? this.id,
-      classRoomName: classRoomName ?? this.classRoomName,
-      setName: setName ?? this.setName,
-      schedule: schedule ?? this.schedule,
-      studentCount: studentCount ?? this.studentCount,
-      teacherName: teacherName ?? this.teacherName,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 }

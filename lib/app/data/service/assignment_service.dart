@@ -1,30 +1,30 @@
-import 'package:blooket/app/config/network/api_client.dart';
 import 'package:blooket/app/config/network/api_endpoints.dart';
 import 'package:blooket/app/data/model/assignment_model.dart';
+import 'package:blooket/app/data/model/request/assignments/create_assignment_request.dart';
+import 'package:blooket/app/data/model/request/assignments/submit_assignment_request.dart';
+import 'package:blooket/app/data/model/request/assignments/update_assignment_request.dart';
+import 'package:blooket/app/data/model/submission_model.dart';
 import 'package:blooket/app/data/model/response/api_response.dart';
 import 'package:blooket/app/data/model/response/api_response_list.dart';
-import 'package:blooket/app/data/model/student_results_model.dart';
+import 'package:blooket/app/data/service/base/base_service.dart';
 
-class AssignmentService {
-  final ApiClient _apiClient;
+class AssignmentService extends BaseService {
+  AssignmentService(super.apiClient);
 
-  AssignmentService(this._apiClient);
-
-  /// Lấy danh sách bài tập của giáo viên
   Future<ApiResponseList<AssignmentModel>> getAssignments({
+    int page = 1,
+    int limit = 10,
+    String? keyword,
     String? classId,
-    String? status,
-    int? page,
-    int? limit,
   }) async {
     final queryParams = {
-      if (classId != null) 'classId': classId,
-      if (status != null) 'status': status,
-      if (page != null) 'page': page,
-      if (limit != null) 'limit': limit,
+      'page': page,
+      'limit': limit,
+      if (keyword != null && keyword.isNotEmpty) 'keyword': keyword,
+      if (classId != null && classId.isNotEmpty) 'classId': classId,
     };
 
-    final response = await _apiClient.get(
+    final response = await apiClient.get(
       ApiEndpoints.assignments,
       query: queryParams,
     );
@@ -35,26 +35,8 @@ class AssignmentService {
     );
   }
 
-  /// Lấy danh sách bài tập của sinh viên
-  Future<ApiResponseList<AssignmentModel>> getStudentAssignments({
-    String? status,
-  }) async {
-    final queryParams = {if (status != null) 'status': status};
-
-    final response = await _apiClient.get(
-      '/api/assignments/my-assignments',
-      query: queryParams,
-    );
-
-    return ApiResponseList<AssignmentModel>.fromJson(
-      response.data,
-      (json) => AssignmentModel.fromJson(json as Map<String, dynamic>),
-    );
-  }
-
-  /// Lấy chi tiết bài tập
-  Future<ApiResponse<AssignmentModel>> getAssignmentById(String id) async {
-    final response = await _apiClient.get(ApiEndpoints.assignmentById(id));
+  Future<ApiResponse<AssignmentModel>> getAssignmentDetail(String id) async {
+    final response = await apiClient.get(ApiEndpoints.assignmentDetail(id));
 
     return ApiResponse<AssignmentModel>.fromJson(
       response.data,
@@ -62,25 +44,12 @@ class AssignmentService {
     );
   }
 
-  /// Tạo bài tập mới (Giao bài)
-  Future<ApiResponse<AssignmentModel>> createAssignment({
-    required String title,
-    required String description,
-    required String classId,
-    required String setId,
-    required DateTime dueDate,
-  }) async {
-    final data = {
-      'title': title,
-      'description': description,
-      'classId': classId,
-      'setId': setId,
-      'dueDate': dueDate.toIso8601String(),
-    };
-
-    final response = await _apiClient.post(
+  Future<ApiResponse<AssignmentModel>> createAssignment(
+    CreateAssignmentRequest request,
+  ) async {
+    final response = await apiClient.post(
       ApiEndpoints.assignments,
-      data: data,
+      data: request.toJson(),
     );
 
     return ApiResponse<AssignmentModel>.fromJson(
@@ -89,16 +58,13 @@ class AssignmentService {
     );
   }
 
-  /// Giao bài tập cho sinh viên cụ thể
-  Future<ApiResponse<AssignmentModel>> assignToStudents({
-    required String assignmentId,
-    required List<String> studentIds,
-  }) async {
-    final data = {'studentIds': studentIds};
-
-    final response = await _apiClient.post(
-      ApiEndpoints.assignToStudents(assignmentId),
-      data: data,
+  Future<ApiResponse<AssignmentModel>> updateAssignment(
+    String id,
+    UpdateAssignmentRequest request,
+  ) async {
+    final response = await apiClient.put(
+      ApiEndpoints.assignmentDetail(id),
+      data: request.toJson(),
     );
 
     return ApiResponse<AssignmentModel>.fromJson(
@@ -107,69 +73,50 @@ class AssignmentService {
     );
   }
 
-  /// Cập nhật bài tập
-  Future<ApiResponse<AssignmentModel>> updateAssignment({
-    required String id,
-    required String title,
-    String? description,
-    DateTime? dueDate,
-  }) async {
-    final data = {
-      'title': title,
-      if (description != null) 'description': description,
-      if (dueDate != null) 'dueDate': dueDate.toIso8601String(),
-    };
+  Future<ApiResponse<bool>> deleteAssignment(String id) async {
+    final response = await apiClient.delete(ApiEndpoints.assignmentDetail(id));
 
-    final response = await _apiClient.put(
-      ApiEndpoints.assignmentById(id),
-      data: data,
+    return ApiResponse<bool>.fromJson(response.data, (json) => true);
+  }
+
+  Future<ApiResponse<SubmissionModel>> submitAssignment(
+    String id,
+    SubmitAssignmentRequest request,
+  ) async {
+    final response = await apiClient.post(
+      ApiEndpoints.submitAssignment(id),
+      data: request.toJson(),
     );
 
-    return ApiResponse<AssignmentModel>.fromJson(
+    return ApiResponse<SubmissionModel>.fromJson(
       response.data,
-      (json) => AssignmentModel.fromJson(json as Map<String, dynamic>),
+      (json) => SubmissionModel.fromJson(json as Map<String, dynamic>),
     );
   }
 
-  /// Đóng bài tập
-  Future<ApiResponse<AssignmentModel>> closeAssignment(String id) async {
-    final response = await _apiClient.put(ApiEndpoints.closeAssignment(id));
+  Future<ApiResponseList<SubmissionModel>> getMyHistory(
+    String assignmentId,
+  ) async {
+    final response = await apiClient.get(
+      ApiEndpoints.submissionHistory(assignmentId),
+    );
 
-    return ApiResponse<AssignmentModel>.fromJson(
+    return ApiResponseList<SubmissionModel>.fromJson(
       response.data,
-      (json) => AssignmentModel.fromJson(json as Map<String, dynamic>),
+      (json) => SubmissionModel.fromJson(json as Map<String, dynamic>),
     );
   }
 
-  /// Xóa bài tập
-  Future<ApiResponse<AssignmentModel>> deleteAssignment(String id) async {
-    final response = await _apiClient.delete(ApiEndpoints.assignmentById(id));
-
-    return ApiResponse<AssignmentModel>.fromJson(
-      response.data,
-      (json) => AssignmentModel.fromJson(json as Map<String, dynamic>),
-    );
-  }
-
-  /// Lấy kết quả chi tiết của bài tập (cho giáo viên)
-  Future<ApiResponseList<StudentResultsModel>> getAssignmentResults(
-    String assignmentId, {
-    int? limit,
-    int? skip,
-  }) async {
-    final queryParams = {
-      if (limit != null) 'limit': limit,
-      if (skip != null) 'skip': skip,
-    };
-
-    final response = await _apiClient.get(
-      ApiEndpoints.assignmentResults(assignmentId),
-      query: queryParams,
+  Future<ApiResponseList<SubmissionModel>> getClassSubmissions(
+    String assignmentId,
+  ) async {
+    final response = await apiClient.get(
+      ApiEndpoints.assignmentSubmissions(assignmentId),
     );
 
-    return ApiResponseList<StudentResultsModel>.fromJson(
+    return ApiResponseList<SubmissionModel>.fromJson(
       response.data,
-      (json) => StudentResultsModel.fromJson(json as Map<String, dynamic>),
+      (json) => SubmissionModel.fromJson(json as Map<String, dynamic>),
     );
   }
 }

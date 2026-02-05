@@ -1,4 +1,4 @@
-import 'package:blooket/app/data/model/request/register_request.dart';
+import 'package:blooket/app/data/model/request/auth/register_request.dart';
 import 'package:blooket/app/data/model/user_model.dart';
 import 'package:get/get.dart';
 

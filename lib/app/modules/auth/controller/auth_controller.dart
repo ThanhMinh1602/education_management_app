@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:blooket/app/core/base/base_controller.dart';
 import 'package:blooket/app/core/utils/logger.dart';
 import 'package:blooket/app/data/enum/user_role.dart';
-import 'package:blooket/app/data/model/request/login_request.dart';
+import 'package:blooket/app/data/model/request/auth/login_request.dart';
 import 'package:blooket/app/data/model/response/api_response.dart';
 import 'package:blooket/app/data/model/response/auth_response_model.dart';
 import 'package:blooket/app/data/model/user_model.dart';

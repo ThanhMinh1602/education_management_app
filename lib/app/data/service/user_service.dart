@@ -1,29 +1,27 @@
-import 'package:blooket/app/config/network/api_client.dart';
 import 'package:blooket/app/config/network/api_endpoints.dart';
-import 'package:blooket/app/data/model/request/register_request.dart';
+import 'package:blooket/app/data/model/request/auth/register_request.dart';
+import 'package:blooket/app/data/model/student_progress_model.dart';
+import 'package:blooket/app/data/model/user_model.dart';
 import 'package:blooket/app/data/model/response/api_response.dart';
 import 'package:blooket/app/data/model/response/api_response_list.dart';
-import 'package:blooket/app/data/model/user_model.dart';
+import 'package:blooket/app/data/service/base/base_service.dart';
 
-class UserService {
-  final ApiClient _apiClient;
+class UserService extends BaseService {
+  UserService(super.apiClient);
 
-  UserService(this._apiClient);
-
-  Future<ApiResponseList<UserModel>> getUsers({
-    String? classId,
-    String? role,
-    int? page,
-    int? limit,
+  Future<ApiResponseList<UserModel>> getStudents({
+    String? keyword,
+    int page = 1,
+    int limit = 10,
   }) async {
     final queryParams = {
-      if (classId != null) 'classId': classId,
-      if (role != null) 'role': role,
-      if (page != null) 'page': page,
-      if (limit != null) 'limit': limit,
+      if (keyword != null && keyword.isNotEmpty) 'keyword': keyword,
+      'page': page,
+      'limit': limit,
     };
-    final response = await _apiClient.get(
-      ApiEndpoints.user,
+
+    final response = await apiClient.get(
+      ApiEndpoints.users,
       query: queryParams,
     );
 
@@ -33,21 +31,21 @@ class UserService {
     );
   }
 
-  Future<ApiResponse<UserModel>> createUser(
-    RegisterRequest registerRequest,
-  ) async {
-    final response = await _apiClient.post(
-      ApiEndpoints.user,
-      data: registerRequest.toJson(),
-    );
+  Future<ApiResponse<UserModel>> getUserDetail(String id) async {
+    final response = await apiClient.get(ApiEndpoints.userDetail(id));
+
     return ApiResponse<UserModel>.fromJson(
       response.data,
       (json) => UserModel.fromJson(json as Map<String, dynamic>),
     );
   }
 
-  Future<ApiResponse<UserModel>> deleteUser(String id) async {
-    final response = await _apiClient.delete('${ApiEndpoints.user}/$id');
+  Future<ApiResponse<UserModel>> createStudent(RegisterRequest request) async {
+    final response = await apiClient.post(
+      ApiEndpoints.users,
+      data: request.toJson(),
+    );
+
     return ApiResponse<UserModel>.fromJson(
       response.data,
       (json) => UserModel.fromJson(json as Map<String, dynamic>),
@@ -57,67 +55,40 @@ class UserService {
   Future<ApiResponse<UserModel>> updateUser(
     String id, {
     String? name,
-    String? username,
-    String? role,
     bool? isActive,
-    String? classId,
-    int? avgScore,
-    String? subject,
+    String? newPassword,
   }) async {
     final data = {
       if (name != null) 'name': name,
-      if (username != null) 'username': username,
-      if (role != null) 'role': role,
       if (isActive != null) 'isActive': isActive,
-      if (classId != null) 'classId': classId,
-      if (avgScore != null) 'avgScore': avgScore,
-      if (subject != null) 'subject': subject,
+      if (newPassword != null) 'password': newPassword,
     };
-    final response = await _apiClient.put(
-      '${ApiEndpoints.user}/$id',
+
+    final response = await apiClient.put(
+      ApiEndpoints.userDetail(id),
       data: data,
     );
+
     return ApiResponse<UserModel>.fromJson(
       response.data,
       (json) => UserModel.fromJson(json as Map<String, dynamic>),
     );
   }
 
-  Future<ApiResponse<UserModel>> resetPassword(String id) async {
-    final response = await _apiClient.put(
-      ApiEndpoints.resetStudentPassword(id),
-    );
-    return ApiResponse<UserModel>.fromJson(
-      response.data,
-      (json) => UserModel.fromJson(json as Map<String, dynamic>),
-    );
+  Future<ApiResponse<bool>> deleteUser(String id) async {
+    final response = await apiClient.delete(ApiEndpoints.userDetail(id));
+
+    return ApiResponse<bool>.fromJson(response.data, (json) => true);
   }
 
-  Future<ApiResponse<UserModel>> addStudentToClass(
-    String studentId,
-    String classId,
+  Future<ApiResponse<StudentProgressModel>> getStudentProgress(
+    String id,
   ) async {
-    final response = await _apiClient.put(
-      ApiEndpoints.addStudentToClass(classId),
-      data: {'studentId': studentId},
-    );
-    return ApiResponse<UserModel>.fromJson(
-      response.data,
-      (json) => UserModel.fromJson(json as Map<String, dynamic>),
-    );
-  }
+    final response = await apiClient.get(ApiEndpoints.userProgress(id));
 
-  Future<ApiResponse<Map<String, dynamic>>> removeStudentFromClass(
-    String studentId,
-    String classId,
-  ) async {
-    final response = await _apiClient.put(
-      ApiEndpoints.removeStudentFromClass(classId),
-      data: {'studentId': studentId},
-    );
-    return ApiResponse<Map<String, dynamic>>.fromJson(
+    return ApiResponse<StudentProgressModel>.fromJson(
       response.data,
-      (json) => json as Map<String, dynamic>,
+      (json) => StudentProgressModel.fromJson(json as Map<String, dynamic>),
     );
   }
 }

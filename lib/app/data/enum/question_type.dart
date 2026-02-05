@@ -1,22 +1,19 @@
 enum QuestionType {
-  // 1. Khai báo các trường hợp (Cases)
-  multipleChoice('Trắc nghiệm', 'multipleChoice'),
-  trueFalse('Đúng / Sai', 'trueFalse'),
-  typing('Nhập câu trả lời', 'typing'),
-  rearrange('Sắp xếp câu', 'rearrange');
+  multipleChoice('MULTIPLE_CHOICE'),
+  arrange('ARRANGE'),
+  trueFalse('TRUE_FALSE'),
+  typing('TYPING'),
+  unknown('UNKNOWN');
 
-  // 2. Khai báo thuộc tính
-  final String title;
   final String value;
+  const QuestionType(this.value);
 
-  // 3. Constructor
-  const QuestionType(this.title, this.value);
-
-  // 4. Hàm lấy Enum từ String value
-  static QuestionType fromValue(String? value) {
+  factory QuestionType.fromJson(String value) {
     return QuestionType.values.firstWhere(
-      (element) => element.value == value,
-      orElse: () => QuestionType.multipleChoice,
+      (e) => e.value == value,
+      orElse: () => QuestionType.unknown,
     );
   }
+
+  String toJson() => value;
 }

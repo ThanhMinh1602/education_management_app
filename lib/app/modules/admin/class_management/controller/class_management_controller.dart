@@ -1,5 +1,5 @@
 import 'package:blooket/app/data/model/class_model.dart';
-import 'package:blooket/app/data/model/request/class_request.dart';
+import 'package:blooket/app/data/model/request/class/class_request.dart';
 import 'package:get/get.dart';
 import 'package:blooket/app/core/base/base_controller.dart';
 import 'package:blooket/app/data/service/class_service.dart';

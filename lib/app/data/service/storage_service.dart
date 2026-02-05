@@ -8,12 +8,10 @@ class StorageService {
   static const String _accessTokenKey = 'accessToken';
   static const String _refreshTokenKey = 'refreshToken';
 
-  // Lưu thông tin người dùng
   Future<void> saveUser(UserModel user) async {
     await _box.write(_userKey, user.toJson());
   }
 
-  // Lưu bộ đôi Token
   Future<void> saveTokens({
     required String access,
     required String refresh,
@@ -24,7 +22,6 @@ class StorageService {
     ]);
   }
 
-  // Đọc thông tin User
   UserModel? getUser() {
     final data = _box.read(_userKey);
     if (data != null) {
@@ -33,13 +30,10 @@ class StorageService {
     return null;
   }
 
-  // Lấy Access Token (Dùng cho ApiClient)
   String? getAccessToken() => _box.read(_accessTokenKey);
 
-  // Lấy Refresh Token
   String? getRefreshToken() => _box.read(_refreshTokenKey);
 
-  // Xóa toàn bộ phiên làm việc (Logout)
   Future<void> clearSession() async {
     await Future.wait([
       _box.remove(_userKey),

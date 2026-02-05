@@ -1,32 +1,86 @@
 class ApiEndpoints {
-  static const String register = "/api/auth/register";
-  static const String login = "/api/auth/login";
-  static const String me = "/api/auth/me";
+  // Base URL (Nên lấy từ file .env hoặc config riêng)
+  // static const String baseUrl = 'http://192.168.1.x:3000/api';
 
-  static const String sets = "/api/sets";
-  static String setById(String id) => "/api/sets/$id";
+  // Timeout settings
+  static const int receiveTimeout = 15000;
+  static const int connectionTimeout = 15000;
 
-  static const String classes = "/api/classes";
-  static String addStudentToClass(String id) => "/api/classes/$id/add-student";
-  static String removeStudentFromClass(String id) =>
-      "/api/classes/$id/remove-student";
+  // ========================================================================
+  // 1. AUTH (Quản lý xác thực)
+  // ========================================================================
+  static const String authLogin = '/auth/login';
+  static const String authRegister = '/auth/register';
+  static const String authRefreshToken = '/auth/refresh-token';
+  static const String authLogout = '/auth/logout';
 
-  static String classById(String id) => "/api/classes/$id";
+  // ========================================================================
+  // 2. USERS (Quản lý người dùng & Profile)
+  // ========================================================================
+  static const String userProfileMe = '/users/profile/me';
+  static const String userChangePassword = '/users/profile/change-password';
 
-  static const String questions = "/api/questions";
-  static String questionById(String id) => "/api/questions/$id";
+  // Dùng cho: GET list, POST create
+  static const String users = '/users';
 
-  static const String user = "/api/user";
-  static String studentById(String id) => "/api/user/$id";
-  static String assignStudent(String id) => "/api/user/$id/assign";
-  static String toggleusertatus(String id) => "/api/user/$id/toggle-status";
-  static String resetStudentPassword(String id) =>
-      "/api/user/$id/reset-password";
+  // Helper để lấy đường dẫn chi tiết user (GET, PUT, DELETE /{id})
+  static String userDetail(String id) => '/users/$id';
 
-  static const String assignments = "/api/assignments";
-  static String assignmentById(String id) => "/api/assignments/$id";
-  static String assignToStudents(String id) =>
-      "/api/assignments/$id/assign-students";
-  static String assignmentResults(String id) => "/api/assignments/$id/results";
-  static String closeAssignment(String id) => "/api/assignments/$id/close";
+  // Helper lấy progress của học viên
+  static String userProgress(String id) => '/users/$id/progress';
+
+  // ========================================================================
+  // 3. CLASSES (Quản lý lớp học)
+  // ========================================================================
+  // Dùng cho: GET list, POST create
+  static const String classes = '/classes';
+
+  static const String classJoin = '/classes/join';
+
+  // Helper cho các route cần ID lớp
+  static String classDetail(String id) => '/classes/$id'; // GET, DELETE
+  static String removeStudent(String classId) =>
+      '/classes/$classId/remove-student'; // PUT
+
+  // ========================================================================
+  // 4. ASSIGNMENTS (Quản lý bài tập)
+  // ========================================================================
+  // Dùng cho: GET list, POST create
+  static const String assignments = '/assignments';
+
+  // Helper cho các route cần ID bài tập
+  static String assignmentDetail(String id) =>
+      '/assignments/$id'; // GET, PUT, DELETE
+
+  static String submitAssignment(String id) =>
+      '/assignments/$id/submit'; // POST
+  static String submissionHistory(String id) =>
+      '/assignments/$id/history'; // GET
+  static String assignmentSubmissions(String id) =>
+      '/assignments/$id/submissions'; // GET (Teacher)
+
+  // ========================================================================
+  // 5. CONTENT (Level, Pack, Question)
+  // ========================================================================
+  // --- Levels ---
+  static const String levels = '/content/levels'; // GET list, POST create
+  static String levelDetail(String id) => '/content/levels/$id'; // PUT, DELETE
+
+  // --- Packs ---
+  static const String packs = '/content/packs'; // GET list, POST create
+  static String packDetail(String id) => '/content/packs/$id'; // PUT, DELETE
+
+  // --- Questions ---
+  static const String questions = '/content/questions'; // POST create
+  static String questionDetail(String id) =>
+      '/content/questions/$id'; // PUT, DELETE
+
+  // Lấy câu hỏi theo Pack
+  static String questionsByPack(String packId) =>
+      '/content/packs/$packId/questions';
+
+  // ========================================================================
+  // 6. UPLOAD (Cloudinary)
+  // ========================================================================
+  static const String upload = '/upload'; // POST, DELETE
 }

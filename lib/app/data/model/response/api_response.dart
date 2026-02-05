@@ -1,9 +1,15 @@
 class ApiResponse<T> {
   final bool success;
-  final T? data;
+  final int code; // Thêm code để check 401, 403, 200...
   final String message;
+  final T? data;
 
-  ApiResponse({required this.success, this.data, required this.message});
+  ApiResponse({
+    required this.success,
+    required this.code,
+    required this.message,
+    this.data,
+  });
 
   factory ApiResponse.fromJson(
     Map<String, dynamic> json,
@@ -11,8 +17,9 @@ class ApiResponse<T> {
   ) {
     return ApiResponse<T>(
       success: json['success'] ?? false,
+      code: json['code'] ?? 200,
       message: json['message'] ?? '',
-      // Nếu data tồn tại thì map sang Model T, ngược lại trả về null
+      // Nếu data != null thì parse, ngược lại trả về null
       data: json['data'] != null ? fromJsonT(json['data']) : null,
     );
   }
