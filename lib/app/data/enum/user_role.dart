@@ -1,11 +1,13 @@
 enum UserRole {
-  student('student'),
-  teacher('teacher'),
-  admin('admin'),
-  unknown('unknown');
+  student('student', 'Học Viên'),
+  teacher('teacher', 'Giáo Viên'),
+  admin('admin', 'Quản Trị Viên'),
+  unknown('unknown', 'Không xác định');
 
   final String value;
-  const UserRole(this.value);
+  final String label;
+
+  const UserRole(this.value, this.label);
 
   factory UserRole.fromJson(String value) {
     return UserRole.values.firstWhere(

@@ -45,7 +45,7 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       defaultTransition: Transition.noTransition,
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(textTheme: GoogleFonts.paytoneOneTextTheme()),
+      theme: ThemeData(textTheme: GoogleFonts.robotoTextTheme()),
       getPages: AppPages.routes,
       initialRoute: AppPages.INITIAL,
       initialBinding: InitialBinding(),

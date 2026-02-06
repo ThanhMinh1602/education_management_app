@@ -73,7 +73,7 @@ class AssignmentResultsView extends GetView<AssignmentResultsController> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Bộ câu hỏi: ${assignment.setName}',
+                        'Bộ câu hỏi: ${assignment.pack?.title}',
                         style: const TextStyle(
                           fontSize: 13,
                           color: Colors.white70,
@@ -89,7 +89,7 @@ class AssignmentResultsView extends GetView<AssignmentResultsController> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            'Hạn chót: ${dateFormat.format(assignment.dueDate)}',
+                            'Hạn chót: ${dateFormat.format(assignment.dueDate ?? DateTime.now())}',
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.white.withOpacity(0.7),

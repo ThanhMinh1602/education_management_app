@@ -132,7 +132,7 @@ class AssignmentView extends GetView<AssignmentController> {
   }
 
   DataRow _buildDataRow(AssignmentModel item) {
-    final isExpired = item.dueDate.isBefore(DateTime.now()) ?? true;
+    final isExpired = true;
 
     return DataRow(
       cells: [
@@ -145,11 +145,11 @@ class AssignmentView extends GetView<AssignmentController> {
                 item.title,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              if (item.description != null)
-                Text(
-                  item.description!,
-                  style: const TextStyle(fontSize: 11, color: Colors.grey),
-                ),
+              // if (item.description != null)
+              Text(
+                'item.description!',
+                style: const TextStyle(fontSize: 11, color: Colors.grey),
+              ),
             ],
           ),
         ),
@@ -170,7 +170,7 @@ class AssignmentView extends GetView<AssignmentController> {
             ),
           ),
         ),
-        DataCell(Text(item.setName)),
+        DataCell(Text('item.setName')),
         DataCell(
           Row(
             children: [
@@ -181,7 +181,7 @@ class AssignmentView extends GetView<AssignmentController> {
               ),
               const SizedBox(width: 4),
               Text(
-                DateFormat('dd/MM HH:mm').format(item.dueDate),
+                DateFormat('dd/MM HH:mm').format(DateTime.now()),
                 style: TextStyle(
                   color: isExpired ? Colors.red : Colors.black87,
                 ),

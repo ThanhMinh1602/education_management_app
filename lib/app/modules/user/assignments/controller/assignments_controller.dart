@@ -24,12 +24,10 @@ class AssignmentsController extends BaseController {
   Future<void> fetchStudentAssignments({String? status}) async {
     showLoading();
     try {
-      final res = await _assignmentService.getStudentAssignments(
-        status: status,
-      );
+      final res = await _assignmentService.getAssignments();
       if (res.success) {
         assignmentList.value = res.data;
-        filterAssignments();
+        // filterAssignments();
       } else {
         showError(res.message);
       }
@@ -40,21 +38,21 @@ class AssignmentsController extends BaseController {
     }
   }
 
-  /// Lọc bài tập theo trạng thái
-  void filterAssignments() {
-    if (selectedStatus.value == 'all') {
-      filteredList.value = assignmentList;
-    } else {
-      filteredList.value = assignmentList
-          .where((a) => a.studentStatus == selectedStatus.value)
-          .toList();
-    }
-  }
+  // /// Lọc bài tập theo trạng thái
+  // void filterAssignments() {
+  //   if (selectedStatus.value == 'all') {
+  //     filteredList.value = assignmentList;
+  //   } else {
+  //     filteredList.value = assignmentList
+  //         .where((a) => a.studentStatus == selectedStatus.value)
+  //         .toList();
+  //   }
+  // }
 
-  /// Thay đổi filter
+  // /// Thay đổi filter
   void changeFilter(String status) {
     selectedStatus.value = status;
-    filterAssignments();
+    // filterAssignments();
   }
 
   /// Làm bài tập (chuyển sang DoAssignment)

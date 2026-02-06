@@ -16,7 +16,7 @@ class AssignmentCard extends StatelessWidget {
   });
 
   String _getStatusLabel() {
-    switch (assignment.studentStatus) {
+    switch ('assigned') {
       case 'assigned':
         return 'Chưa làm';
       case 'started':
@@ -31,20 +31,13 @@ class AssignmentCard extends StatelessWidget {
   }
 
   bool _isOverdue() {
-    return DateTime.now().isAfter(assignment.dueDate) &&
-        assignment.studentStatus != 'submitted';
+    return true;
   }
 
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
-    final isCloseSoon =
-        assignment.dueDate
-            .difference(DateTime.now())
-            .inHours
-            .abs()
-            .compareTo(24) <
-        0;
+    final isCloseSoon = true;
 
     return GestureDetector(
       onTap: onTap,
@@ -86,26 +79,26 @@ class AssignmentCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (assignment.score != null &&
-                    assignment.studentStatus == 'submitted')
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      '${assignment.score}/100',
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
+                // if (assignment.score != null &&
+                //     assignment.studentStatus == 'submitted')
+                //   Container(
+                //     padding: const EdgeInsets.symmetric(
+                //       horizontal: 8,
+                //       vertical: 4,
+                //     ),
+                //     decoration: BoxDecoration(
+                //       color: Colors.white.withOpacity(0.3),
+                //       borderRadius: BorderRadius.circular(8),
+                //     ),
+                //     child: Text(
+                //       '${assignment.score}/100',
+                //       style: const TextStyle(
+                //         fontSize: 10,
+                //         fontWeight: FontWeight.bold,
+                //         color: Colors.white,
+                //       ),
+                //     ),
+                //   ),
               ],
             ),
             const SizedBox(height: 12),
@@ -133,14 +126,14 @@ class AssignmentCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    assignment.setName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.white.withOpacity(0.8),
-                    ),
-                  ),
+                  // Text(
+                  //   assignment.setName,
+                  //   maxLines: 1,
+                  //   overflow: TextOverflow.ellipsis,
+                  //   style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  //     color: Colors.white.withOpacity(0.8),
+                  //   ),
+                  // ),
                 ],
               ),
             ),
@@ -156,83 +149,83 @@ class AssignmentCard extends StatelessWidget {
                       : Colors.white.withOpacity(0.7),
                 ),
                 const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    dateFormat.format(assignment.dueDate),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: _isOverdue() || isCloseSoon
-                          ? Colors.yellow[200]
-                          : Colors.white.withOpacity(0.7),
-                      fontWeight: _isOverdue() || isCloseSoon
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                    ),
-                  ),
-                ),
+                // Expanded(
+                //   child: Text(
+                //     dateFormat.format(assignment.dueDate),
+                //     maxLines: 1,
+                //     overflow: TextOverflow.ellipsis,
+                //     style: TextStyle(
+                //       fontSize: 10,
+                //       color: _isOverdue() || isCloseSoon
+                //           ? Colors.yellow[200]
+                //           : Colors.white.withOpacity(0.7),
+                //       fontWeight: _isOverdue() || isCloseSoon
+                //           ? FontWeight.bold
+                //           : FontWeight.normal,
+                //     ),
+                //   ),
+                // ),
               ],
             ),
             const SizedBox(height: 10),
             // Button
-            if (assignment.studentStatus == 'assigned' && onStartTap != null)
-              SizedBox(
-                width: double.infinity,
-                height: 36,
-                child: ElevatedButton(
-                  onPressed: onStartTap,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: AppColor.pink,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    'Làm bài',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              )
-            else if (assignment.studentStatus == 'started')
-              SizedBox(
-                width: double.infinity,
-                height: 36,
-                child: ElevatedButton(
-                  onPressed: onTap,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: AppColor.pink,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    'Tiếp tục',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              )
-            else if (assignment.studentStatus == 'submitted')
-              SizedBox(
-                width: double.infinity,
-                height: 36,
-                child: ElevatedButton(
-                  onPressed: onTap,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: AppColor.pink,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    'Xem kết quả',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
+            // if (assignment.studentStatus == 'assigned' && onStartTap != null)
+            //   SizedBox(
+            //     width: double.infinity,
+            //     height: 36,
+            //     child: ElevatedButton(
+            //       onPressed: onStartTap,
+            //       style: ElevatedButton.styleFrom(
+            //         backgroundColor: Colors.white,
+            //         foregroundColor: AppColor.pink,
+            //         shape: RoundedRectangleBorder(
+            //           borderRadius: BorderRadius.circular(8),
+            //         ),
+            //       ),
+            //       child: const Text(
+            //         'Làm bài',
+            //         style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            //       ),
+            //     ),
+            //   )
+            // else if (assignment.studentStatus == 'started')
+            //   SizedBox(
+            //     width: double.infinity,
+            //     height: 36,
+            //     child: ElevatedButton(
+            //       onPressed: onTap,
+            //       style: ElevatedButton.styleFrom(
+            //         backgroundColor: Colors.white,
+            //         foregroundColor: AppColor.pink,
+            //         shape: RoundedRectangleBorder(
+            //           borderRadius: BorderRadius.circular(8),
+            //         ),
+            //       ),
+            //       child: const Text(
+            //         'Tiếp tục',
+            //         style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            //       ),
+            //     ),
+            //   )
+            // else if (assignment.studentStatus == 'submitted')
+            //   SizedBox(
+            //     width: double.infinity,
+            //     height: 36,
+            //     child: ElevatedButton(
+            //       onPressed: onTap,
+            //       style: ElevatedButton.styleFrom(
+            //         backgroundColor: Colors.white,
+            //         foregroundColor: AppColor.pink,
+            //         shape: RoundedRectangleBorder(
+            //           borderRadius: BorderRadius.circular(8),
+            //         ),
+            //       ),
+            //       child: const Text(
+            //         'Xem kết quả',
+            //         style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            //       ),
+            //     ),
+            //   ),
           ],
         ),
       ),

@@ -48,12 +48,12 @@ class ResultTable extends GetView<AssignmentResultsController> {
           );
         }
 
-        if (controller.resultsList.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.all(20),
-            child: Center(child: Text('Chưa có kết quả nào')),
-          );
-        }
+        // if (controller.resultsList.isEmpty) {
+        //   return const Padding(
+        //     padding: EdgeInsets.all(20),
+        //     child: Center(child: Text('Chưa có kết quả nào')),
+        //   );
+        // }
 
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -91,10 +91,10 @@ class ResultTable extends GetView<AssignmentResultsController> {
                 ),
               ),
             ],
-            rows: controller.resultsList.map((result) {
-              return DataRow(
+            rows: [
+              DataRow(
                 cells: [
-                  DataCell(Text(result.studentName ?? 'N/A')),
+                  DataCell(Text('N/A')),
                   DataCell(
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -102,47 +102,30 @@ class ResultTable extends GetView<AssignmentResultsController> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: _getStatusColor(result.status).withOpacity(0.2),
+                        color: _getStatusColor('submitted').withOpacity(0.2),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        _getStatusLabel(result.status),
+                        _getStatusLabel('submitted'),
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          color: _getStatusColor(result.status),
+                          color: _getStatusColor('submitted'),
                         ),
                       ),
                     ),
                   ),
                   DataCell(
                     Text(
-                      result.score != null ? '${result.score}/100' : '-',
-                      style: TextStyle(
-                        fontWeight: result.score != null
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
+                      '1/100',
+                      style: TextStyle(fontWeight: FontWeight.normal),
                     ),
                   ),
-                  DataCell(
-                    Text(
-                      result.totalCorrect != null
-                          ? result.totalCorrect.toString()
-                          : '-',
-                    ),
-                  ),
-                  DataCell(
-                    Text(
-                      result.submittedAt != null
-                          ? result.submittedAt!.toString().split('.')[0]
-                          : '-',
-                      style: const TextStyle(fontSize: 11),
-                    ),
-                  ),
+                  DataCell(Text('-')),
+                  DataCell(Text('-', style: const TextStyle(fontSize: 11))),
                 ],
-              );
-            }).toList(),
+              ),
+            ],
           ),
         );
       }),

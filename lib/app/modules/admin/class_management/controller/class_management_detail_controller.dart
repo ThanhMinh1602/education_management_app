@@ -42,43 +42,40 @@ class ClassManagementDetailController extends BaseController {
   }
 
   Future<void> fetchClassDetail() async {
-    final res = await _classService.getClassById(currentClassId);
+    final res = await _classService.getClassDetail(currentClassId);
     if (res.success) {
       studentsInClass.value = res.data?.students ?? [];
     }
   }
 
   Future<void> fetchAllStudents() async {
-    final res = await _userService.getUsers(role: UserRole.student.value);
+    final res = await _userService.getStudents();
     if (res.success) {
       allStudents.value = res.data;
     }
   }
 
-  Future<void> addStudentToClass(String studentId) async {
-    showLoading();
-    try {
-      final res = await _userService.addStudentToClass(
-        studentId,
-        currentClassId,
-      );
-      if (res.success && res.data != null) {
-        studentsInClass.add(res.data!);
-        isDataChanged = true;
-      }
-    } catch (e) {
-      showError("Không thể thêm học viên, vui lòng thử lại");
-    }
-    hideLoading();
-  }
+  // Future<void> addStudentToClass(String studentId) async {
+  //   showLoading();
+  //   try {
+  //     final res = await _userService.addStudentToClass(
+  //       studentId,
+  //       currentClassId,
+  //     );
+  //     if (res.success && res.data != null) {
+  //       studentsInClass.add(res.data!);
+  //       isDataChanged = true;
+  //     }
+  //   } catch (e) {
+  //     showError("Không thể thêm học viên, vui lòng thử lại");
+  //   }
+  //   hideLoading();
+  // }
 
   Future<void> removeStudentFromClass(String studentId) async {
     showLoading();
     try {
-      final res = await _userService.removeStudentFromClass(
-        studentId,
-        currentClassId,
-      );
+      final res = await _classService.removeStudent(studentId, currentClassId);
       if (res.success && res.data != null) {
         studentsInClass.removeWhere((element) => element.id == studentId);
         isDataChanged = true;

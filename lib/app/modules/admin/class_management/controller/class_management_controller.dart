@@ -26,7 +26,7 @@ class ClassManagementController extends BaseController {
   Future<void> fetchClasses() async {
     showLoading();
     try {
-      final res = await _classService.getAllClasses();
+      final res = await _classService.getClasses();
       hideLoading();
       if (!res.success) {
         showError(res.message);
@@ -63,7 +63,7 @@ class ClassManagementController extends BaseController {
   }) async {
     showLoading();
     try {
-      final res = await _classService.updateClass(classRequest, id);
+      final res = await _classService.updateClass(id, classRequest);
       hideLoading();
       if (!res.success) {
         showError(res.message);

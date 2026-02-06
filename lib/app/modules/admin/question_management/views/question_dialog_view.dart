@@ -1,6 +1,5 @@
 import 'package:blooket/app/core/utils/dialogs.dart';
 import 'package:blooket/app/data/model/question_model.dart';
-import 'package:blooket/app/data/model/request/question_request.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -16,14 +15,8 @@ import 'package:blooket/app/modules/admin/question_management/widgets/time_limit
 class QuestionDialogView extends StatefulWidget {
   final String setId;
   final QuestionModel? initialData;
-  final Function(QuestionRequest) onSave;
 
-  const QuestionDialogView({
-    super.key,
-    required this.setId,
-    required this.onSave,
-    this.initialData,
-  });
+  const QuestionDialogView({super.key, required this.setId, this.initialData});
 
   @override
   State<QuestionDialogView> createState() => _QuestionDialogViewState();
@@ -42,13 +35,13 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
   void initState() {
     super.initState();
     if (widget.initialData != null) {
-      selectedType = widget.initialData!.type ?? QuestionType.multipleChoice;
-      contentCtrl.text = widget.initialData!.content ?? '';
-      timeLimit = widget.initialData!.timeLimit ?? 30;
-      isRandom = widget.initialData!.isRandom ?? false;
+      // selectedType = widget.initialData!.type ?? QuestionType.multipleChoice;
+      // contentCtrl.text = widget.initialData!.content ?? '';
+      // timeLimit = widget.initialData!.timeLimit ?? 30;
+      // isRandom = widget.initialData!.isRandom ?? false;
 
-      _currentOptions = widget.initialData!.options ?? [];
-      _currentAnswers = widget.initialData!.answers ?? [];
+      // _currentOptions = widget.initialData!.options ?? [];
+      // _currentAnswers = widget.initialData!.answers ?? [];
     } else {
       selectedType = QuestionType.multipleChoice;
     }
@@ -68,7 +61,7 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
   // --- 2. Hàm Validate và Save ---
   void _validateAndSave() {
     // 2.1 Kiểm tra nội dung câu hỏi (trừ loại sắp xếp vì nội dung nằm trong options)
-    if (selectedType != QuestionType.rearrange &&
+    if (selectedType != QuestionType.arrange &&
         contentCtrl.text.trim().isEmpty) {
       _showWarningDialog("Vui lòng nhập nội dung câu hỏi.");
       return;
@@ -103,7 +96,7 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
         }
         break;
 
-      case QuestionType.rearrange:
+      case QuestionType.arrange:
         // Với loại sắp xếp, answers chính là các từ cần sắp xếp
         if (_currentAnswers.isEmpty || _currentAnswers.length < 2) {
           _showWarningDialog("Vui lòng nhập ít nhất 2 từ để sắp xếp.");
@@ -117,67 +110,70 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
           _currentAnswers = ["true"];
         }
         break;
+      case QuestionType.unknown:
+        // TODO: Handle this case.
+        throw UnimplementedError();
     }
 
     // 2.3 Save nếu tất cả hợp lệ
-    final questionReq = QuestionRequest(
-      setId: widget.setId,
-      type: selectedType.value,
-      content: contentCtrl.text.trim(),
-      timeLimit: timeLimit,
-      isRandom: isRandom,
-      options: _currentOptions,
-      answers: _currentAnswers,
-    );
+    // final questionReq = QuestionRequest(
+    //   setId: widget.setId,
+    //   type: selectedType.value,
+    //   content: contentCtrl.text.trim(),
+    //   timeLimit: timeLimit,
+    //   isRandom: isRandom,
+    //   options: _currentOptions,
+    //   answers: _currentAnswers,
+    // );
 
-    widget.onSave(questionReq);
+    // widget.onSave(questionReq);
     Get.back(); // Đóng dialog chính
   }
 
-  Widget _getAnswerFromType() {
-    return KeyedSubtree(
-      key: ValueKey(selectedType),
-      child: switch (selectedType) {
-        QuestionType.multipleChoice => AnswerMultiChose(
-          initialOptions: widget.initialData?.options,
-          initialCorrectAnswers: widget.initialData?.answers,
-          onChanged: (options, answers) {
-            _currentOptions = options;
-            _currentAnswers = answers;
-          },
-        ),
-        QuestionType.rearrange => AnswerRearrange(
-          initialWords: widget.initialData?.answers,
-          onChanged: (words) {
-            setState(() {
-              contentCtrl.text = words.join(' - ');
-              _currentAnswers = words;
-              // Rearrange không dùng options, có thể clear hoặc gán giống answer
-              _currentOptions = [];
-            });
-          },
-        ),
-        QuestionType.trueFalse => AnswerTrueFalse(
-          initialValue: bool.parse(
-            widget.initialData?.answers?.first ?? 'true',
-          ),
-          onChanged: (isTrue) {
-            // True/False không cần options, chỉ cần answers
-            _currentAnswers = [isTrue.toString()];
-            _currentOptions = [];
-          },
-        ),
-        // Sửa lại đoạn này để hứng dữ liệu từ Typing Form
-        QuestionType.typing => AnswerTyping(
-          initialAnswers: widget.initialData?.answers, // Truyền data cũ nếu có
-          onChanged: (answers) {
-            _currentAnswers = answers;
-            _currentOptions = []; // Typing không có options
-          },
-        ),
-      },
-    );
-  }
+  // Widget _getAnswerFromType() {
+  //   return KeyedSubtree(
+  //     key: ValueKey(selectedType),
+  //     child: switch (selectedType) {
+  //       QuestionType.multipleChoice => AnswerMultiChose(
+  //         initialOptions: widget.initialData?.options,
+  //         initialCorrectAnswers: widget.initialData?.answers,
+  //         onChanged: (options, answers) {
+  //           _currentOptions = options;
+  //           _currentAnswers = answers;
+  //         },
+  //       ),
+  //       QuestionType.rearrange => AnswerRearrange(
+  //         initialWords: widget.initialData?.answers,
+  //         onChanged: (words) {
+  //           setState(() {
+  //             contentCtrl.text = words.join(' - ');
+  //             _currentAnswers = words;
+  //             // Rearrange không dùng options, có thể clear hoặc gán giống answer
+  //             _currentOptions = [];
+  //           });
+  //         },
+  //       ),
+  //       QuestionType.trueFalse => AnswerTrueFalse(
+  //         initialValue: bool.parse(
+  //           widget.initialData?.answers?.first ?? 'true',
+  //         ),
+  //         onChanged: (isTrue) {
+  //           // True/False không cần options, chỉ cần answers
+  //           _currentAnswers = [isTrue.toString()];
+  //           _currentOptions = [];
+  //         },
+  //       ),
+  //       // Sửa lại đoạn này để hứng dữ liệu từ Typing Form
+  //       QuestionType.typing => AnswerTyping(
+  //         initialAnswers: widget.initialData?.answers, // Truyền data cũ nếu có
+  //         onChanged: (answers) {
+  //           _currentAnswers = answers;
+  //           _currentOptions = []; // Typing không có options
+  //         },
+  //       ),
+  //     },
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -205,13 +201,13 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (selectedType != QuestionType.rearrange)
-                      _buildInputQuestion(),
+                    // if (selectedType != QuestionType.rearrange)
+                    //   _buildInputQuestion(),
                     const SizedBox(height: 20),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: _getAnswerFromType(),
-                    ),
+                    // Padding(
+                    //   padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    //   child: _getAnswerFromType(),
+                    // ),
                   ],
                 ),
               ),
@@ -271,24 +267,24 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
             ),
           ),
           const SizedBox(width: 12),
-          if (widget.initialData == null)
-            BorderedStatWidget(
-              title: selectedType.title,
-              icon: Icons.category_outlined,
-              onTap: () async {
-                final type = await Get.dialog<QuestionType>(
-                  _buildTypeSelectionDialog(),
-                );
+          // if (widget.initialData == null)
+          //   BorderedStatWidget(
+          //     title: selectedType.title,
+          //     icon: Icons.category_outlined,
+          //     onTap: () async {
+          //       final type = await Get.dialog<QuestionType>(
+          //         _buildTypeSelectionDialog(),
+          //       );
 
-                if (type != null && type != selectedType) {
-                  setState(() {
-                    selectedType = type;
-                    _currentOptions = [];
-                    _currentAnswers = [];
-                  });
-                }
-              },
-            ),
+          //       if (type != null && type != selectedType) {
+          //         setState(() {
+          //           selectedType = type;
+          //           _currentOptions = [];
+          //           _currentAnswers = [];
+          //         });
+          //       }
+          //     },
+          //   ),
           const Spacer(),
           const SizedBox(width: 20),
           Container(height: 40, width: 1, color: Colors.white.withOpacity(0.5)),
@@ -381,7 +377,7 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
                         vertical: 4,
                       ),
                       title: Text(
-                        qt.title,
+                        ' qt.title',
                         style: TextStyle(
                           color: isSelected ? AppColor.pink : Colors.black87,
                           fontWeight: isSelected

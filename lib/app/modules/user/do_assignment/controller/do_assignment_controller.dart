@@ -44,7 +44,7 @@ class DoAssignmentController extends BaseController {
       final setId = assignment.id; // Hoặc có thể lấy từ assignment.setId nếu có
 
       // Gọi API để lấy câu hỏi từ setId
-      final res = await _questionService.getQuestions(setId: setId);
+      final res = await _questionService.getQuestionsByPack(setId);
       if (res.success) {
         questions.value = res.data;
         // Update trạng thái bài tập thành 'started'
@@ -66,9 +66,9 @@ class DoAssignmentController extends BaseController {
 
     final dueDate = assignment.dueDate;
     final now = DateTime.now();
-    final duration = dueDate.difference(now);
+    final duration = dueDate?.difference(now);
 
-    if (duration.isNegative) {
+    if (duration == null || duration.isNegative) {
       isTimeUp.value = true;
       return;
     }
@@ -127,10 +127,10 @@ class DoAssignmentController extends BaseController {
       int correctCount = 0;
       for (var question in questions) {
         final selectedAnswer = answers[question.id];
-        if (selectedAnswer != null &&
-            question.answers.contains(selectedAnswer)) {
-          correctCount++;
-        }
+        // if (selectedAnswer != null &&
+        //     question.answers.contains(selectedAnswer)) {
+        //   correctCount++;
+        // }
       }
 
       final score = (correctCount / questions.length * 100).toInt();

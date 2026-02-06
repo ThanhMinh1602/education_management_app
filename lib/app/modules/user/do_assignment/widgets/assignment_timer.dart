@@ -14,8 +14,7 @@ class AssignmentTimer extends GetView<DoAssignmentController> {
 
       // Tính phần trăm thời gian còn lại
       final assignment = controller.assignment.value;
-      final totalSeconds =
-          assignment?.dueDate.difference(DateTime.now()).inSeconds ?? 0;
+      final totalSeconds = 0;
       final percentRemaining = totalSeconds > 0
           ? timeInSeconds / totalSeconds
           : 0;

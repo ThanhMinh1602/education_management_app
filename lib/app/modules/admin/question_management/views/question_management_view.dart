@@ -39,7 +39,7 @@ class QuestionManagementView extends GetView<QuestionManagementController> {
                       );
                       if (name != null) {
                         await Future.delayed(const Duration(milliseconds: 300));
-                        await controller.createQuestionSet(name);
+                        // await controller.createQuestionSet(name);
                       }
                     },
                   ),
@@ -64,13 +64,13 @@ class QuestionManagementView extends GetView<QuestionManagementController> {
                         itemBuilder: (context, index) {
                           final item = controller.questionSets[index];
                           return QuestionSetCard(
-                            name: item.setName ?? "Không có tên",
-                            questionCount: item.questionCount ?? 0,
+                            name: 'item.setName ' ?? "Không có tên",
+                            questionCount: 0 ?? 0,
                             createdAt: item.createdAt ?? DateTime.now(),
                             onEdit: () async {
                               await controller.openDetail(
                                 item.id,
-                                item.setName ?? "",
+                                ' item.setName' ?? "",
                               );
                             },
                             onDelete: () {

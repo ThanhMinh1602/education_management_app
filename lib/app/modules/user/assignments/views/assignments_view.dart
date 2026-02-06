@@ -80,9 +80,7 @@ class AssignmentsView extends GetView<AssignmentsController> {
                         assignment: assignment,
                         onTap: () =>
                             controller.viewAssignmentDetails(assignment),
-                        onStartTap: assignment.studentStatus == 'assigned'
-                            ? () => controller.startAssignment(assignment.id)
-                            : null,
+                        onStartTap: null,
                       );
                     },
                   );

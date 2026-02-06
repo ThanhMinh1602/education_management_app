@@ -89,7 +89,7 @@ class AddUserToClass extends StatelessWidget {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            subtitle: Text("${user.username}"),
+                            subtitle: Text(user.username),
                             trailing: ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: controller.accentColor,
@@ -98,8 +98,7 @@ class AddUserToClass extends StatelessWidget {
                                 ),
                                 elevation: 0,
                               ),
-                              onPressed: () =>
-                                  controller.addStudentToClass(user.id),
+                              onPressed: () {},
                               child: const Text(
                                 "Thêm",
                                 style: TextStyle(color: Colors.white),

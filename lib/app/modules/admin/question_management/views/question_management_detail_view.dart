@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:blooket/app/core/components/header/custom_page_header.dart';
 import 'package:blooket/app/core/utils/dialogs.dart';
 import 'package:blooket/app/core/utils/ui_dialogs.dart';
-import 'package:blooket/app/data/model/request/question_request.dart';
 import 'package:blooket/app/modules/admin/question_management/views/question_dialog_view.dart';
 import 'package:blooket/app/modules/admin/question_management/widgets/question_list_item.dart';
 import 'package:flutter/material.dart';
@@ -59,10 +58,10 @@ class QuestionManagementDetailView
             Get.dialog(
               barrierDismissible: false,
               QuestionDialogView(
-                setId: controller.setId,
-                onSave: (questionModel) {
-                  controller.addQuestion(questionModel);
-                },
+                setId: controller.packsId,
+                // onSave: (questionModel) {
+                //   controller.addQuestion(questionModel);
+                // },
               ),
             );
           },
@@ -82,19 +81,19 @@ class QuestionManagementDetailView
                     Get.dialog(
                       barrierDismissible: false,
                       QuestionDialogView(
-                        setId: controller.setId,
+                        setId: controller.packsId,
                         initialData: question,
-                        onSave: (formData) {
-                          final updateRequest = QuestionRequest(
-                            content: formData.content,
-                            timeLimit: formData.timeLimit,
-                            isRandom: formData.isRandom,
-                            options: formData.options,
-                            answers: formData.answers,
-                            type: formData.type,
-                          );
-                          controller.updateQuestion(updateRequest, question.id);
-                        },
+                        // onSave: (formData) {
+                        //   final updateRequest = QuestionRequest(
+                        //     content: formData.content,
+                        //     timeLimit: formData.timeLimit,
+                        //     isRandom: formData.isRandom,
+                        //     options: formData.options,
+                        //     answers: formData.answers,
+                        //     type: formData.type,
+                        //   );
+                        //   controller.updateQuestion(updateRequest, question.id);
+                        // },
                       ),
                     );
                   },
@@ -136,7 +135,7 @@ class QuestionManagementDetailView
         children: [
           Obx(
             () => Text(
-              controller.setName.value,
+              controller.packsTitle.value,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Colors.white,
@@ -162,11 +161,11 @@ class QuestionManagementDetailView
                   onTap: () async {
                     final result = await UiDialogs.showQuestionSetName(
                       title: 'Sửa tên bộ đề',
-                      initial: controller.setName.value,
+                      initial: controller.packsTitle.value,
                     );
-                    if (result != null || result!.isNotEmpty) {
-                      controller.updateQuestionSet(controller.setId, result);
-                    }
+                    // if (result != null || result!.isNotEmpty) {
+                    //   controller.updateQuestionSet(controller.packsId, result);
+                    // }
                   },
                 ),
               ),

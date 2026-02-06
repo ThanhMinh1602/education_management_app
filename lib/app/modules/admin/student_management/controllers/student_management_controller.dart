@@ -1,3 +1,4 @@
+import 'package:blooket/app/data/enum/user_role.dart';
 import 'package:blooket/app/data/model/request/auth/register_request.dart';
 import 'package:blooket/app/data/model/user_model.dart';
 import 'package:get/get.dart';
@@ -13,12 +14,12 @@ class StudentManagementController extends BaseController {
   @override
   void onInit() async {
     super.onInit();
-    await getAllUsers();
+    await getStudents();
   }
 
-  Future<void> getAllUsers({int? page, int? limit}) async {
+  Future<void> getStudents({int? page, int? limit}) async {
     showLoading();
-    final res = await _userService.getUsers(page: page, limit: limit);
+    final res = await _userService.getStudents(role: UserRole.student.value);
     hideLoading();
     if (res.success) {
       studentList.value = res.data;
@@ -49,7 +50,7 @@ class StudentManagementController extends BaseController {
         role: role,
       );
 
-      final res = await _userService.createUser(registerRequest);
+      final res = await _userService.createStudent(registerRequest);
 
       if (res.success && res.data != null) {
         studentList.insert(0, res.data!);
@@ -89,7 +90,7 @@ class StudentManagementController extends BaseController {
   Future<bool> resetPassword(String id) async {
     showLoading();
     try {
-      final res = await _userService.resetPassword(id);
+      final res = await _userService.updateUser(id, newPassword: '123456');
       hideLoading();
       if (res.success) {
         showSuccess("Đặt lại mật khẩu thành công");

@@ -1,18 +1,17 @@
 import 'package:blooket/app/data/model/assignment_model.dart';
 import 'package:blooket/app/data/model/class_model.dart';
-import 'package:blooket/app/data/model/request/set_request.dart';
-import 'package:blooket/app/data/model/set_model.dart';
-import 'package:blooket/app/data/service/set_service.dart';
+import 'package:blooket/app/data/model/question_pack_model.dart';
+import 'package:blooket/app/data/model/request/content/question_pack_request.dart';
+import 'package:blooket/app/data/service/question_pack_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:blooket/app/core/base/base_controller.dart';
 
 class QuestionManagementController extends BaseController {
-  final SetService _setService;
+  final QuestionPackService _questionPackService;
+  QuestionManagementController(this._questionPackService);
 
-  QuestionManagementController(this._setService);
-
-  final questionSets = <SetModel>[].obs;
+  final questionSets = <QuestionPackModel>[].obs;
 
   final primaryColor = const Color(0xFF909CC2);
   final actionColor = const Color(0xFFEDBBC6);
@@ -26,7 +25,7 @@ class QuestionManagementController extends BaseController {
   Future<void> fetchData() async {
     showLoading();
     try {
-      final response = await _setService.listSets();
+      final response = await _questionPackService.getPacks();
       if (response.success) {
         questionSets.assignAll(response.data ?? []);
       } else {
@@ -42,7 +41,7 @@ class QuestionManagementController extends BaseController {
   Future<bool> deleteSet(String id) async {
     showLoading();
 
-    final response = await _setService.deleteSet(id);
+    final response = await _questionPackService.deletePack(id);
     hideLoading();
 
     if (response.success) {
@@ -63,11 +62,9 @@ class QuestionManagementController extends BaseController {
     }
   }
 
-  Future<bool> createQuestionSet(String name) async {
+  Future<bool> createQuestionSet(QuestionPackRequest request) async {
     showLoading();
-
-    final request = SetRequest(name: name.trim());
-    final response = await _setService.createSet(request);
+    final response = await _questionPackService.createPack(request);
     hideLoading();
 
     if (response.success) {

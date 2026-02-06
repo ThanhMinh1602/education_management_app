@@ -38,7 +38,7 @@ class QuestionCard extends GetView<DoAssignmentController> {
             const SizedBox(height: 12),
             // Nội dung câu hỏi
             Text(
-              question.content,
+              'question.content',
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
@@ -62,69 +62,69 @@ class QuestionCard extends GetView<DoAssignmentController> {
 
       return Column(
         children: [
-          if (question.options.isNotEmpty)
-            Column(
-              children: question.options.asMap().entries.map((entry) {
-                final option = entry.value;
-                final isSelected = selectedAnswer == option;
+          // if (question.options.isNotEmpty)
+          //   Column(
+          //     children: question.options.asMap().entries.map((entry) {
+          //       final option = entry.value;
+          //       final isSelected = selectedAnswer == option;
 
-                return GestureDetector(
-                  onTap: () => controller.selectAnswer(question.id, option),
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: isSelected ? Colors.blue : Colors.grey[300]!,
-                        width: isSelected ? 2 : 1,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                      color: isSelected
-                          ? Colors.blue.withOpacity(0.1)
-                          : Colors.transparent,
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: isSelected
-                                  ? Colors.blue
-                                  : Colors.grey[400]!,
-                            ),
-                            color: isSelected
-                                ? Colors.blue
-                                : Colors.transparent,
-                          ),
-                          child: isSelected
-                              ? const Icon(
-                                  Icons.check,
-                                  color: Colors.white,
-                                  size: 14,
-                                )
-                              : null,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            option,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
+          //       return GestureDetector(
+          //         onTap: () => controller.selectAnswer(question.id, option),
+          //         child: Container(
+          //           margin: const EdgeInsets.only(bottom: 10),
+          //           padding: const EdgeInsets.all(16),
+          //           decoration: BoxDecoration(
+          //             border: Border.all(
+          //               color: isSelected ? Colors.blue : Colors.grey[300]!,
+          //               width: isSelected ? 2 : 1,
+          //             ),
+          //             borderRadius: BorderRadius.circular(8),
+          //             color: isSelected
+          //                 ? Colors.blue.withOpacity(0.1)
+          //                 : Colors.transparent,
+          //           ),
+          //           child: Row(
+          //             children: [
+          //               Container(
+          //                 width: 24,
+          //                 height: 24,
+          //                 decoration: BoxDecoration(
+          //                   shape: BoxShape.circle,
+          //                   border: Border.all(
+          //                     color: isSelected
+          //                         ? Colors.blue
+          //                         : Colors.grey[400]!,
+          //                   ),
+          //                   color: isSelected
+          //                       ? Colors.blue
+          //                       : Colors.transparent,
+          //                 ),
+          //                 child: isSelected
+          //                     ? const Icon(
+          //                         Icons.check,
+          //                         color: Colors.white,
+          //                         size: 14,
+          //                       )
+          //                     : null,
+          //               ),
+          //               const SizedBox(width: 12),
+          //               Expanded(
+          //                 child: Text(
+          //                   option,
+          //                   style: TextStyle(
+          //                     fontSize: 16,
+          //                     fontWeight: isSelected
+          //                         ? FontWeight.bold
+          //                         : FontWeight.normal,
+          //                   ),
+          //                 ),
+          //               ),
+          //             ],
+          //           ),
+          //         ),
+          //       );
+          //     }).toList(),
+          //   ),
         ],
       );
     });
@@ -152,7 +152,7 @@ class QuestionCard extends GetView<DoAssignmentController> {
         return 'Đúng/Sai';
       case QuestionType.typing:
         return 'Điền đáp án';
-      case QuestionType.rearrange:
+      case QuestionType.arrange:
         return 'Sắp xếp';
       default:
         return 'Câu hỏi';

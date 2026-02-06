@@ -7,11 +7,11 @@ class ClassModel {
   final String description;
   final String thumbnail;
 
-  // Teacher có thể null hoặc object (dựa vào logic populate)
   final UserModel? teacher;
 
   final int studentCount;
   final List<UserModel> students;
+  final List<ClassSchedule> schedule;
   final bool isActive;
   final DateTime? createdAt;
 
@@ -24,6 +24,7 @@ class ClassModel {
     this.teacher,
     this.studentCount = 0,
     this.students = const [],
+    this.schedule = const [],
     required this.isActive,
     this.createdAt,
   });
@@ -36,7 +37,6 @@ class ClassModel {
       description: json['description'] ?? '',
       thumbnail: json['thumbnail'] ?? '',
 
-      // Check kỹ nếu teacher là object hay null
       teacher:
           (json['teacher'] != null &&
               json['teacher'] is Map<String, dynamic> &&
@@ -50,10 +50,62 @@ class ClassModel {
                 .map((e) => UserModel.fromJson(e))
                 .toList()
           : [],
+      schedule: json['schedule'] != null
+          ? (json['schedule'] as List)
+                .map((e) => ClassSchedule.fromJson(e))
+                .toList()
+          : [],
       isActive: json['isActive'] ?? false,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
           : null,
     );
+  }
+}
+
+class ClassSchedule {
+  final String id;
+  final int dayOfWeek;
+  final String startTime;
+  final String endTime;
+  final String room;
+
+  ClassSchedule({
+    required this.id,
+    required this.dayOfWeek,
+    required this.startTime,
+    required this.endTime,
+    this.room = '',
+  });
+
+  factory ClassSchedule.fromJson(Map<String, dynamic> json) {
+    return ClassSchedule(
+      id: json['id'] ?? '',
+      dayOfWeek: json['dayOfWeek'] ?? 0,
+      startTime: json['startTime'] ?? '',
+      endTime: json['endTime'] ?? '',
+      room: json['room'] ?? '',
+    );
+  }
+
+  String get dayName {
+    switch (dayOfWeek) {
+      case 0:
+        return 'Chủ Nhật';
+      case 1:
+        return 'Thứ 2';
+      case 2:
+        return 'Thứ 3';
+      case 3:
+        return 'Thứ 4';
+      case 4:
+        return 'Thứ 5';
+      case 5:
+        return 'Thứ 6';
+      case 6:
+        return 'Thứ 7';
+      default:
+        return '';
+    }
   }
 }

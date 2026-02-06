@@ -19,7 +19,7 @@ class ApiClient {
         responseType: ResponseType.json,
         headers: {
           'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': 'true',
+          // 'ngrok-skip-browser-warning': 'true',
         },
       ),
     );

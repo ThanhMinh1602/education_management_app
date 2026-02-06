@@ -87,12 +87,12 @@ class QuestionListItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  questionModel.content ?? 'Nội dung câu hỏi trống',
+                  'questionModel.content' ?? 'Nội dung câu hỏi trống',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "Loại: ${questionModel.type?.title}",
+                  "Loại: ${questionModel.type?.value}",
                   style: const TextStyle(color: Colors.grey),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,

@@ -1,5 +1,7 @@
-import 'package:blooket/app/data/model/request/question_request.dart';
-import 'package:blooket/app/data/service/set_service.dart';
+import 'package:blooket/app/data/model/request/content/create_question_request.dart';
+import 'package:blooket/app/data/model/request/content/question_pack_request.dart';
+import 'package:blooket/app/data/model/request/content/update_question_request.dart';
+import 'package:blooket/app/data/service/question_pack_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:blooket/app/core/base/base_controller.dart';
@@ -8,12 +10,15 @@ import 'package:blooket/app/data/service/question_service.dart';
 
 class QuestionManagementDetailController extends BaseController {
   final QuestionService _questionService;
-  final SetService _setService;
-  QuestionManagementDetailController(this._questionService, this._setService);
+  final QuestionPackService _questionPackService;
+  QuestionManagementDetailController(
+    this._questionService,
+    this._questionPackService,
+  );
 
   final questions = <QuestionModel>[].obs;
-  final setName = ''.obs;
-  late String setId;
+  final packsTitle = ''.obs;
+  late String packsId;
   bool isDataChanged = false;
 
   final primaryColor = const Color(0xFF909CC2);
@@ -24,9 +29,9 @@ class QuestionManagementDetailController extends BaseController {
   void onInit() async {
     super.onInit();
 
-    setId = Get.parameters['id'] ?? '';
+    packsId = Get.parameters['id'] ?? '';
 
-    if (setId.isNotEmpty) {
+    if (packsId.isNotEmpty) {
       await Future.delayed(const Duration(milliseconds: 300));
       fetchQuestions();
       getSetById();
@@ -36,7 +41,7 @@ class QuestionManagementDetailController extends BaseController {
   Future<void> fetchQuestions() async {
     showLoading();
     try {
-      final response = await _questionService.getQuestions(setId: setId);
+      final response = await _questionService.getQuestionsByPack(packsId);
 
       if (response.success) {
         questions.assignAll(response.data);
@@ -61,7 +66,7 @@ class QuestionManagementDetailController extends BaseController {
     }
   }
 
-  Future<void> addQuestion(QuestionRequest newQuestion) async {
+  Future<void> addQuestion(CreateQuestionRequest newQuestion) async {
     showLoading();
     try {
       final response = await _questionService.createQuestion(newQuestion);
@@ -93,7 +98,7 @@ class QuestionManagementDetailController extends BaseController {
   }
 
   Future<void> updateQuestion(
-    QuestionRequest requestBody,
+    UpdateQuestionRequest requestBody,
     String questionId,
   ) async {
     showLoading();
@@ -164,15 +169,15 @@ class QuestionManagementDetailController extends BaseController {
     }
   }
 
-  Future<void> updateQuestionSet(String id, String name) async {
+  Future<void> updateQuestionSet(String id, QuestionPackRequest request) async {
     showLoading();
     // Gọi API update
-    final response = await _setService.updateSet(id, name.trim());
+    final response = await _questionPackService.updatePack(id, request);
     hideLoading();
 
     if (response.success) {
       showSuccess("Đã cập nhật tên bộ đề");
-      setName.value = name.trim();
+      packsTitle.value = request.title.trim();
     } else {
       showError(response.message);
     }
@@ -181,9 +186,9 @@ class QuestionManagementDetailController extends BaseController {
   Future<void> getSetById() async {
     showLoading();
     try {
-      final response = await _setService.getSetById(setId);
+      final response = await _questionPackService.getPackDetail(packsId);
       if (response.success) {
-        setName.value = response.data?.setName ?? '';
+        packsTitle.value = response.data?.title ?? '';
       }
     } catch (e) {
       print("Error fetching set: $e");

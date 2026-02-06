@@ -8,8 +8,9 @@ class UserModel {
   final String avatar;
   final double? avgScore;
   final String? subject;
-  final List<UserClassInfo> classes;
+  final bool isActive;
   final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   UserModel({
     required this.id,
@@ -19,8 +20,9 @@ class UserModel {
     required this.avatar,
     this.avgScore,
     this.subject,
-    this.classes = const [],
+    this.isActive = true,
     this.createdAt,
+    this.updatedAt,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -35,13 +37,13 @@ class UserModel {
           ? (json['avgScore'] as num).toDouble()
           : null,
       subject: json['subject'],
-      classes: json['classes'] != null
-          ? (json['classes'] as List)
-                .map((e) => UserClassInfo.fromJson(e))
-                .toList()
-          : [],
+      isActive: json['isActive'] ?? true,
+
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
+          : null,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'])
           : null,
     );
   }
@@ -55,10 +57,9 @@ class UserModel {
       'avatar': avatar,
       'avgScore': avgScore,
       'subject': subject,
-
-      'classes': classes.map((e) => e.toJson()).toList(),
-
+      'isActive': isActive,
       'createdAt': createdAt?.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
     };
   }
 }

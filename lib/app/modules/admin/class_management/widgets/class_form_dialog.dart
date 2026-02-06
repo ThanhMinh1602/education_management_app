@@ -31,12 +31,10 @@ class _ClassFormWidgetState extends State<ClassFormWidget> {
   @override
   void initState() {
     super.initState();
-    nameCtrl = TextEditingController(
-      text: widget.classModel?.classRoomName ?? '',
-    );
+    nameCtrl = TextEditingController(text: widget.classModel?.name ?? '');
 
     scheduleCtrl = TextEditingController(
-      text: widget.classModel?.schedule ?? '',
+      text: widget.classModel?.description ?? '',
     );
   }
 
@@ -65,7 +63,12 @@ class _ClassFormWidgetState extends State<ClassFormWidget> {
       return;
     }
 
-    final request = ClassRequest(name: name, schedule: schedule);
+    final request = ClassRequest(
+      name: name,
+      description: schedule,
+      thumbnail:
+          'https://media.istockphoto.com/id/1425103315/vi/anh/ng%C6%B0%E1%BB%9Di-ph%E1%BB%A5-n%E1%BB%AF-ch%C3%A2u-%C3%A1-m%E1%BA%B7c-v%C4%83n-h%C3%B3a-vi%E1%BB%87t-nam-truy%E1%BB%81n-th%E1%BB%91ng-t%E1%BA%A1i-tam-c%E1%BB%91c-vi%E1%BB%87t-nam.jpg?s=612x612&w=0&k=20&c=xZDKlDmMiYEv7r5z0KNgMYfEe19Ozr7s1JXc040TR0Y=',
+    );
 
     bool isSuccess = false;
 

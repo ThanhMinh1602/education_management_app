@@ -59,29 +59,29 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
     });
   }
 
-  void _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    if (selectedClassId == null ||
-        selectedSetId == null ||
-        selectedDate == null) {
-      Get.snackbar(
-        "Thiếu thông tin",
-        "Vui lòng chọn đầy đủ Lớp, Bộ đề và Hạn nộp",
-        backgroundColor: Colors.orange.withOpacity(0.5),
-      );
-      return;
-    }
+  // void _submit() async {
+  //   if (!_formKey.currentState!.validate()) return;
+  //   if (selectedClassId == null ||
+  //       selectedSetId == null ||
+  //       selectedDate == null) {
+  //     Get.snackbar(
+  //       "Thiếu thông tin",
+  //       "Vui lòng chọn đầy đủ Lớp, Bộ đề và Hạn nộp",
+  //       backgroundColor: Colors.orange.withOpacity(0.5),
+  //     );
+  //     return;
+  //   }
 
-    final success = await controller.createAssignment(
-      title: titleCtrl.text.trim(),
-      description: descCtrl.text.trim(),
-      classId: selectedClassId!,
-      setId: selectedSetId!,
-      dueDate: selectedDate!,
-    );
+  //   final success = await controller.createAssignment(
+  //     title: titleCtrl.text.trim(),
+  //     description: descCtrl.text.trim(),
+  //     classId: selectedClassId!,
+  //     setId: selectedSetId!,
+  //     dueDate: selectedDate!,
+  //   );
 
-    if (success) Get.back();
-  }
+  //   if (success) Get.back();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -127,7 +127,7 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
                             return DropdownMenuItem<String>(
                               value: e.id,
                               child: Text(
-                                e.classRoomName,
+                                'e.classRoomName',
                                 style: const TextStyle(fontSize: 16),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -142,28 +142,28 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
                       ),
                     ),
                     const SizedBox(width: 16),
-                    Expanded(
-                      child: Obx(
-                        () => CustomDropdownField<String>(
-                          value: selectedSetId,
-                          items: controller.availableSets
-                              .map(
-                                (e) => DropdownMenuItem(
-                                  value: e.id,
-                                  child: Text(
-                                    e.setName ?? '',
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (val) =>
-                              setState(() => selectedSetId = val),
-                          validator: (v) => v == null ? 'Chọn bộ đề' : null,
-                          labelText: 'Chọn bộ đề',
-                        ),
-                      ),
-                    ),
+                    // Expanded(
+                    //   child: Obx(
+                    //     () => CustomDropdownField<String>(
+                    //       value: selectedSetId,
+                    //       items: controller.availableSets
+                    //           .map(
+                    //             (e) => DropdownMenuItem(
+                    //               value: e.id,
+                    //               child: Text(
+                    //                 e.setName ?? '',
+                    //                 overflow: TextOverflow.ellipsis,
+                    //               ),
+                    //             ),
+                    //           )
+                    //           .toList(),
+                    //       onChanged: (val) =>
+                    //           setState(() => selectedSetId = val),
+                    //       validator: (v) => v == null ? 'Chọn bộ đề' : null,
+                    //       labelText: 'Chọn bộ đề',
+                    //     ),
+                    //   ),
+                    // ),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -188,22 +188,22 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
                       ),
                     ),
                     const SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.action,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        onPressed: _submit,
-                        child: const Text(
-                          'GIAO BÀI',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
+                    // Expanded(
+                    //   child: ElevatedButton(
+                    //     style: ElevatedButton.styleFrom(
+                    //       backgroundColor: AppColors.action,
+                    //       padding: const EdgeInsets.symmetric(vertical: 16),
+                    //     ),
+                    //     onPressed: _submit,
+                    //     child: const Text(
+                    //       'GIAO BÀI',
+                    //       style: TextStyle(
+                    //         color: Colors.white,
+                    //         fontWeight: FontWeight.bold,
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ),
                   ],
                 ),
               ],

@@ -11,13 +11,15 @@ class UserService extends BaseService {
 
   Future<ApiResponseList<UserModel>> getStudents({
     String? keyword,
-    int page = 1,
-    int limit = 10,
+    int? page = 1,
+    int? limit = 10,
+    String? role,
   }) async {
     final queryParams = {
       if (keyword != null && keyword.isNotEmpty) 'keyword': keyword,
-      'page': page,
-      'limit': limit,
+      if (page != null) 'page': page,
+      if (limit != null) 'limit': limit,
+      if (role != null) 'role': role,
     };
 
     final response = await apiClient.get(
@@ -57,11 +59,13 @@ class UserService extends BaseService {
     String? name,
     bool? isActive,
     String? newPassword,
+    String? role,
   }) async {
     final data = {
       if (name != null) 'name': name,
       if (isActive != null) 'isActive': isActive,
       if (newPassword != null) 'password': newPassword,
+      if (role != null) 'role': role,
     };
 
     final response = await apiClient.put(
