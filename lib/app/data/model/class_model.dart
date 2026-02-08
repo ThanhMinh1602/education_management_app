@@ -6,7 +6,6 @@ class ClassModel {
   final String code;
   final String description;
   final String thumbnail;
-
   final UserModel? teacher;
 
   final int studentCount;
@@ -14,6 +13,7 @@ class ClassModel {
   final List<ClassSchedule> schedule;
   final bool isActive;
   final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   ClassModel({
     required this.id,
@@ -27,6 +27,7 @@ class ClassModel {
     this.schedule = const [],
     required this.isActive,
     this.createdAt,
+    this.updatedAt,
   });
 
   factory ClassModel.fromJson(Map<String, dynamic> json) {
@@ -58,6 +59,9 @@ class ClassModel {
       isActive: json['isActive'] ?? false,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
+          : null,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'])
           : null,
     );
   }

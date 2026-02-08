@@ -1,9 +1,8 @@
-// 1. Class con để quản lý từng buổi học
 class ClassScheduleRequest {
-  final int dayOfWeek; // 0: CN, 1: T2, ..., 6: T7
-  final String startTime; // "19:00"
-  final String endTime; // "21:00"
-  final String? room; // "Online" hoặc "Phòng 101"
+  final int dayOfWeek;
+  final String startTime;
+  final String endTime;
+  final String? room;
 
   ClassScheduleRequest({
     required this.dayOfWeek,
@@ -17,34 +16,33 @@ class ClassScheduleRequest {
       'dayOfWeek': dayOfWeek,
       'startTime': startTime,
       'endTime': endTime,
-      'room': room ?? 'Online', // Mặc định là Online nếu không nhập
+      'room': room ?? 'Online',
     };
   }
 }
 
-// 2. Class Request chính
 class ClassRequest {
-  final String name;
-  final String thumbnail;
-  final String description;
+  final String? name;
+  final String? thumbnail;
+  final String? description;
   final bool? isActive;
   final List<ClassScheduleRequest>? schedule;
 
   ClassRequest({
-    required this.name,
-    required this.thumbnail,
-    required this.description,
+    this.name,
+    this.thumbnail,
+    this.description,
     this.isActive,
     this.schedule,
   });
 
   Map<String, dynamic> toJson() {
     return {
-      'name': name,
-      'thumbnail': thumbnail,
-      'description': description,
+      if (name != null) 'name': name,
+      if (thumbnail != null) 'thumbnail': thumbnail,
+      if (description != null) 'description': description,
       if (isActive != null) 'isActive': isActive,
-      // Map list object sang list json
+
       if (schedule != null)
         'schedule': schedule!.map((e) => e.toJson()).toList(),
     };

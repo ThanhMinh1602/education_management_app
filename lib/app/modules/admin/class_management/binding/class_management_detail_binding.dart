@@ -5,7 +5,7 @@ class ClassManagementDetailBinding extends Bindings {
   @override
   void dependencies() {
     Get.lazyPut<ClassManagementDetailController>(
-      () => ClassManagementDetailController(Get.find(), Get.find()),
+      () => ClassManagementDetailController(Get.find()),
     );
   }
 }

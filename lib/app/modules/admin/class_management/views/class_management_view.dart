@@ -59,32 +59,18 @@ class ClassManagementView extends GetView<ClassManagementController> {
                         gridDelegate:
                             const SliverGridDelegateWithMaxCrossAxisExtent(
                               maxCrossAxisExtent: 400,
-                              childAspectRatio:
-                                  1.3, // <--- GIẢM SỐ NÀY XUỐNG (VD: từ 1.5 -> 1.3 hoặc 1.2) để Card cao hơn
+                              childAspectRatio: 1.3,
                               crossAxisSpacing: 30,
                               mainAxisSpacing: 30,
                             ),
                         itemBuilder: (context, index) {
                           final item = controller.classList[index];
-
                           return ClassCard(
                             className: item.name,
-                            code: item.code, // Truyền Mã lớp
-                            teacherName:
-                                item.teacher?.name, // Truyền Tên GV (nếu có)
-                            schedule: item
-                                .schedule, // Truyền thẳng List<ClassSchedule>
+                            code: item.code,
+                            schedule: item.schedule,
                             studentCount: item.studentCount,
                             onEnterClass: () => controller.enterClass(item.id),
-                            onEdit: () {
-                              Get.dialog(
-                                ClassFormWidget(
-                                  title: 'SỬA LỚP HỌC',
-                                  controller: controller,
-                                  classModel: item,
-                                ),
-                              );
-                            },
                             onDelete: () {
                               AppDialogs.showDeleteConfirm(
                                 onConfirm: () async {

@@ -1,8 +1,10 @@
+import 'package:blooket/app/core/components/text_field/custom_text_field.dart';
 import 'package:blooket/app/core/constants/app_colors.dart';
 import 'package:blooket/app/core/constants/app_text_styles.dart';
 import 'package:blooket/app/data/model/class_model.dart';
 import 'package:blooket/app/data/model/request/class/class_request.dart';
 import 'package:blooket/app/modules/admin/class_management/controller/class_management_controller.dart';
+import 'package:blooket/app/modules/admin/class_management/widgets/schedule_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -26,22 +28,29 @@ class ClassFormWidget extends StatefulWidget {
 
 class _ClassFormWidgetState extends State<ClassFormWidget> {
   late TextEditingController nameCtrl;
-  late TextEditingController scheduleCtrl;
+  late TextEditingController descriptionCtrl;
+  late TextEditingController thumbnailCtrl;
+
+  List<ClassScheduleRequest> scheduleRequests = [];
+  List<ClassSchedule> schedule = [];
 
   @override
   void initState() {
     super.initState();
     nameCtrl = TextEditingController(text: widget.classModel?.name ?? '');
-
-    scheduleCtrl = TextEditingController(
+    descriptionCtrl = TextEditingController(
       text: widget.classModel?.description ?? '',
+    );
+    thumbnailCtrl = TextEditingController(
+      text: widget.classModel?.thumbnail ?? '',
     );
   }
 
   @override
   void dispose() {
     nameCtrl.dispose();
-    scheduleCtrl.dispose();
+    descriptionCtrl.dispose();
+    thumbnailCtrl.dispose();
     super.dispose();
   }
 
@@ -49,7 +58,8 @@ class _ClassFormWidgetState extends State<ClassFormWidget> {
     FocusScope.of(context).unfocus();
 
     final name = nameCtrl.text.trim();
-    final schedule = scheduleCtrl.text.trim();
+    final description = descriptionCtrl.text.trim();
+    final thumbnail = thumbnailCtrl.text.trim();
 
     if (name.isEmpty) {
       Get.snackbar(
@@ -65,9 +75,9 @@ class _ClassFormWidgetState extends State<ClassFormWidget> {
 
     final request = ClassRequest(
       name: name,
-      description: schedule,
-      thumbnail:
-          'https://media.istockphoto.com/id/1425103315/vi/anh/ng%C6%B0%E1%BB%9Di-ph%E1%BB%A5-n%E1%BB%AF-ch%C3%A2u-%C3%A1-m%E1%BA%B7c-v%C4%83n-h%C3%B3a-vi%E1%BB%87t-nam-truy%E1%BB%81n-th%E1%BB%91ng-t%E1%BA%A1i-tam-c%E1%BB%91c-vi%E1%BB%87t-nam.jpg?s=612x612&w=0&k=20&c=xZDKlDmMiYEv7r5z0KNgMYfEe19Ozr7s1JXc040TR0Y=',
+      description: description,
+      thumbnail: thumbnail,
+      schedule: scheduleRequests,
     );
 
     bool isSuccess = false;
@@ -103,40 +113,26 @@ class _ClassFormWidgetState extends State<ClassFormWidget> {
             children: [
               Text(widget.title, style: AppTextStyles.dialogTitle),
               const SizedBox(height: 16),
-
-              TextField(
-                controller: nameCtrl,
-                decoration: InputDecoration(
-                  labelText: 'Tên lớp (VD: Tiếng Trung K15)',
-                  prefixIcon: const Icon(
-                    Icons.class_,
-                    color: AppColors.primary,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey.shade50,
-                ),
-              ),
+              CustomTextField(controller: nameCtrl, labelText: 'Tên lớp'),
               const SizedBox(height: 12),
-              TextField(
-                controller: scheduleCtrl,
-                decoration: InputDecoration(
-                  labelText: 'Lịch học (VD: 2-4-6 19:30)',
-                  prefixIcon: const Icon(
-                    Icons.access_time,
-                    color: AppColors.primary,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey.shade50,
-                ),
+              CustomTextField(controller: descriptionCtrl, labelText: 'Mô tả'),
+              const SizedBox(height: 12),
+              CustomTextField(
+                controller: thumbnailCtrl,
+                labelText: 'Thumbnail',
               ),
-              const SizedBox(height: 18),
-
+              SizedBox(height: 20.0),
+              ScheduleWidget(
+                isEditable: true,
+                scheduleInitial: schedule,
+                onChanged: (values) {
+                  values.map((e) => print(e));
+                  setState(() {
+                    scheduleRequests = values;
+                  });
+                },
+              ),
+              SizedBox(height: 20.0),
               Row(
                 children: [
                   Expanded(

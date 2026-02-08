@@ -20,7 +20,6 @@ Future<void> main() async {
   runApp(const MyApp());
 }
 
-// Hàm cấu hình style cho EasyLoading (Màu sắc, animation...)
 void configLoading() {
   EasyLoading.instance
     ..displayDuration = const Duration(milliseconds: 2000)

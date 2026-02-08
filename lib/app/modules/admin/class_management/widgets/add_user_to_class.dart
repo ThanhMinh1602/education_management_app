@@ -1,7 +1,7 @@
+import 'package:blooket/app/core/constants/app_color.dart';
 import 'package:blooket/app/modules/admin/class_management/controller/class_management_detail_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 
 class AddUserToClass extends StatelessWidget {
   const AddUserToClass({super.key});
@@ -26,7 +26,7 @@ class AddUserToClass extends StatelessWidget {
                   Text(
                     "CHỌN HỌC VIÊN",
                     style: TextStyle(
-                      color: controller.primaryColor,
+                      color: AppColor.primary,
                       fontSize: 24,
                       fontWeight: FontWeight.w900,
                     ),
@@ -55,7 +55,7 @@ class AddUserToClass extends StatelessWidget {
               const SizedBox(height: 16),
 
               Expanded(
-                child: controller.allStudents.isEmpty
+                child: controller.classDetail.value?.students == null
                     ? const Center(
                         child: Text(
                           "Không có học viên nào khả dụng",
@@ -63,22 +63,25 @@ class AddUserToClass extends StatelessWidget {
                         ),
                       )
                     : ListView.separated(
-                        itemCount: controller.allStudents.length,
+                        itemCount:
+                            controller.classDetail.value!.students.length,
                         separatorBuilder: (_, __) => const Divider(height: 1),
                         itemBuilder: (ctx, index) {
-                          final user = controller.allStudents[index];
+                          final user =
+                              controller.classDetail.value!.students[index];
                           return ListTile(
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: 4,
                             ),
                             leading: CircleAvatar(
-                              backgroundColor: controller.primaryColor
-                                  .withOpacity(0.1),
+                              backgroundColor: AppColor.primary.withOpacity(
+                                0.1,
+                              ),
                               child: Text(
                                 user.name?[0] ?? 'M',
                                 style: TextStyle(
-                                  color: controller.primaryColor,
+                                  color: AppColor.primary,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -92,7 +95,7 @@ class AddUserToClass extends StatelessWidget {
                             subtitle: Text(user.username),
                             trailing: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: controller.accentColor,
+                                backgroundColor: AppColor.green,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),

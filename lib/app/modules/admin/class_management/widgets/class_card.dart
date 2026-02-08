@@ -1,31 +1,83 @@
-// lib/app/modules/admin/class_management/widgets/class_card.dart
-
 import 'package:blooket/app/data/model/class_model.dart';
+import 'package:blooket/app/data/model/request/class/class_request.dart';
+import 'package:blooket/app/modules/admin/class_management/widgets/schedule_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Để dùng Clipboard
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
-class ClassCard extends StatelessWidget {
-  final String className;
-  final String code;
-  final String? teacherName;
-  final List<ClassSchedule> schedule;
-  final int studentCount;
-  final VoidCallback onEnterClass;
-  final VoidCallback onDelete;
-  final VoidCallback onEdit;
+class ClassCard extends StatefulWidget {
+  final ClassModel? classModel;
+  final bool isDetail;
+
+  final String? className;
+  final String? code;
+  final int? studentCount;
+  final List<ClassSchedule>? schedule;
+
+  final VoidCallback? onEnterClass;
+  final VoidCallback? onDelete;
+  final Function(String)? onNameChanged;
+  final Function(String)? onDescriptionChanged;
+  final Function(bool)? onStatusChanged;
+  final Function(List<ClassScheduleRequest>)? onScheduleChanged;
 
   const ClassCard({
     super.key,
-    required this.className,
-    required this.code,
-    this.teacherName,
-    required this.schedule,
-    required this.studentCount,
-    required this.onEnterClass,
-    required this.onDelete,
-    required this.onEdit,
+    this.classModel,
+    this.isDetail = false,
+    this.className,
+    this.code,
+    this.studentCount,
+    this.schedule,
+    this.onEnterClass,
+    this.onDelete,
+    this.onNameChanged,
+    this.onDescriptionChanged,
+    this.onStatusChanged,
+    this.onScheduleChanged,
   });
+
+  @override
+  State<ClassCard> createState() => _ClassCardState();
+}
+
+class _ClassCardState extends State<ClassCard> {
+  late TextEditingController _nameCtrl;
+  late TextEditingController _descCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameCtrl = TextEditingController(text: _getName());
+    _descCtrl = TextEditingController(
+      text: widget.classModel?.description ?? '',
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant ClassCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.classModel?.name != oldWidget.classModel?.name) {
+      _nameCtrl.text = widget.classModel?.name ?? '';
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _descCtrl.dispose();
+    super.dispose();
+  }
+
+  String _getName() =>
+      widget.classModel?.name ?? widget.className ?? 'Unknown Class';
+  String _getCode() => widget.classModel?.code ?? widget.code ?? '---';
+  int _getCount() =>
+      widget.classModel?.studentCount ?? widget.studentCount ?? 0;
+  List<ClassSchedule> _getSchedule() =>
+      widget.classModel?.schedule ?? widget.schedule ?? [];
+  String? _getTeacher() => widget.classModel?.teacher?.name;
 
   @override
   Widget build(BuildContext context) {
@@ -49,13 +101,12 @@ class ClassCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         child: Stack(
           children: [
-            // --- Trang trí nền (Hình tròn mờ góc phải) ---
             Positioned(
               top: -30,
               right: -30,
               child: Container(
-                width: 120,
-                height: 120,
+                width: 150,
+                height: 150,
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.05),
                   shape: BoxShape.circle,
@@ -63,376 +114,343 @@ class ClassCard extends StatelessWidget {
               ),
             ),
 
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // ==============================
-                // 1. HEADER (Tên, Mã lớp, GV)
-                // ==============================
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 16, 0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Badge Mã lớp (Bấm để Copy)
-                            Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(6),
-                                onTap: () {
-                                  Clipboard.setData(ClipboardData(text: code));
-                                  Get.snackbar(
-                                    "Đã sao chép",
-                                    "Mã lớp: $code",
-                                    snackPosition: SnackPosition.BOTTOM,
-                                    backgroundColor: Colors.black87,
-                                    colorText: Colors.white,
-                                    duration: const Duration(seconds: 1),
-                                    margin: const EdgeInsets.all(16),
-                                  );
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(
-                                      color: Colors.white.withOpacity(0.1),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        'CODE: $code',
-                                        style: const TextStyle(
-                                          color: Color(0xFFFFE082),
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: 1,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      const Icon(
-                                        Icons.copy_rounded,
-                                        color: Colors.white70,
-                                        size: 12,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            // Tên lớp
-                            Text(
-                              className,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 22,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            // Tên giáo viên
-                            if (teacherName != null) ...[
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.person_rounded,
-                                    color: Colors.white70,
-                                    size: 14,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    child: Text(
-                                      teacherName!,
-                                      style: const TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      // Nút Sửa / Xóa
-                      Column(
-                        children: [
-                          _buildCircleButton(Icons.edit_rounded, onEdit),
-                          const SizedBox(height: 8),
-                          _buildCircleButton(
-                            Icons.delete_outline_rounded,
-                            onDelete,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // ==============================
-                // 2. BODY (Thanh lịch học 7 ngày)
-                // ==============================
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+            widget.isDetail
+                ? _buildContent(context)
+                : Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 16, 0),
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 12,
-                            horizontal: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.1),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: _buildWeekDays(), // Render 7 hình tròn
-                          ),
-                        ),
-
-                        const Spacer(),
-
-                        // Số học viên
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.people_alt_rounded,
-                              color: Colors.white60,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              '$studentCount học viên',
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
+                        _buildHeaderCompact(),
+                        const SizedBox(height: 16),
+                        Expanded(child: _buildBodyCompact()),
+                        if (widget.onEnterClass != null) _buildFooterCompact(),
+                        const SizedBox(height: 12),
                       ],
                     ),
                   ),
-                ),
-
-                // ==============================
-                // 3. FOOTER BUTTON
-                // ==============================
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                  child: ElevatedButton(
-                    onPressed: onEnterClass,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFEDBBC6),
-                      foregroundColor: const Color(0xFF6A4C53),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'XEM LỚP HỌC',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 13,
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        Icon(Icons.arrow_forward_rounded, size: 16),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
           ],
         ),
       ),
     );
   }
 
-  // --- LOGIC HELPER ---
-  // --- HÀM TẠO DANH SÁCH 7 NGÀY (CÓ TOOLTIP) ---
-  List<Widget> _buildWeekDays() {
-    final weekOrder = [1, 2, 3, 4, 5, 6, 0];
+  Widget _buildHeaderCompact() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildCodeBadge(_getCode()),
+              const SizedBox(height: 8),
+              Text(
+                _getName(),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              if (_getTeacher() != null) ...[
+                const SizedBox(height: 4),
+                _buildTeacherRow(_getTeacher()!),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 
-    return weekOrder.map((dayIndex) {
-      final scheduleItem = schedule.firstWhereOrNull(
-        (s) => s.dayOfWeek == dayIndex,
-      );
-      final isActive = scheduleItem != null;
+  Widget _buildBodyCompact() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        ScheduleWidget(scheduleInitial: _getSchedule()),
+        const Spacer(),
+        _buildStudentCountRow(),
+      ],
+    );
+  }
 
-      // Chuẩn bị nội dung cho Tooltip
-      String tooltipMessage;
-      if (isActive) {
-        tooltipMessage =
-            '${_getDayFullName(dayIndex)}\n'
-            '⏰ ${scheduleItem.startTime} - ${scheduleItem.endTime}';
-        if (scheduleItem.room.isNotEmpty) {
-          tooltipMessage += '\n📍 ${scheduleItem.room}';
-        }
-      } else {
-        tooltipMessage = '${_getDayFullName(dayIndex)}\n💤 Không có lịch';
-      }
+  Widget _buildFooterCompact() {
+    return ElevatedButton(
+      onPressed: widget.onEnterClass,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFFEDBBC6),
+        foregroundColor: const Color(0xFF6A4C53),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      ),
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'XEM LỚP HỌC',
+            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+          ),
+          SizedBox(width: 8),
+          Icon(Icons.arrow_forward_rounded, size: 16),
+        ],
+      ),
+    );
+  }
 
-      return Expanded(
-        // Bọc Tooltip ở đây
-        child: Tooltip(
-          message: tooltipMessage,
-          padding: const EdgeInsets.all(12),
-          margin: const EdgeInsets.only(top: 10), // Cách xa chấm tròn một chút
-          showDuration: const Duration(seconds: 3), // Thời gian hiện
-          decoration: BoxDecoration(
-            color: const Color(0xFF2D3436).withOpacity(0.95),
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
+  Widget _buildContent(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (widget.classModel?.thumbnail.isNotEmpty == true)
+                Container(
+                  width: 60,
+                  height: 60,
+                  margin: const EdgeInsets.only(right: 16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    image: DecorationImage(
+                      image: NetworkImage(widget.classModel!.thumbnail),
+                      fit: BoxFit.cover,
+                      onError: (_, __) {},
+                    ),
+                    border: Border.all(color: Colors.white24),
+                  ),
+                ),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildCodeBadge(_getCode()),
+                        Transform.scale(
+                          scale: 0.8,
+                          child: Switch(
+                            value: widget.classModel?.isActive ?? true,
+                            activeColor: const Color(0xFF00B894),
+                            onChanged: widget.onStatusChanged,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    if (_getTeacher() != null) _buildTeacherRow(_getTeacher()!),
+                  ],
+                ),
               ),
             ],
           ),
-          textStyle: const TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-            height: 1.4, // Giãn dòng cho dễ đọc
+
+          const SizedBox(height: 8),
+          _buildEditableField(
+            controller: _nameCtrl,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+            ),
+            hint: "Tên lớp học",
+            onChanged: widget.onNameChanged,
           ),
-          // TriggerMode: longPress cho mobile, manual cho mouse hover
-          triggerMode: TooltipTriggerMode.longPress,
 
-          child: Container(
-            // Thêm màu nền trong suốt để tăng diện tích nhận cảm ứng cho Tooltip
-            color: Colors.transparent,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Hình tròn
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isActive
-                        ? const Color(0xFFFFE082)
-                        : Colors.white.withOpacity(0.1),
-                    boxShadow: isActive
-                        ? [
-                            BoxShadow(
-                              color: const Color(0xFFFFE082).withOpacity(0.4),
-                              blurRadius: 6,
-                              spreadRadius: 1,
-                            ),
-                          ]
-                        : [],
-                  ),
-                  child: Center(
-                    child: Text(
-                      _getDayShortName(dayIndex),
-                      style: TextStyle(
-                        color: isActive
-                            ? const Color(0xFF5D4037)
-                            : Colors.white60,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 10,
-                      ),
-                    ),
-                  ),
-                ),
+          const SizedBox(height: 20),
 
-                const SizedBox(height: 4),
-
-                // Giờ học
-                Text(
-                  isActive ? _formatTimeShort(scheduleItem.startTime) : '',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 9,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.visible,
-                ),
-              ],
+          const Text(
+            "Mô tả:",
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
             ),
           ),
-        ),
-      );
-    }).toList();
+          const SizedBox(height: 4),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white12),
+            ),
+            child: _buildEditableField(
+              controller: _descCtrl,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                height: 1.4,
+              ),
+              hint: "Chưa có mô tả...",
+              maxLines: 3,
+              onChanged: widget.onDescriptionChanged,
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          const Text(
+            "Lịch học:",
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ScheduleWidget(
+            scheduleInitial: _getSchedule(),
+            onChanged: widget.onScheduleChanged,
+            isEditable: widget.isDetail,
+          ),
+
+          const SizedBox(height: 20),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildStudentCountRow(),
+              if (widget.classModel?.createdAt != null)
+                Tooltip(
+                  message:
+                      "Ngày tạo: ${DateFormat('dd/MM/yyyy HH:mm').format(widget.classModel!.createdAt!)}",
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.access_time,
+                        color: Colors.white38,
+                        size: 14,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        DateFormat(
+                          'dd/MM/yyyy',
+                        ).format(widget.classModel!.createdAt!),
+                        style: const TextStyle(
+                          color: Colors.white38,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
-  // Helper: Tên ngày đầy đủ cho Tooltip
-  String _getDayFullName(int dayIndex) {
-    if (dayIndex == 0) return 'Chủ Nhật';
-    return 'Thứ ${dayIndex + 1}';
-  }
-
-  // Chuyển index sang tên ngày (0->CN, 1->T2...)
-  String _getDayShortName(int dayIndex) {
-    if (dayIndex == 0) return 'CN';
-    return 'T${dayIndex + 1}';
-  }
-
-  // Rút gọn giờ (19:00 -> 19h, 19:30 -> 19h30)
-  String _formatTimeShort(String time) {
-    final parts = time.split(':');
-    if (parts.length >= 2) {
-      final hour = parts[0];
-      final minute = parts[1];
-      if (minute == '00') return '${hour}h';
-      return '${hour}h$minute';
-    }
-    return time;
-  }
-
-  // Nút tròn nhỏ cho Edit/Delete
-  Widget _buildCircleButton(IconData icon, VoidCallback onPressed) {
+  Widget _buildCodeBadge(String code) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(6),
+        onTap: () {
+          Clipboard.setData(ClipboardData(text: code));
+          Get.snackbar(
+            "Sao chép",
+            "Code: $code",
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.black54,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 1),
+            margin: const EdgeInsets.all(10),
+          );
+        },
         child: Container(
-          padding: const EdgeInsets.all(6),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white.withOpacity(0.2)),
+            color: Colors.black.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: Colors.white.withOpacity(0.1)),
           ),
-          child: Icon(icon, color: Colors.white, size: 16),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'CODE: $code',
+                style: const TextStyle(
+                  color: Color(0xFFFFE082),
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(width: 6),
+              const Icon(Icons.copy_rounded, color: Colors.white70, size: 12),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildTeacherRow(String name) {
+    return Row(
+      children: [
+        const Icon(Icons.person_rounded, color: Colors.white70, size: 14),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Text(
+            name,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStudentCountRow() {
+    return Row(
+      children: [
+        const Icon(Icons.people_alt_rounded, color: Colors.white60, size: 16),
+        const SizedBox(width: 6),
+        Text(
+          '${_getCount()} học viên',
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEditableField({
+    required TextEditingController controller,
+    required TextStyle style,
+    String? hint,
+    int maxLines = 1,
+    Function(String)? onChanged,
+  }) {
+    return TextFormField(
+      controller: controller,
+      style: style,
+      maxLines: maxLines,
+      onChanged: onChanged,
+      cursorColor: const Color(0xFFFFE082),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: style.copyWith(color: Colors.white30),
+        border: InputBorder.none,
+        isDense: true,
+        contentPadding: EdgeInsets.zero,
       ),
     );
   }

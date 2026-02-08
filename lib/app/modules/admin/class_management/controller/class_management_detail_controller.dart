@@ -1,27 +1,18 @@
-import 'package:blooket/app/data/enum/user_role.dart';
-import 'package:blooket/app/data/model/user_model.dart';
+import 'package:blooket/app/data/model/class_model.dart';
+import 'package:blooket/app/data/model/request/class/class_request.dart';
 import 'package:blooket/app/data/service/class_service.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:blooket/app/core/base/base_controller.dart';
-import 'package:blooket/app/data/service/user_service.dart';
 
 class ClassManagementDetailController extends BaseController {
-  final UserService _userService;
   final ClassService _classService;
 
-  final studentsInClass = <UserModel>[].obs;
-
-  final allStudents = <UserModel>[].obs;
+  final classDetail = Rxn<ClassModel>();
 
   late String currentClassId;
   bool isDataChanged = false;
-  ClassManagementDetailController(this._userService, this._classService);
-
-  final primaryColor = const Color(0xFF909CC2);
-  final accentColor = const Color(0xFFEDBBC6);
-  final bgColor = const Color(0xFFDCD6F7);
+  ClassManagementDetailController(this._classService);
 
   @override
   void onInit() {
@@ -34,7 +25,6 @@ class ClassManagementDetailController extends BaseController {
     try {
       showLoading();
       await fetchClassDetail();
-      await fetchAllStudents();
       hideLoading();
     } catch (e) {
       showError("Không thể tải danh sách học viên, vui lòng thử lại");
@@ -44,51 +34,52 @@ class ClassManagementDetailController extends BaseController {
   Future<void> fetchClassDetail() async {
     final res = await _classService.getClassDetail(currentClassId);
     if (res.success) {
-      studentsInClass.value = res.data?.students ?? [];
+      classDetail.value = res.data;
     }
   }
-
-  Future<void> fetchAllStudents() async {
-    final res = await _userService.getStudents();
-    if (res.success) {
-      allStudents.value = res.data;
-    }
-  }
-
-  // Future<void> addStudentToClass(String studentId) async {
-  //   showLoading();
-  //   try {
-  //     final res = await _userService.addStudentToClass(
-  //       studentId,
-  //       currentClassId,
-  //     );
-  //     if (res.success && res.data != null) {
-  //       studentsInClass.add(res.data!);
-  //       isDataChanged = true;
-  //     }
-  //   } catch (e) {
-  //     showError("Không thể thêm học viên, vui lòng thử lại");
-  //   }
-  //   hideLoading();
-  // }
 
   Future<void> removeStudentFromClass(String studentId) async {
-    showLoading();
     try {
-      final res = await _classService.removeStudent(studentId, currentClassId);
-      if (res.success && res.data != null) {
-        studentsInClass.removeWhere((element) => element.id == studentId);
+      showLoading();
+
+      final res = await _classService.removeStudent(currentClassId, studentId);
+
+      if (res.success) {
+        classDetail.update((val) {
+          if (val != null) {
+            val.students.removeWhere((element) => element.id == studentId);
+          }
+        });
+
         isDataChanged = true;
+        showSuccess("Đã xóa học viên khỏi lớp");
+      } else {
+        showError(res.message);
       }
     } catch (e) {
+      print(e);
       showError("Không thể xóa học viên, vui lòng thử lại");
+    } finally {
+      hideLoading();
     }
-    hideLoading();
   }
 
-  void resetPassword(String id) {
-    showSuccess("Đã reset mật khẩu");
-  }
+  Future<void> updateClass(ClassRequest classRequest) async {
+    try {
+      showLoading();
 
-  void toggleStatus(String id) {}
+      final res = await _classService.updateClass(currentClassId, classRequest);
+
+      if (res.success) {
+        showSuccess("Cập nhật lớp thành công");
+      } else {
+        showError(res.message);
+      }
+    } catch (e) {
+      print(e);
+      showError("Không thể cập nhật lớp, vui lòng thử lại");
+    } finally {
+      hideLoading();
+    }
+  }
 }
