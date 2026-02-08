@@ -65,22 +65,14 @@ class ClassManagementView extends GetView<ClassManagementController> {
                             ),
                         itemBuilder: (context, index) {
                           final item = controller.classList[index];
+
                           return ClassCard(
+                            key: ValueKey(item.id),
                             className: item.name,
                             code: item.code,
                             schedule: item.schedule,
                             studentCount: item.studentCount,
                             onEnterClass: () => controller.enterClass(item.id),
-                            onDelete: () {
-                              AppDialogs.showDeleteConfirm(
-                                onConfirm: () async {
-                                  await Future.delayed(
-                                    const Duration(milliseconds: 300),
-                                  );
-                                  await controller.deleteClass(item.id);
-                                },
-                              );
-                            },
                           );
                         },
                       );

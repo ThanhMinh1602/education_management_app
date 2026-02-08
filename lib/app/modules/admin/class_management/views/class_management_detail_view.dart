@@ -1,6 +1,7 @@
 import 'package:blooket/app/core/components/appbar/custom_app_bar.dart';
+import 'package:blooket/app/core/components/button/custom_button.dart';
 import 'package:blooket/app/core/constants/app_color.dart';
-import 'package:blooket/app/data/model/request/class/class_request.dart';
+import 'package:blooket/app/data/model/user_model.dart';
 import 'package:blooket/app/modules/admin/class_management/controller/class_management_detail_controller.dart';
 import 'package:blooket/app/modules/admin/class_management/widgets/add_user_to_class.dart';
 import 'package:blooket/app/modules/admin/class_management/widgets/class_card.dart';
@@ -41,25 +42,30 @@ class ClassManagementDetailView
                     ClassCard(
                       isDetail: true,
                       classModel: currentClass,
-                      onNameChanged: (val) {
-                        controller.updateClass(ClassRequest(name: val));
-                      },
-                      onDescriptionChanged: (val) {
-                        controller.updateClass(ClassRequest(description: val));
-                      },
-                      onStatusChanged: (isActive) {
-                        controller.updateClass(
-                          ClassRequest(isActive: isActive),
-                        );
-                      },
-                      onScheduleChanged: (newSchedules) {
-                        // controller.updateClass(Sce)
+                      onSave: (classRequest) {
+                        controller.updateClass(classRequest);
                       },
                     ),
 
                     const SizedBox(height: 24),
 
                     _buildQuickStats(context, currentClass.students),
+                    const SizedBox(height: 24),
+                    CustomButton(
+                      text: 'Xóa lớp',
+                      backgroundColor: AppColor.falseRed,
+                      foregroundColor: AppColor.white,
+                      onPressed: () {
+                        AppDialogs.showDeleteConfirm(
+                          onConfirm: () async {
+                            await Future.delayed(
+                              const Duration(milliseconds: 300),
+                            );
+                            await controller.deleteClass();
+                          },
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -174,18 +180,12 @@ class ClassManagementDetailView
               color: Colors.grey[500],
             ),
           ),
-          const SizedBox(height: 8),
-          TextButton.icon(
-            onPressed: () => _showAddDialog(Get.context!),
-            icon: const Icon(Icons.add),
-            label: const Text("Thêm học viên ngay"),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildDataTable(BuildContext context, List<dynamic> students) {
+  Widget _buildDataTable(BuildContext context, List<UserModel> students) {
     return Theme(
       data: Theme.of(context).copyWith(dividerColor: Colors.grey.shade100),
       child: SingleChildScrollView(
@@ -228,21 +228,14 @@ class ClassManagementDetailView
                             ),
                           ],
                           image: DecorationImage(
-                            image: NetworkImage(user.avatar ?? ''),
+                            image: NetworkImage(user.avatar),
                             fit: BoxFit.cover,
                             onError: (_, __) {},
                           ),
                         ),
-                        child: Center(
-                          child: Text(
-                            (user.name ?? 'A').substring(0, 1).toUpperCase(),
-                            style: TextStyle(
-                              color: AppColor.primary,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
+                        child: user.avatar.isEmpty
+                            ? Icon(Icons.person, color: AppColor.primary)
+                            : null,
                       ),
                       const SizedBox(width: 16),
                       Column(
@@ -262,7 +255,6 @@ class ClassManagementDetailView
                     ],
                   ),
                 ),
-
                 DataCell(
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -457,7 +449,7 @@ class ClassManagementDetailView
     );
   }
 
-  void _showAddDialog(BuildContext context) {
-    Get.dialog(const AddUserToClass());
-  }
+  // void _showAddDialog(BuildContext context) {
+  //   Get.dialog(const AddUserToClass());
+  // }
 }

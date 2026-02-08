@@ -44,6 +44,20 @@ class _ClassFormWidgetState extends State<ClassFormWidget> {
     thumbnailCtrl = TextEditingController(
       text: widget.classModel?.thumbnail ?? '',
     );
+
+    if (widget.classModel != null) {
+      schedule = widget.classModel!.schedule;
+      scheduleRequests = schedule
+          .map(
+            (e) => ClassScheduleRequest(
+              dayOfWeek: e.dayOfWeek,
+              startTime: e.startTime,
+              endTime: e.endTime,
+              room: e.room,
+            ),
+          )
+          .toList();
+    }
   }
 
   @override
@@ -65,10 +79,11 @@ class _ClassFormWidgetState extends State<ClassFormWidget> {
       Get.snackbar(
         'Thiếu thông tin',
         'Vui lòng nhập tên lớp',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.redAccent.withOpacity(0.1),
-        colorText: Colors.red,
-        margin: const EdgeInsets.all(10),
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        icon: const Icon(Icons.warning_amber_rounded, color: Colors.white),
       );
       return;
     }
@@ -81,7 +96,6 @@ class _ClassFormWidgetState extends State<ClassFormWidget> {
     );
 
     bool isSuccess = false;
-
     if (widget.classModel != null) {
       isSuccess = await widget.controller.updateClass(
         id: widget.classModel!.id,
@@ -91,82 +105,286 @@ class _ClassFormWidgetState extends State<ClassFormWidget> {
       isSuccess = await widget.controller.createClass(request);
     }
 
-    if (isSuccess) {
-      Get.back();
-    }
+    if (isSuccess) Get.back();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    // Màu chủ đạo
+    const primaryColor = Color(0xFF6C63FF);
+    const secondaryColor = Color(0xFF2D3436);
+
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      elevation: 10,
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent, // Fix lỗi ám màu trên Material 3
       child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 520),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(widget.title, style: AppTextStyles.dialogTitle),
-              const SizedBox(height: 16),
-              CustomTextField(controller: nameCtrl, labelText: 'Tên lớp'),
-              const SizedBox(height: 12),
-              CustomTextField(controller: descriptionCtrl, labelText: 'Mô tả'),
-              const SizedBox(height: 12),
-              CustomTextField(
-                controller: thumbnailCtrl,
-                labelText: 'Thumbnail',
+        constraints: const BoxConstraints(maxWidth: 550),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // --- HEADER ---
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
+                border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
               ),
-              SizedBox(height: 20.0),
-              ScheduleWidget(
-                isEditable: true,
-                scheduleInitial: schedule,
-                onChanged: (values) {
-                  values.map((e) => print(e));
-                  setState(() {
-                    scheduleRequests = values;
-                  });
-                },
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.school_rounded,
+                      color: primaryColor,
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.title,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: secondaryColor,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "Nhập thông tin chi tiết lớp học",
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Get.back(),
+                    icon: const Icon(Icons.close_rounded),
+                    color: Colors.grey,
+                    tooltip: "Đóng",
+                  ),
+                ],
               ),
-              SizedBox(height: 20.0),
-              Row(
+            ),
+
+            // --- BODY ---
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionTitle(
+                      "Thông tin chung",
+                      Icons.info_outline_rounded,
+                      Colors.blueAccent,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildInputWithIcon(
+                      controller: nameCtrl,
+                      label: "Tên lớp học",
+                      icon: Icons.edit_note_rounded,
+                      iconColor: Colors.orangeAccent,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildInputWithIcon(
+                      controller: descriptionCtrl,
+                      label: "Mô tả",
+                      icon: Icons.description_outlined,
+                      iconColor: Colors.teal,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildInputWithIcon(
+                      controller: thumbnailCtrl,
+                      label: "Link hình ảnh",
+                      icon: Icons.image_rounded,
+                      iconColor: Colors.pinkAccent,
+                    ),
+
+                    const SizedBox(height: 30),
+
+                    _buildSectionTitle(
+                      "Lịch học",
+                      Icons.calendar_month_rounded,
+                      Colors.purpleAccent,
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      "Chạm vào các ngày trong tuần để thêm/sửa giờ học.",
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 13,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // --- WIDGET LỊCH HỌC ĐƯỢC PHỐI MÀU ---
+                    ScheduleWidget(
+                      isEditable: true,
+                      scheduleInitial: schedule,
+                      onChanged: (values) {
+                        setState(() {
+                          scheduleRequests = values;
+                        });
+                      },
+
+                      // --- CẤU HÌNH MÀU CHO FORM NỀN TRẮNG ---
+                      backgroundColor: const Color(
+                        0xFFF8F9FA,
+                      ), // Nền xám rất nhạt
+                      borderColor: Colors.grey.shade300, // Viền xám
+
+                      activeColor: primaryColor, // Chip màu Tím (Primary)
+                      activeTextColor: Colors.white, // Chữ trắng
+
+                      inactiveColor: const Color(
+                        0xFFEEEEEE,
+                      ), // Chip màu xám nhạt (khi chưa chọn)
+                      inactiveTextColor: Colors.grey, // Chữ xám
+
+                      timeColor: primaryColor, // Giờ hiển thị màu Tím
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // --- FOOTER ---
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                border: Border(top: BorderSide(color: Colors.grey.shade100)),
+              ),
+              child: Row(
                 children: [
                   Expanded(
                     child: TextButton(
                       onPressed: widget.onCancel ?? () => Get.back(),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        foregroundColor: Colors.grey.shade600,
+                      ),
                       child: const Text(
-                        'Hủy',
-                        style: TextStyle(color: Colors.grey),
+                        'Hủy bỏ',
+                        style: TextStyle(fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 16),
                   Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.action,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF6C63FF), Color(0xFF4834D4)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF6C63FF).withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
                       ),
-                      onPressed: _onSubmit,
-                      child: const Text(
-                        'LƯU',
-                        style: AppTextStyles.buttonWhite,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: _onSubmit,
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'LƯU THÔNG TIN',
+                              style: AppTextStyles.buttonWhite,
+                            ),
+                            SizedBox(width: 8),
+                            Icon(
+                              Icons.arrow_forward_rounded,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title, IconData icon, Color color) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: color),
+        const SizedBox(width: 8),
+        Text(
+          title.toUpperCase(),
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey.shade700,
+            letterSpacing: 1.0,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(child: Divider(color: Colors.grey.shade200, thickness: 1)),
+      ],
+    );
+  }
+
+  Widget _buildInputWithIcon({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    required Color iconColor,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: iconColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: iconColor, size: 20),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: CustomTextField(controller: controller, labelText: label),
+        ),
+      ],
     );
   }
 }

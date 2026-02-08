@@ -1,3 +1,4 @@
+import 'package:blooket/app/core/constants/app_color.dart';
 import 'package:blooket/app/data/model/class_model.dart';
 import 'package:blooket/app/data/model/request/class/class_request.dart';
 import 'package:blooket/app/modules/admin/class_management/widgets/schedule_widget.dart';
@@ -17,10 +18,8 @@ class ClassCard extends StatefulWidget {
 
   final VoidCallback? onEnterClass;
   final VoidCallback? onDelete;
-  final Function(String)? onNameChanged;
-  final Function(String)? onDescriptionChanged;
-  final Function(bool)? onStatusChanged;
-  final Function(List<ClassScheduleRequest>)? onScheduleChanged;
+
+  final Function(ClassRequest request)? onSave;
 
   const ClassCard({
     super.key,
@@ -32,10 +31,7 @@ class ClassCard extends StatefulWidget {
     this.schedule,
     this.onEnterClass,
     this.onDelete,
-    this.onNameChanged,
-    this.onDescriptionChanged,
-    this.onStatusChanged,
-    this.onScheduleChanged,
+    this.onSave,
   });
 
   @override
@@ -46,20 +42,33 @@ class _ClassCardState extends State<ClassCard> {
   late TextEditingController _nameCtrl;
   late TextEditingController _descCtrl;
 
+  bool? _tempIsActive;
+  List<ClassScheduleRequest>? _tempScheduleRequest;
+
+  bool _isEditing = false;
+
   @override
   void initState() {
     super.initState();
+    _initData();
+  }
+
+  void _initData() {
     _nameCtrl = TextEditingController(text: _getName());
     _descCtrl = TextEditingController(
       text: widget.classModel?.description ?? '',
     );
+    _tempIsActive = widget.classModel?.isActive;
+
+    _tempScheduleRequest = null;
   }
 
   @override
   void didUpdateWidget(covariant ClassCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.classModel?.name != oldWidget.classModel?.name) {
-      _nameCtrl.text = widget.classModel?.name ?? '';
+
+    if (widget.classModel != oldWidget.classModel && !_isEditing) {
+      _initData();
     }
   }
 
@@ -115,7 +124,10 @@ class _ClassCardState extends State<ClassCard> {
             ),
 
             widget.isDetail
-                ? _buildContent(context)
+                ? SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: _buildContent(context),
+                  )
                 : Padding(
                     padding: const EdgeInsets.fromLTRB(20, 20, 16, 0),
                     child: Column(
@@ -129,10 +141,78 @@ class _ClassCardState extends State<ClassCard> {
                       ],
                     ),
                   ),
+
+            if (widget.isDetail)
+              Positioned(top: 16, right: 16, child: _buildEditToggleButton()),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildEditToggleButton() {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          if (_isEditing) {
+            _handleSubmit();
+          } else {
+            setState(() {
+              _isEditing = true;
+            });
+          }
+        },
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: _isEditing ? Colors.white : Colors.black.withOpacity(0.2),
+            shape: BoxShape.circle,
+            boxShadow: _isEditing
+                ? [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : [],
+          ),
+          child: Icon(
+            _isEditing ? Icons.check_rounded : Icons.edit_rounded,
+            color: _isEditing ? const Color(0xFF00B894) : Colors.white,
+            size: 20,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _handleSubmit() {
+    FocusScope.of(context).unfocus();
+
+    final request = ClassRequest(
+      name: _nameCtrl.text != widget.classModel?.name ? _nameCtrl.text : null,
+
+      description: _descCtrl.text != widget.classModel?.description
+          ? _descCtrl.text
+          : null,
+
+      isActive: _tempIsActive != widget.classModel?.isActive
+          ? _tempIsActive
+          : null,
+
+      schedule: _tempScheduleRequest,
+    );
+
+    if (widget.onSave != null) {
+      widget.onSave!(request);
+    }
+
+    setState(() {
+      _isEditing = false;
+    });
   }
 
   Widget _buildHeaderCompact() {
@@ -173,6 +253,7 @@ class _ClassCardState extends State<ClassCard> {
         ScheduleWidget(scheduleInitial: _getSchedule()),
         const Spacer(),
         _buildStudentCountRow(),
+        const SizedBox(height: 16),
       ],
     );
   }
@@ -203,7 +284,7 @@ class _ClassCardState extends State<ClassCard> {
 
   Widget _buildContent(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.only(top: 8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -231,17 +312,23 @@ class _ClassCardState extends State<ClassCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         _buildCodeBadge(_getCode()),
-                        Transform.scale(
-                          scale: 0.8,
-                          child: Switch(
-                            value: widget.classModel?.isActive ?? true,
-                            activeColor: const Color(0xFF00B894),
-                            onChanged: widget.onStatusChanged,
+                        const SizedBox(width: 12),
+
+                        if (_isEditing)
+                          Transform.scale(
+                            scale: 0.8,
+                            child: Switch(
+                              value: _tempIsActive ?? true,
+                              activeColor: const Color(0xFF00B894),
+                              onChanged: (val) {
+                                setState(() {
+                                  _tempIsActive = val;
+                                });
+                              },
+                            ),
                           ),
-                        ),
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -252,17 +339,26 @@ class _ClassCardState extends State<ClassCard> {
             ],
           ),
 
-          const SizedBox(height: 8),
-          _buildEditableField(
-            controller: _nameCtrl,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
-            ),
-            hint: "Tên lớp học",
-            onChanged: widget.onNameChanged,
-          ),
+          const SizedBox(height: 16),
+
+          _isEditing
+              ? _buildEditableField(
+                  controller: _nameCtrl,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                  ),
+                  hint: "Tên lớp học",
+                )
+              : Text(
+                  _nameCtrl.text,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
 
           const SizedBox(height: 20),
 
@@ -275,25 +371,34 @@ class _ClassCardState extends State<ClassCard> {
             ),
           ),
           const SizedBox(height: 4),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white12),
-            ),
-            child: _buildEditableField(
-              controller: _descCtrl,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 13,
-                height: 1.4,
-              ),
-              hint: "Chưa có mô tả...",
-              maxLines: 3,
-              onChanged: widget.onDescriptionChanged,
-            ),
-          ),
+
+          _isEditing
+              ? Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white12),
+                  ),
+                  child: _buildEditableField(
+                    controller: _descCtrl,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
+                    hint: "Chưa có mô tả...",
+                    maxLines: 3,
+                  ),
+                )
+              : Text(
+                  _descCtrl.text.isEmpty ? "Chưa có mô tả..." : _descCtrl.text,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
+                ),
 
           const SizedBox(height: 20),
 
@@ -306,10 +411,13 @@ class _ClassCardState extends State<ClassCard> {
             ),
           ),
           const SizedBox(height: 8),
+
           ScheduleWidget(
             scheduleInitial: _getSchedule(),
-            onChanged: widget.onScheduleChanged,
-            isEditable: widget.isDetail,
+            isEditable: _isEditing,
+            onChanged: (newSchedules) {
+              _tempScheduleRequest = newSchedules;
+            },
           ),
 
           const SizedBox(height: 20),
@@ -421,7 +529,7 @@ class _ClassCardState extends State<ClassCard> {
         const Icon(Icons.people_alt_rounded, color: Colors.white60, size: 16),
         const SizedBox(width: 6),
         Text(
-          '${_getCount()} học viên',
+          'Học viên: ${_getCount()}',
           style: const TextStyle(
             color: Colors.white70,
             fontSize: 13,
@@ -448,9 +556,14 @@ class _ClassCardState extends State<ClassCard> {
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: style.copyWith(color: Colors.white30),
-        border: InputBorder.none,
+        enabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+        ),
+        focusedBorder: const UnderlineInputBorder(
+          borderSide: BorderSide(color: Color(0xFFFFE082), width: 2),
+        ),
         isDense: true,
-        contentPadding: EdgeInsets.zero,
+        contentPadding: const EdgeInsets.only(bottom: 8),
       ),
     );
   }
