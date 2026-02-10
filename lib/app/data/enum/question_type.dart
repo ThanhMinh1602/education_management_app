@@ -1,12 +1,14 @@
 enum QuestionType {
-  multipleChoice('MULTIPLE_CHOICE'),
-  arrange('ARRANGE'),
-  trueFalse('TRUE_FALSE'),
-  typing('TYPING'),
-  unknown('UNKNOWN');
+  multipleChoice('MULTIPLE_CHOICE', 'Trắc nghiệm'),
+  arrange('ARRANGE', 'Sắp xếp'),
+  trueFalse('TRUE_FALSE', 'Đúng/Sai'),
+  typing('TYPING', 'Nhập đáp án'),
+  unknown('UNKNOWN', 'Không xác định');
 
   final String value;
-  const QuestionType(this.value);
+  final String label;
+
+  const QuestionType(this.value, this.label);
 
   factory QuestionType.fromJson(String value) {
     return QuestionType.values.firstWhere(

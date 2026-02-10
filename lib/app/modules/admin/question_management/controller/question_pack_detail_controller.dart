@@ -1,3 +1,4 @@
+import 'package:blooket/app/data/model/question_pack_model.dart';
 import 'package:blooket/app/data/model/request/content/create_question_request.dart';
 import 'package:blooket/app/data/model/request/content/question_pack_request.dart';
 import 'package:blooket/app/data/model/request/content/update_question_request.dart';
@@ -17,7 +18,7 @@ class QuestionPackDetailController extends BaseController {
   );
 
   final questions = <QuestionModel>[].obs;
-  final packsTitle = ''.obs;
+  final questionPackModel = Rxn<QuestionPackModel>();
   late String packsId;
   bool isDataChanged = false;
 
@@ -28,13 +29,13 @@ class QuestionPackDetailController extends BaseController {
   @override
   void onInit() async {
     super.onInit();
-
-    packsId = Get.parameters['id'] ?? '';
+    // Đảm bảo param 'id' trùng với route (/:id hoặc /:packId)
+    packsId = Get.parameters['packId'] ?? '';
 
     if (packsId.isNotEmpty) {
       await Future.delayed(const Duration(milliseconds: 300));
       fetchQuestions();
-      getSetById();
+      getPackById();
     }
   }
 
@@ -175,20 +176,23 @@ class QuestionPackDetailController extends BaseController {
     final response = await _questionPackService.updatePack(id, request);
     hideLoading();
 
-    if (response.success) {
+    if (response.success && response.data != null) {
       showSuccess("Đã cập nhật tên bộ đề");
-      packsTitle.value = request.title.trim();
+      questionPackModel.value = response.data!;
+      isDataChanged = true;
     } else {
       showError(response.message);
     }
   }
 
-  Future<void> getSetById() async {
+  Future<void> getPackById() async {
     showLoading();
     try {
       final response = await _questionPackService.getPackDetail(packsId);
       if (response.success) {
-        packsTitle.value = response.data?.title ?? '';
+        questionPackModel.value = response.data;
+      } else {
+        showError(response.message);
       }
     } catch (e) {
       print("Error fetching set: $e");

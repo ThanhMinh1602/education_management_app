@@ -1,4 +1,5 @@
 import 'dart:ui';
+
 import 'package:blooket/app/core/components/header/custom_page_header.dart';
 import 'package:blooket/app/core/utils/dialogs.dart';
 import 'package:blooket/app/core/utils/ui_dialogs.dart';
@@ -11,6 +12,7 @@ import 'package:blooket/app/core/components/button/custom_action_button.dart';
 import 'package:blooket/app/core/constants/app_color.dart';
 import 'package:blooket/app/core/components/appbar/custom_app_bar.dart';
 import 'package:blooket/app/modules/admin/question_management/controller/question_pack_detail_controller.dart';
+import 'package:intl/intl.dart';
 
 class QuestionPackDetailView extends GetView<QuestionPackDetailController> {
   const QuestionPackDetailView({super.key});
@@ -47,20 +49,24 @@ class QuestionPackDetailView extends GetView<QuestionPackDetailController> {
             child: Obx(
               () => Text(
                 '${controller.questions.length} câu hỏi',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ),
           subtitle: 'Quản lý các câu hỏi trong bộ đề',
           buttonLabel: 'Thêm câu hỏi mới',
           onButtonPressed: () {
+            // SHOW DIALOG TẠO MỚI
             Get.dialog(
               barrierDismissible: false,
               QuestionDialogView(
-                setId: controller.packsId,
-                // onSave: (questionModel) {
-                //   controller.addQuestion(questionModel);
-                // },
+                packId: controller.packsId,
+                onSave: (request) async {
+                  await controller.addQuestion(request);
+                },
               ),
             );
           },
@@ -78,22 +84,17 @@ class QuestionPackDetailView extends GetView<QuestionPackDetailController> {
                   questionModel: question,
                   onEdit: () {
                     Get.dialog(
-                      barrierDismissible: false,
                       QuestionDialogView(
-                        setId: controller.packsId,
-                        initialData: question,
-                        // onSave: (formData) {
-                        //   final updateRequest = QuestionRequest(
-                        //     content: formData.content,
-                        //     timeLimit: formData.timeLimit,
-                        //     isRandom: formData.isRandom,
-                        //     options: formData.options,
-                        //     answers: formData.answers,
-                        //     type: formData.type,
-                        //   );
-                        //   controller.updateQuestion(updateRequest, question.id);
-                        // },
+                        packId: controller.packsId,
+
+                        initialData: question, // TRUYỀN DỮ LIỆU CŨ VÀO ĐÂY
+
+                        onSave: (request) async {
+                          // request lúc này là UpdateQuestionRequest
+                          await controller.updateQuestion(request, question.id);
+                        },
                       ),
+                      barrierDismissible: false,
                     );
                   },
                   onDelete: () {
@@ -101,8 +102,8 @@ class QuestionPackDetailView extends GetView<QuestionPackDetailController> {
                       onConfirm: () => controller.deleteQuestion(question.id),
                     );
                   },
-                  onCopy: () {},
-                  onUp: () {},
+                  onCopy: () {}, // Logic copy nếu cần
+                  onUp: () {}, // Logic sắp xếp nếu cần
                   onDown: () {},
                 );
               },
@@ -115,71 +116,224 @@ class QuestionPackDetailView extends GetView<QuestionPackDetailController> {
   }
 
   Widget _buildLeftWidget() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColor.primary,
-        borderRadius: BorderRadius.circular(20),
+    return Obx(() {
+      final pack = controller.questionPackModel.value;
 
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Obx(
-            () => Text(
-              controller.packsTitle.value,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+      // Nếu chưa load xong data thì hiện loading hoặc rỗng
+      if (pack == null) {
+        return const Center(
+          child: CircularProgressIndicator(color: AppColor.primary),
+        );
+      }
+
+      return Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: AppColor.primary,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 1. Thumbnail Image
+            Center(
+              child: Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(16),
+                  image: pack.thumbnail.isNotEmpty
+                      ? DecorationImage(
+                          image: NetworkImage(pack.thumbnail),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 2,
+                  ),
+                ),
+                child: pack.thumbnail.isEmpty
+                    ? const Icon(
+                        Icons.image_not_supported_outlined,
+                        color: Colors.white70,
+                        size: 40,
+                      )
+                    : null,
               ),
             ),
-          ),
-          const SizedBox(height: 24),
-          CustomActionButton(
-            width: double.infinity,
-            onTap: () => Get.back<bool>(result: controller.isDataChanged),
-            icon: Icons.save_outlined,
-            text: 'SAVE',
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _buildGlassButton(
-                  icon: Icons.edit_outlined,
-                  text: 'Chỉnh sửa',
-                  onTap: () async {
-                    final result = await UiDialogs.showQuestionSetName(
-                      title: 'Sửa tên bộ đề',
-                      initial: controller.packsTitle.value,
-                    );
-                    // if (result != null || result!.isNotEmpty) {
-                    //   controller.updateQuestionSet(controller.packsId, result);
-                    // }
-                  },
-                ),
-              ),
-              const SizedBox(width: 12),
 
-              Expanded(
-                child: _buildGlassButton(
-                  icon: Icons.timer_outlined,
-                  text: 'Thời gian',
-                  onTap: () {
-                    AppDialogs.showDeveloping();
-                  },
-                ),
+            const SizedBox(height: 16),
+
+            // 2. Title & Status
+            Center(
+              child: Column(
+                children: [
+                  Text(
+                    pack.title,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      height: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildStatusBadge(pack.isPublic),
+                ],
               ),
-            ],
+            ),
+
+            const SizedBox(height: 24),
+            const Divider(color: Colors.white24, height: 1),
+            const SizedBox(height: 20),
+
+            // 3. Metadata Info (Level, Teacher, Date)
+            _buildInfoRow(Icons.layers_rounded, "Level:", pack.levelName),
+            const SizedBox(height: 12),
+            _buildInfoRow(Icons.person_rounded, "Giáo viên:", pack.teacherName),
+            const SizedBox(height: 12),
+            if (pack.createdAt != null)
+              _buildInfoRow(
+                Icons.calendar_month_rounded,
+                "Ngày tạo:",
+                // Cần import 'package:intl/intl.dart';
+                DateFormat('dd/MM/yyyy').format(pack.createdAt!),
+              ),
+
+            const SizedBox(height: 20),
+            const Divider(color: Colors.white24, height: 1),
+            const SizedBox(height: 20),
+
+            // 4. Description
+            const Text(
+              "MÔ TẢ",
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.0,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              (pack.description == null || pack.description!.isEmpty)
+                  ? "Chưa có mô tả cho bộ đề này."
+                  : pack.description!,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                height: 1.5,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+
+            const SizedBox(height: 32),
+
+            // 5. Actions Buttons (Giữ nguyên logic cũ)
+            CustomActionButton(
+              width: double.infinity,
+              onTap: () => Get.back<bool>(result: controller.isDataChanged),
+              icon: Icons.save_outlined,
+              text: 'SAVE & CLOSE', // Đổi tên cho rõ nghĩa
+            ),
+
+            const SizedBox(height: 12),
+
+            Row(
+              children: [
+                Expanded(
+                  child: _buildGlassButton(
+                    icon: Icons.edit_outlined,
+                    text: 'Sửa tên',
+                    onTap: () async {},
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildGlassButton(
+                    icon: Icons.settings_outlined,
+                    text: 'Cài đặt',
+                    onTap: () {
+                      AppDialogs.showDeveloping();
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  // --- Widget phụ: Dòng thông tin (Icon - Label - Value) ---
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: Colors.white70, size: 16),
+        const SizedBox(width: 10),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white70, fontSize: 13),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // --- Widget phụ: Badge trạng thái Public/Private ---
+  Widget _buildStatusBadge(bool isPublic) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: isPublic ? Colors.greenAccent.withOpacity(0.2) : Colors.black26,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isPublic
+              ? Colors.greenAccent.withOpacity(0.6)
+              : Colors.white30,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isPublic ? Icons.public : Icons.lock_outline,
+            color: isPublic ? Colors.greenAccent : Colors.white70,
+            size: 12,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            isPublic ? "Công khai" : "Riêng tư",
+            style: TextStyle(
+              color: isPublic ? Colors.greenAccent : Colors.white70,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
@@ -205,7 +359,6 @@ class QuestionPackDetailView extends GetView<QuestionPackDetailController> {
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(16),
-
                 border: Border.all(
                   color: Colors.white.withOpacity(0.3),
                   width: 1.5,

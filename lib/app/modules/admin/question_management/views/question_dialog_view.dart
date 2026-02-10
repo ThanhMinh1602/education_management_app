@@ -1,10 +1,18 @@
-import 'package:blooket/app/core/utils/dialogs.dart';
-import 'package:blooket/app/data/model/question_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+// --- IMPORTS ---
 import 'package:blooket/app/core/constants/app_color.dart';
+import 'package:blooket/app/core/utils/dialogs.dart';
+import 'package:blooket/app/data/enum/media_type.dart';
 import 'package:blooket/app/data/enum/question_type.dart';
+import 'package:blooket/app/data/model/question_content_model.dart'; // Model chuẩn hóa
+import 'package:blooket/app/data/model/question_model.dart';
+import 'package:blooket/app/data/model/request/content/create_question_request.dart';
+import 'package:blooket/app/data/model/request/content/question_content_request.dart';
+import 'package:blooket/app/data/model/request/content/update_question_request.dart';
+
+// --- WIDGETS ---
 import 'package:blooket/app/modules/admin/question_management/widgets/answer_form/answer_multi_chose.dart';
 import 'package:blooket/app/modules/admin/question_management/widgets/answer_form/answer_rearrange.dart';
 import 'package:blooket/app/modules/admin/question_management/widgets/answer_form/answer_true_false.dart';
@@ -13,10 +21,16 @@ import 'package:blooket/app/modules/admin/question_management/widgets/bordered_s
 import 'package:blooket/app/modules/admin/question_management/widgets/time_limit_dialog_content.dart';
 
 class QuestionDialogView extends StatefulWidget {
-  final String setId;
-  final QuestionModel? initialData;
+  final String packId;
+  final QuestionModel? initialData; // Dữ liệu cũ (nếu Edit)
+  final Function(dynamic request)? onSave;
 
-  const QuestionDialogView({super.key, required this.setId, this.initialData});
+  const QuestionDialogView({
+    super.key,
+    required this.packId,
+    this.initialData,
+    this.onSave,
+  });
 
   @override
   State<QuestionDialogView> createState() => _QuestionDialogViewState();
@@ -27,22 +41,61 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
   final contentCtrl = TextEditingController();
   int timeLimit = 30;
   bool isRandom = false;
+  int points = 1;
 
+  // Biến tạm để hứng dữ liệu từ các Form con
   List<String> _currentOptions = [];
   List<String> _currentAnswers = [];
 
   @override
   void initState() {
     super.initState();
-    if (widget.initialData != null) {
-      // selectedType = widget.initialData!.type ?? QuestionType.multipleChoice;
-      // contentCtrl.text = widget.initialData!.content ?? '';
-      // timeLimit = widget.initialData!.timeLimit ?? 30;
-      // isRandom = widget.initialData!.isRandom ?? false;
+    _initData();
+  }
 
-      // _currentOptions = widget.initialData!.options ?? [];
-      // _currentAnswers = widget.initialData!.answers ?? [];
+  // --- LOGIC QUAN TRỌNG: KHỞI TẠO DỮ LIỆU ---
+  void _initData() {
+    if (widget.initialData != null) {
+      final q = widget.initialData!;
+
+      // 1. Map dữ liệu chung
+      selectedType = q.type;
+      contentCtrl.text = q.content.question; // Lấy từ class cha QuestionContent
+      timeLimit = q.timeLimit;
+      isRandom = q.isRandom;
+      points = q.point;
+
+      // 2. Map dữ liệu riêng theo từng loại Content
+      final content = q.content;
+
+      if (content is MultipleChoiceContent) {
+        // Trắc nghiệm
+        if (selectedType == QuestionType.trueFalse) {
+          // True/False (Logic đặc biệt: Option cố định, chỉ lấy Answer)
+          _currentOptions = ["True", "False"];
+          final correctOpt = content.options.firstWhereOrNull(
+            (e) => e.isCorrect,
+          );
+          _currentAnswers = correctOpt != null ? [correctOpt.text] : ["True"];
+        } else {
+          // Multiple Choice thường
+          _currentOptions = content.options.map((e) => e.text).toList();
+          _currentAnswers = content.options
+              .where((e) => e.isCorrect)
+              .map((e) => e.text)
+              .toList();
+        }
+      } else if (content is TypingContent) {
+        // Typing: Chỉ có đáp án chấp nhận
+        _currentAnswers = List.from(content.acceptableAnswers);
+        _currentOptions = [];
+      } else if (content is ArrangeContent) {
+        // Arrange: Segments là danh sách từ cần sắp xếp
+        _currentAnswers = content.segments.map((e) => e.text).toList();
+        _currentOptions = [];
+      }
     } else {
+      // 3. Tạo mới (Mặc định)
       selectedType = QuestionType.multipleChoice;
     }
   }
@@ -53,161 +106,139 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
     super.dispose();
   }
 
-  // --- 1. Hàm hiển thị Dialog Cảnh Báo ---
-  void _showWarningDialog(String message) {
-    AppDialogs.showWarning(message);
-  }
-
-  // --- 2. Hàm Validate và Save ---
+  // --- VALIDATE & SAVE ---
   void _validateAndSave() {
-    // 2.1 Kiểm tra nội dung câu hỏi (trừ loại sắp xếp vì nội dung nằm trong options)
+    // 1. Validate Câu hỏi
     if (selectedType != QuestionType.arrange &&
         contentCtrl.text.trim().isEmpty) {
-      _showWarningDialog("Vui lòng nhập nội dung câu hỏi.");
+      AppDialogs.showWarning("Vui lòng nhập nội dung câu hỏi.");
       return;
     }
 
-    // 2.2 Kiểm tra logic từng loại câu hỏi
+    QuestionContentRequest? contentRequest;
+
+    // 2. Build Content Request & Validate Chi tiết
     switch (selectedType) {
       case QuestionType.multipleChoice:
-        // Phải có ít nhất 2 lựa chọn không rỗng
-        final validOptions = _currentOptions
-            .where((op) => op.trim().isNotEmpty)
-            .toList();
-        if (validOptions.length < 4) {
-          _showWarningDialog("Cần nhập đủ 4 phương án lựa chọn.");
+      case QuestionType.trueFalse:
+        if (selectedType == QuestionType.multipleChoice &&
+            _currentOptions.length < 2) {
+          AppDialogs.showWarning("Cần ít nhất 2 lựa chọn.");
           return;
         }
-        // Phải chọn ít nhất 1 đáp án đúng
         if (_currentAnswers.isEmpty) {
-          _showWarningDialog("Vui lòng tích chọn ít nhất 1 đáp án đúng.");
+          AppDialogs.showWarning("Vui lòng chọn đáp án đúng.");
           return;
         }
+
+        // Map sang OptionRequest
+        List<OptionRequest> optionsList = [];
+        for (int i = 0; i < _currentOptions.length; i++) {
+          final text = _currentOptions[i];
+          optionsList.add(
+            OptionRequest(
+              id: i, // Fake ID hoặc null
+              text: text,
+              isCorrect: _currentAnswers.contains(text),
+            ),
+          );
+        }
+
+        contentRequest = MultipleChoiceContentRequest(
+          question: contentCtrl.text.trim(),
+          options: optionsList,
+        );
         break;
 
       case QuestionType.typing:
-        // Phải nhập ít nhất 1 đáp án chấp nhận
-        final validAnswers = _currentAnswers
-            .where((ans) => ans.trim().isNotEmpty)
-            .toList();
-        if (validAnswers.isEmpty) {
-          _showWarningDialog("Vui lòng nhập câu trả lời đúng.");
+        if (_currentAnswers.isEmpty) {
+          AppDialogs.showWarning("Vui lòng nhập ít nhất 1 đáp án.");
           return;
         }
+        contentRequest = TypingContentRequest(
+          question: contentCtrl.text.trim(),
+          acceptableAnswers: _currentAnswers,
+        );
         break;
 
       case QuestionType.arrange:
-        // Với loại sắp xếp, answers chính là các từ cần sắp xếp
-        if (_currentAnswers.isEmpty || _currentAnswers.length < 2) {
-          _showWarningDialog("Vui lòng nhập ít nhất 2 từ để sắp xếp.");
+        if (_currentAnswers.length < 2) {
+          AppDialogs.showWarning("Cần ít nhất 2 từ để sắp xếp.");
           return;
         }
+
+        List<SegmentRequest> segments = [];
+        List<int> correctOrder = [];
+        for (int i = 0; i < _currentAnswers.length; i++) {
+          segments.add(SegmentRequest(id: i, text: _currentAnswers[i]));
+          correctOrder.add(i);
+        }
+
+        contentRequest = ArrangeContentRequest(
+          question: "Sắp xếp câu",
+          segments: segments,
+          correctOrder: correctOrder,
+          correctText: _currentAnswers.join(" "),
+        );
         break;
 
-      case QuestionType.trueFalse:
-        // True/False thường mặc định là True nếu chưa chọn, nên ít lỗi
-        if (_currentAnswers.isEmpty) {
-          _currentAnswers = ["true"];
-        }
-        break;
-      case QuestionType.unknown:
-        // TODO: Handle this case.
-        throw UnimplementedError();
+      default:
+        return;
     }
 
-    // 2.3 Save nếu tất cả hợp lệ
-    // final questionReq = QuestionRequest(
-    //   setId: widget.setId,
-    //   type: selectedType.value,
-    //   content: contentCtrl.text.trim(),
-    //   timeLimit: timeLimit,
-    //   isRandom: isRandom,
-    //   options: _currentOptions,
-    //   answers: _currentAnswers,
-    // );
+    // 3. Callback về Controller
+    if (widget.initialData == null) {
+      // Create Request
+      final request = CreateQuestionRequest(
+        packId: widget.packId,
+        type: selectedType,
+        point: points,
+        mediaType: MediaType.none,
+        content: contentRequest!,
+      );
+      widget.onSave?.call(request);
+    } else {
+      // Update Request
+      final request = UpdateQuestionRequest(
+        type: selectedType,
+        point: points,
+        mediaType: MediaType.none,
+        content: contentRequest!,
+      );
+      widget.onSave?.call(request);
+    }
 
-    // widget.onSave(questionReq);
-    Get.back(); // Đóng dialog chính
+    Get.back();
   }
 
-  // Widget _getAnswerFromType() {
-  //   return KeyedSubtree(
-  //     key: ValueKey(selectedType),
-  //     child: switch (selectedType) {
-  //       QuestionType.multipleChoice => AnswerMultiChose(
-  //         initialOptions: widget.initialData?.options,
-  //         initialCorrectAnswers: widget.initialData?.answers,
-  //         onChanged: (options, answers) {
-  //           _currentOptions = options;
-  //           _currentAnswers = answers;
-  //         },
-  //       ),
-  //       QuestionType.rearrange => AnswerRearrange(
-  //         initialWords: widget.initialData?.answers,
-  //         onChanged: (words) {
-  //           setState(() {
-  //             contentCtrl.text = words.join(' - ');
-  //             _currentAnswers = words;
-  //             // Rearrange không dùng options, có thể clear hoặc gán giống answer
-  //             _currentOptions = [];
-  //           });
-  //         },
-  //       ),
-  //       QuestionType.trueFalse => AnswerTrueFalse(
-  //         initialValue: bool.parse(
-  //           widget.initialData?.answers?.first ?? 'true',
-  //         ),
-  //         onChanged: (isTrue) {
-  //           // True/False không cần options, chỉ cần answers
-  //           _currentAnswers = [isTrue.toString()];
-  //           _currentOptions = [];
-  //         },
-  //       ),
-  //       // Sửa lại đoạn này để hứng dữ liệu từ Typing Form
-  //       QuestionType.typing => AnswerTyping(
-  //         initialAnswers: widget.initialData?.answers, // Truyền data cũ nếu có
-  //         onChanged: (answers) {
-  //           _currentAnswers = answers;
-  //           _currentOptions = []; // Typing không có options
-  //         },
-  //       ),
-  //     },
-  //   );
-  // }
-
+  // --- UI ---
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-
     final dialogWidth = screenWidth > 950 ? 900.0 : screenWidth * 0.95;
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       backgroundColor: Colors.white,
       insetPadding: const EdgeInsets.all(16),
       child: Container(
         width: dialogWidth,
         constraints: BoxConstraints(
-          maxHeight: screenHeight * 0.9,
-          minHeight: 400,
+          maxHeight: Get.height * 0.9,
+          minHeight: 500,
         ),
         child: Column(
           children: [
-            _buildDialogHeaderControl(),
+            _buildHeader(),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.only(bottom: 20),
+                padding: const EdgeInsets.all(24),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // if (selectedType != QuestionType.rearrange)
-                    //   _buildInputQuestion(),
-                    const SizedBox(height: 20),
-                    // Padding(
-                    //   padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    //   child: _getAnswerFromType(),
-                    // ),
+                    if (selectedType != QuestionType.arrange)
+                      _buildQuestionInput(),
+                    const SizedBox(height: 24),
+                    _buildAnswerForm(),
                   ],
                 ),
               ),
@@ -218,189 +249,136 @@ class _QuestionDialogViewState extends State<QuestionDialogView> {
     );
   }
 
-  Widget _buildDialogHeaderControl() {
+  Widget _buildHeader() {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      padding: const EdgeInsets.all(16),
       decoration: const BoxDecoration(
         color: AppColor.pink,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(12),
-          topRight: Radius.circular(12),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           BorderedStatWidget(
-            title: 'Time Limit',
+            title: 'Time',
             value: '${timeLimit}s',
             icon: Icons.timer_outlined,
             onTap: () async {
-              final newTimeLimit = await showTimeLimitDialog(
-                defaultValue: timeLimit,
-              );
-              if (newTimeLimit != null) {
-                setState(() => timeLimit = newTimeLimit);
-              }
+              final val = await showTimeLimitDialog(defaultValue: timeLimit);
+              if (val != null) setState(() => timeLimit = val);
             },
           ),
           const SizedBox(width: 12),
-          BorderedStatWidget(
-            title: 'Random',
-            icon: Icons.shuffle,
-            trailing: SizedBox(
-              height: 24,
-              width: 24,
-              child: Checkbox(
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                visualDensity: VisualDensity.compact,
-                activeColor: AppColor.white,
-                checkColor: AppColor.pink,
-                side: const BorderSide(color: AppColor.white, width: 2.0),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                value: isRandom,
-                onChanged: (val) => setState(() => isRandom = val ?? false),
-              ),
+          // Chỉ cho đổi loại câu hỏi khi TẠO MỚI (để tránh lỗi data structure)
+          if (widget.initialData == null)
+            BorderedStatWidget(
+              title: selectedType.name.toUpperCase(),
+              icon: Icons.category_outlined,
+              onTap: _showTypeSelector,
             ),
+          const Spacer(),
+          IconButton(
+            onPressed: () => Get.back(),
+            icon: const Icon(Icons.close, color: Colors.white),
           ),
           const SizedBox(width: 12),
-          // if (widget.initialData == null)
-          //   BorderedStatWidget(
-          //     title: selectedType.title,
-          //     icon: Icons.category_outlined,
-          //     onTap: () async {
-          //       final type = await Get.dialog<QuestionType>(
-          //         _buildTypeSelectionDialog(),
-          //       );
-
-          //       if (type != null && type != selectedType) {
-          //         setState(() {
-          //           selectedType = type;
-          //           _currentOptions = [];
-          //           _currentAnswers = [];
-          //         });
-          //       }
-          //     },
-          //   ),
-          const Spacer(),
-          const SizedBox(width: 20),
-          Container(height: 40, width: 1, color: Colors.white.withOpacity(0.5)),
-          const SizedBox(width: 20),
-          const Spacer(),
-          BorderedStatWidget(
-            title: 'Cancel',
-            icon: Icons.close,
-            onTap: () => Get.back(),
-          ),
-          const SizedBox(width: 12),
-          BorderedStatWidget(
-            title: 'Save',
-            icon: Icons.check_circle_outline,
-            // GỌI HÀM VALIDATE MỚI Ở ĐÂY
-            onTap: _validateAndSave,
+          ElevatedButton.icon(
+            onPressed: _validateAndSave,
+            icon: const Icon(Icons.save, size: 18),
+            label: const Text("Lưu"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: AppColor.pink,
+            ),
           ),
         ],
       ),
     );
   }
 
-  // ... (Giữ nguyên _buildInputQuestion và _buildTypeSelectionDialog)
-  Widget _buildInputQuestion() {
-    return Container(
-      alignment: Alignment.center,
-      constraints: const BoxConstraints(minHeight: 150),
-      padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 32.0),
-      child: TextField(
-        controller: contentCtrl,
-        textAlign: TextAlign.center,
-        maxLines: null,
-        style: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w500,
-          color: Colors.black87,
-        ),
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          hintText: "Nhập câu hỏi ở đây...",
-          hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 20),
-          fillColor: Colors.grey.withOpacity(0.05),
-          filled: true,
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: AppColor.pink.withOpacity(0.3)),
-          ),
+  Widget _buildQuestionInput() {
+    return TextField(
+      controller: contentCtrl,
+      textAlign: TextAlign.center,
+      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+      decoration: InputDecoration(
+        hintText: "Nhập câu hỏi...",
+        filled: true,
+        fillColor: Colors.grey.shade50,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
         ),
       ),
     );
   }
 
-  Widget _buildTypeSelectionDialog() {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      backgroundColor: Colors.white,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: SizedBox(
-          width: 300,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16.0),
-                width: double.infinity,
-                color: Colors.grey.shade50,
-                child: const Text(
-                  "Select Question Type",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+  Widget _buildAnswerForm() {
+    // KeyedSubtree để buộc rebuild widget khi đổi type hoặc load data edit
+    return KeyedSubtree(
+      key: ValueKey("${selectedType}_${widget.initialData?.id}"),
+      child: switch (selectedType) {
+        QuestionType.multipleChoice => AnswerMultiChose(
+          initialOptions: _currentOptions.isNotEmpty ? _currentOptions : null,
+          initialCorrectAnswers: _currentAnswers.isNotEmpty
+              ? _currentAnswers
+              : null,
+          onChanged: (opts, ans) {
+            _currentOptions = opts;
+            _currentAnswers = ans;
+          },
+        ),
+        QuestionType.trueFalse => AnswerTrueFalse(
+          initialValue: _currentAnswers.isNotEmpty
+              ? (_currentAnswers.first.toLowerCase() == 'true')
+              : null,
+          onChanged: (val) {
+            _currentAnswers = [val.toString()];
+            _currentOptions = ["True", "False"];
+          },
+        ),
+        QuestionType.typing => AnswerTyping(
+          initialAnswers: _currentAnswers.isNotEmpty ? _currentAnswers : null,
+          onChanged: (ans) {
+            _currentAnswers = ans;
+            _currentOptions = [];
+          },
+        ),
+        QuestionType.arrange => AnswerRearrange(
+          initialWords: _currentAnswers.isNotEmpty ? _currentAnswers : null,
+          onChanged: (words) {
+            _currentAnswers = words;
+            _currentOptions = [];
+          },
+        ),
+        _ => const SizedBox(),
+      },
+    );
+  }
+
+  void _showTypeSelector() async {
+    final type = await Get.dialog<QuestionType>(
+      Dialog(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: QuestionType.values
+              .where((e) => e != QuestionType.unknown)
+              .map(
+                (e) => ListTile(
+                  title: Text(e.name.toUpperCase()),
+                  onTap: () => Get.back(result: e),
                 ),
-              ),
-              const Divider(height: 1),
-              ...QuestionType.values.map((qt) {
-                final isSelected = qt == selectedType;
-                return InkWell(
-                  onTap: () => Get.back(result: qt),
-                  child: Container(
-                    color: isSelected
-                        ? AppColor.pink.withOpacity(0.1)
-                        : Colors.transparent,
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 4,
-                      ),
-                      title: Text(
-                        ' qt.title',
-                        style: TextStyle(
-                          color: isSelected ? AppColor.pink : Colors.black87,
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
-                      ),
-                      trailing: isSelected
-                          ? const Icon(
-                              Icons.check_circle,
-                              color: AppColor.pink,
-                              size: 20,
-                            )
-                          : null,
-                    ),
-                  ),
-                );
-              }),
-              const SizedBox(height: 10),
-            ],
-          ),
+              )
+              .toList(),
         ),
       ),
     );
+    if (type != null && type != selectedType) {
+      setState(() {
+        selectedType = type;
+        _currentOptions = [];
+        _currentAnswers = [];
+        contentCtrl.clear();
+      });
+    }
   }
 }
