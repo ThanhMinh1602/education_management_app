@@ -17,6 +17,15 @@ class LevelService extends BaseService {
     );
   }
 
+  Future<ApiResponse<LevelModel>> getLevelDetail(String id) async {
+    final response = await apiClient.get(ApiEndpoints.levelDetail(id));
+
+    return ApiResponse<LevelModel>.fromJson(
+      response.data,
+      (json) => LevelModel.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
   Future<ApiResponse<LevelModel>> createLevel(LevelRequest request) async {
     final response = await apiClient.post(
       ApiEndpoints.levels,

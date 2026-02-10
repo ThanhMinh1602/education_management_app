@@ -2,6 +2,8 @@ import 'package:blooket/app/modules/admin/assignment/bindings/assignment_binding
 import 'package:blooket/app/modules/admin/assignment/views/assignment_view.dart';
 import 'package:blooket/app/modules/admin/assignment_results/binding/assignment_results_binding.dart';
 import 'package:blooket/app/modules/admin/assignment_results/views/assignment_results_view.dart';
+import 'package:blooket/app/modules/admin/question_management/binding/level_binding.dart';
+import 'package:blooket/app/modules/admin/question_management/views/level_view.dart';
 import 'package:blooket/app/modules/user/assignments/binding/assignments_binding.dart';
 import 'package:blooket/app/modules/user/assignments/views/assignments_view.dart';
 import 'package:blooket/app/modules/user/do_assignment/binding/do_assignment_binding.dart';
@@ -61,15 +63,23 @@ class AppPages {
       ],
     ),
     GetPage(
-      name: AppRoutes.QUESTION_MANAGEMENT,
-      page: () => const QuestionManagementView(),
-      binding: QuestionManagementBinding(),
+      name: AppRoutes.LEVEL,
+      page: () => const LevelView(),
+      binding: LevelBinding(),
       children: [
         GetPage(
-          name: AppRoutes.QUESTION_MANAGEMENT_DETAIL,
+          name: AppRoutes.QUESTION_PACKS,
           page: () => const QuestionManagementDetailView(),
           transition: Transition.rightToLeft,
           binding: QuestionManagementDetailBinding(),
+          children: [
+            GetPage(
+              name: AppRoutes.QUESTION_MANAGEMENT_DETAIL,
+              page: () => const QuestionManagementDetailView(),
+              transition: Transition.rightToLeft,
+              binding: QuestionManagementDetailBinding(),
+            ),
+          ],
         ),
       ],
     ),

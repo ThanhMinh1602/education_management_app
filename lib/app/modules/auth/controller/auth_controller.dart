@@ -15,7 +15,6 @@ class AuthController extends BaseController {
   final AuthService _authService;
   final StorageService _storageService;
 
-  // Rxn cho phép giá trị null khi chưa đăng nhập
   final Rxn<UserModel> currentUser = Rxn<UserModel>();
 
   AuthController(this._authService, this._storageService);
@@ -26,10 +25,8 @@ class AuthController extends BaseController {
     _restoreSession();
   }
 
-  // Kiểm tra trạng thái đăng nhập
   bool get isLoggedIn => currentUser.value != null;
 
-  // Khôi phục phiên làm việc từ Storage
   void _restoreSession() {
     try {
       final user = _storageService.getUser();
@@ -42,7 +39,6 @@ class AuthController extends BaseController {
     }
   }
 
-  // Logic Đăng nhập
   Future<void> login(String username, String password) async {
     final cleanUsername = username.trim();
     final cleanPassword = password.trim();
@@ -60,7 +56,6 @@ class AuthController extends BaseController {
         password: cleanPassword,
       );
 
-      // Gọi API login qua AuthService
       final ApiResponse<AuthResponseModel> response = await _authService.login(
         loginRequest,
       );
@@ -69,17 +64,14 @@ class AuthController extends BaseController {
         final authData = response.data!;
         final user = authData.user;
 
-        // Kiểm tra tài khoản hoạt động
         if (user?.isActive == false) {
           hideLoading();
           showError('Tài khoản của bạn hiện đang bị khóa');
           return;
         }
 
-        // Cập nhật trạng thái ứng dụng
         currentUser.value = user;
 
-        // Lưu thông tin vào StorageService cục bộ
         await Future.wait([
           if (user != null) _storageService.saveUser(user),
           _storageService.saveTokens(
@@ -91,11 +83,10 @@ class AuthController extends BaseController {
         hideLoading();
         showSuccess('Xin chào ${user?.name ?? 'bạn'}!');
 
-        // Điều hướng dựa trên Enum Role
         _navigateByRole(user?.role);
       } else {
         hideLoading();
-        // Hiển thị lỗi từ MessageCodes của Backend
+
         showError(response.message);
       }
     } catch (e) {
@@ -105,12 +96,11 @@ class AuthController extends BaseController {
     }
   }
 
-  // Điều hướng dựa trên vai trò người dùng
   void _navigateByRole(UserRole? role) {
     switch (role) {
       case UserRole.admin:
       case UserRole.teacher:
-        Get.offAllNamed(AppRoutes.QUESTION_MANAGEMENT);
+        Get.offAllNamed(AppRoutes.LEVEL);
         break;
       case UserRole.student:
       default:
@@ -119,7 +109,6 @@ class AuthController extends BaseController {
     }
   }
 
-  // Đăng xuất
   Future<void> logout() async {
     try {
       showLoading();

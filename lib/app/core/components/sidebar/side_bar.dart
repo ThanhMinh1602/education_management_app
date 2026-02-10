@@ -24,7 +24,7 @@ class SideBarWidget extends StatelessWidget {
     String routeName = '';
     switch (item) {
       case SideBarItem.question:
-        routeName = AppRoutes.QUESTION_MANAGEMENT;
+        routeName = AppRoutes.LEVEL;
         break;
       case SideBarItem.userManagement:
         routeName = AppRoutes.STUDENT_MANAGEMENT;
@@ -52,7 +52,6 @@ class SideBarWidget extends StatelessWidget {
       color: Colors.white,
       child: Column(
         children: [
-          // MENU ITEMS
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 12),
