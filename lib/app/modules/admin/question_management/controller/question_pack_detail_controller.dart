@@ -8,10 +8,10 @@ import 'package:blooket/app/core/base/base_controller.dart';
 import 'package:blooket/app/data/model/question_model.dart';
 import 'package:blooket/app/data/service/question_service.dart';
 
-class QuestionManagementDetailController extends BaseController {
+class QuestionPackDetailController extends BaseController {
   final QuestionService _questionService;
   final QuestionPackService _questionPackService;
-  QuestionManagementDetailController(
+  QuestionPackDetailController(
     this._questionService,
     this._questionPackService,
   );

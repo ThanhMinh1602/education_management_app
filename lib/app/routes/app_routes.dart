@@ -2,9 +2,9 @@ class AppRoutes {
   static const LOGIN = '/login';
   static const USER_DASHBOARD = '/user_dashboard';
   static const LEVEL = '/level';
-  static const LEVEL_DETAIL = '/:id';
+  static const LEVEL_DETAIL = '/:levelId';
   static const QUESTION_PACKS = '/question_packs';
-  static const QUESTION_PACK_DETAIL = '/:id';
+  static const QUESTION_PACK_DETAIL = '/:packId';
   static const QUESTION_MANAGEMENT = '/question_management';
   static const QUESTION_MANAGEMENT_DETAIL = '/:id';
   static const CLASS_MANAGEMENT = '/class_management';

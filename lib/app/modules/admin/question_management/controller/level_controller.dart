@@ -49,23 +49,16 @@ class LevelController extends BaseController {
     }
   }
 
-  Future<void> deleteLevel(String id) async {
-    showLoading();
-    try {
-      final res = await _levelService.deleteLevel(id);
-      hideLoading();
-      if (!res.success) {
-        showError(res.message);
-        return;
-      }
-      levels.removeWhere((element) => element.id == id);
-    } catch (e) {
-      hideLoading();
-      print(e);
+  Future<void> onTapDetail(String? id) async {
+    if (id == null) {
+      showInfo("Level không tồn tại");
+      return;
     }
-  }
+    ;
 
-  Future<void> updateLevel(String? id) async {
-    print("Sửa level $id");
+    final bool result = await Get.toNamed("${Get.currentRoute}/$id");
+    if (result) {
+      fetchLevels();
+    }
   }
 }

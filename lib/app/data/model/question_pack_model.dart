@@ -1,5 +1,3 @@
-import 'user_model.dart';
-
 class QuestionPackModel {
   final String id;
   final String title;
@@ -7,7 +5,8 @@ class QuestionPackModel {
   final String thumbnail;
   final String levelId;
   final String levelName;
-  final UserModel? teacher;
+  final String teacherId;
+  final String teacherName;
   final int totalQuestions;
   final bool isPublic;
   final DateTime? createdAt;
@@ -19,7 +18,8 @@ class QuestionPackModel {
     required this.thumbnail,
     required this.levelId,
     required this.levelName,
-    this.teacher,
+    required this.teacherId,
+    required this.teacherName,
     required this.totalQuestions,
     required this.isPublic,
     this.createdAt,
@@ -33,10 +33,8 @@ class QuestionPackModel {
       thumbnail: json['thumbnail'] ?? '',
       levelId: json['levelId'] ?? '',
       levelName: json['levelName'] ?? '',
-      teacher:
-          (json['teacher'] != null && json['teacher'] is Map<String, dynamic>)
-          ? UserModel.fromJson(json['teacher'])
-          : null,
+      teacherId: json['teacherId'] ?? '',
+      teacherName: json['teacherName'] ?? '',
       totalQuestions: json['totalQuestions'] ?? 0,
       isPublic: json['isPublic'] ?? false,
       createdAt: json['createdAt'] != null

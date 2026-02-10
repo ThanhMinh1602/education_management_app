@@ -10,11 +10,10 @@ import 'package:get/get.dart';
 import 'package:blooket/app/core/components/button/custom_action_button.dart';
 import 'package:blooket/app/core/constants/app_color.dart';
 import 'package:blooket/app/core/components/appbar/custom_app_bar.dart';
-import 'package:blooket/app/modules/admin/question_management/controller/question_management_detail_controller.dart';
+import 'package:blooket/app/modules/admin/question_management/controller/question_pack_detail_controller.dart';
 
-class QuestionManagementDetailView
-    extends GetView<QuestionManagementDetailController> {
-  const QuestionManagementDetailView({super.key});
+class QuestionPackDetailView extends GetView<QuestionPackDetailController> {
+  const QuestionPackDetailView({super.key});
 
   @override
   Widget build(BuildContext context) {

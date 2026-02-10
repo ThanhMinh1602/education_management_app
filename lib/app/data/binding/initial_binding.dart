@@ -3,6 +3,7 @@ import 'package:blooket/app/data/service/assignment_service.dart';
 import 'package:blooket/app/data/service/auth_service.dart';
 import 'package:blooket/app/data/service/class_service.dart';
 import 'package:blooket/app/data/service/level_service.dart';
+import 'package:blooket/app/data/service/question_pack_service.dart';
 import 'package:blooket/app/data/service/question_service.dart';
 import 'package:blooket/app/data/service/storage_service.dart';
 import 'package:blooket/app/data/service/user_service.dart';
@@ -18,6 +19,10 @@ class InitialBinding extends Bindings {
     Get.lazyPut<UserService>(() => UserService(Get.find()), fenix: true);
     Get.lazyPut<QuestionService>(
       () => QuestionService(Get.find()),
+      fenix: true,
+    );
+    Get.lazyPut<QuestionPackService>(
+      () => QuestionPackService(Get.find()),
       fenix: true,
     );
     Get.lazyPut<AuthService>(() => AuthService(Get.find()), fenix: true);

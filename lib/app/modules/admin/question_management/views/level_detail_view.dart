@@ -1,30 +1,29 @@
+import 'package:blooket/app/core/common/app_tooltip.dart';
+import 'package:blooket/app/core/components/button/custom_delete_button.dart';
+import 'package:blooket/app/core/utils/dialogs.dart';
+import 'package:blooket/app/data/model/question_pack_model.dart';
 import 'package:blooket/app/modules/admin/question_management/controller/level_detail_controller.dart';
+import 'package:blooket/app/modules/admin/question_management/widgets/level/level_info_card.dart';
+import 'package:blooket/app/modules/admin/question_management/widgets/question_pack_form_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
-// Imports UI Components
 import 'package:blooket/app/core/components/appbar/custom_app_bar.dart';
-import 'package:blooket/app/core/components/button/custom_button.dart';
 import 'package:blooket/app/core/constants/app_color.dart';
-import 'package:blooket/app/core/utils/dialogs.dart';
-import 'package:blooket/app/modules/admin/question_management/widgets/level/level_card.dart';
+import 'package:blooket/app/core/components/table/admin_table.dart';
 
 class LevelDetailView extends GetView<LevelDetailController> {
-  final String levelId;
-
-  const LevelDetailView({super.key, required this.levelId});
+  const LevelDetailView({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(
-        0xFFF0F2F5,
-      ), // Màu nền xám nhạt (Detail Mode)
+      backgroundColor: const Color(0xFFF1F5F9),
       appBar: CustomAppBar(
         title: 'Chi Tiết Cấp Độ',
         onLeadingPressed: () {
-          Get.back(result: controller.isDataChanged);
+          Get.back(result: controller.isDataChanged.value);
         },
       ),
       body: Obx(() {
@@ -33,87 +32,58 @@ class LevelDetailView extends GetView<LevelDetailController> {
         }
 
         final currentLevel = controller.levelDetail.value!;
-        // Danh sách bộ đề (Giả sử model Level có list questionPacks)
         final packs = controller.questionPacks;
 
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
+          padding: const EdgeInsets.all(32.0),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- CỘT TRÁI (THÔNG TIN LEVEL) ---
               Expanded(
-                flex: 1,
+                flex: 2,
                 child: Column(
                   children: [
-                    // Hiển thị Card Level (Có thể chỉnh sửa LevelCard để hỗ trợ edit mode nếu muốn)
-                    LevelCard(
-                      name: currentLevel.name ?? "",
-                      description: currentLevel.description ?? "",
-                      order: currentLevel.order ?? 0,
-                      isActive: currentLevel.isActive ?? true,
-                      createdAt: currentLevel.createdAt ?? DateTime.now(),
-                      onEdit: () {
-                        // Logic sửa thông tin Level
-                      },
-                      onDelete: () {
-                        // Logic xóa (thường ẩn đi ở view này vì nút xóa to ở dưới rồi)
+                    LevelInfoCard(
+                      isDetail: true,
+                      levelModel: currentLevel,
+                      onSave: (request) async {
+                        await controller.updateLevel(request);
                       },
                     ),
-
                     const SizedBox(height: 24),
-
-                    // Thống kê nhanh
                     _buildQuickStats(context, packs.length),
-
-                    const SizedBox(height: 24),
-
-                    // Nút xóa Level
-                    CustomButton(
-                      text: 'Xóa Cấp Độ',
-                      backgroundColor: AppColor.falseRed,
-                      foregroundColor: AppColor.white,
+                    SizedBox(height: 24.0),
+                    CustomDeleteButton(
                       onPressed: () {
                         AppDialogs.showDeleteConfirm(
-                          onConfirm: () async {
-                            // await controller.deleteLevel();
+                          onConfirm: () {
+                            controller.deleteLevel(currentLevel.id);
                           },
                         );
                       },
+                      text: 'Xóa cấp độ',
                     ),
                   ],
                 ),
               ),
-
               const SizedBox(width: 32),
-
-              // --- CỘT PHẢI (DANH SÁCH BỘ ĐỀ) ---
               Expanded(
-                flex: 3,
+                flex: 7,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _buildToolbar(context),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
+
                     Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.03),
-                              offset: const Offset(0, 4),
-                              blurRadius: 20,
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(24),
-                          child: packs.isEmpty
-                              ? _buildEmptyState()
-                              : _buildDataTable(context, packs),
-                        ),
+                      child: AdminTable(
+                        columns: const [
+                          'Thông tin bộ đề',
+                          'Câu hỏi',
+                          'Ngày tạo',
+                          'Hành động',
+                        ],
+                        rows: _generateRows(packs),
                       ),
                     ),
                   ],
@@ -126,7 +96,122 @@ class LevelDetailView extends GetView<LevelDetailController> {
     );
   }
 
-  // --- CÁC WIDGET CON (Copy style từ ClassDetailView) ---
+  List<DataRow> _generateRows(List<QuestionPackModel> packs) {
+    return packs.map((pack) {
+      return DataRow(
+        cells: [
+          DataCell(
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: const Icon(
+                    Icons.library_books_rounded,
+                    color: Color(0xFF6C63FF),
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        pack.title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1E293B),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "ID: ${pack.id.length > 6 ? '...${pack.id.substring(pack.id.length - 6)}' : pack.id}",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[500],
+                          fontFamily: "monospace",
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          DataCell(
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: (pack.totalQuestions ?? 0) > 0
+                    ? const Color(0xFFDEF7EC)
+                    : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                "${pack.totalQuestions ?? 0} câu",
+                style: TextStyle(
+                  color: (pack.totalQuestions ?? 0) > 0
+                      ? const Color(0xFF03543F)
+                      : Colors.grey[600],
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ),
+
+          DataCell(
+            Text(
+              DateFormat('dd/MM/yyyy').format(pack.createdAt ?? DateTime.now()),
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+          ),
+
+          DataCell(
+            _actionButton(Icons.edit_rounded, Colors.blue, "Sửa", () {
+              controller.onTapPackDetail(pack.id);
+            }),
+          ),
+        ],
+      );
+    }).toList();
+  }
+
+  Widget _actionButton(
+    IconData icon,
+    Color color,
+    String tooltipText,
+    VoidCallback onTap,
+  ) {
+    return AppTooltip(
+      message: tooltipText,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          hoverColor: color.withOpacity(0.1),
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: color.withOpacity(0.2), width: 1),
+            ),
+            child: Icon(icon, size: 18, color: color),
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildToolbar(BuildContext context) {
     return Row(
@@ -136,193 +221,98 @@ class LevelDetailView extends GetView<LevelDetailController> {
           children: [
             Text(
               'Danh Sách Bộ Đề',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w800,
-                color: const Color(0xFF2D3436),
-                letterSpacing: 0.5,
+                color: const Color(0xFF1E293B),
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              'Quản lý các bộ câu hỏi thuộc cấp độ này',
-              style: TextStyle(color: Colors.grey[600], fontSize: 13),
+              'Quản lý nội dung học tập',
+              style: TextStyle(color: Colors.grey[500], fontSize: 13),
             ),
           ],
         ),
+
         const Spacer(),
-        // Ô tìm kiếm
+
         Container(
-          width: 250,
-          height: 44,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          width: 260,
+          height: 40,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(8),
             border: Border.all(color: Colors.grey.shade300),
           ),
           child: Row(
             children: [
-              Icon(Icons.search, color: Colors.grey[400], size: 20),
+              Icon(Icons.search, size: 18, color: Colors.grey[400]),
               const SizedBox(width: 8),
               Expanded(
                 child: TextField(
                   decoration: InputDecoration(
-                    hintText: 'Tìm bộ đề...',
+                    hintText: 'Tìm kiếm...',
                     border: InputBorder.none,
-                    hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
                     isDense: true,
                     contentPadding: EdgeInsets.zero,
+                    hintStyle: TextStyle(fontSize: 13, color: Colors.grey[400]),
                   ),
+                  style: const TextStyle(fontSize: 13),
                   onChanged: (val) {},
                 ),
               ),
             ],
           ),
         ),
+
         const SizedBox(width: 16),
-        // Nút thêm bộ đề vào Level
-        CustomButton(
-          text: "+ Thêm Bộ Đề",
-          backgroundColor: AppColor.primary,
-          onPressed: () {},
+
+        ElevatedButton.icon(
+          onPressed: () {
+            Get.dialog(
+              QuestionPackFormWidget(
+                levelId: controller.levelId,
+                onSave: (request) async {
+                  await controller.createQuestionPack(request);
+                },
+              ),
+            );
+          },
+          icon: const Icon(Icons.add, size: 18, color: Colors.white),
+          label: const Text(
+            "Thêm Bộ Đề",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColor.primary,
+            elevation: 2,
+            shadowColor: AppColor.primary.withOpacity(0.3),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.folder_off_outlined, size: 80, color: Colors.grey[300]),
-          const SizedBox(height: 16),
-          Text(
-            "Cấp độ này chưa có bộ đề nào",
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey[500],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDataTable(BuildContext context, List<dynamic> packs) {
-    // Thay dynamic bằng Model QuestionPack của bạn
-    return Theme(
-      data: Theme.of(context).copyWith(dividerColor: Colors.grey.shade100),
-      child: SingleChildScrollView(
-        padding: EdgeInsets.zero,
-        child: DataTable(
-          headingRowColor: MaterialStateProperty.all(const Color(0xFFFAFAFA)),
-          dataRowColor: MaterialStateProperty.resolveWith<Color?>((states) {
-            if (states.contains(MaterialState.hovered))
-              return AppColor.primary.withOpacity(0.05);
-            return Colors.white;
-          }),
-          headingRowHeight: 52,
-          dataRowHeight: 72,
-          columnSpacing: 24,
-          horizontalMargin: 24,
-          columns: [
-            _buildHeader('Tên Bộ Đề'),
-            _buildHeader('Số câu hỏi', alignCenter: true),
-            _buildHeader('Ngày tạo', alignCenter: true),
-            _buildHeader('Hành động', alignEnd: true),
-          ],
-          rows: packs.map<DataRow>((pack) {
-            return DataRow(
-              cells: [
-                DataCell(
-                  Text(
-                    pack.name ?? 'Unknown',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      color: Color(0xFF2D3436),
-                    ),
-                  ),
-                ),
-                DataCell(Center(child: Text("${pack.questionCount ?? 0}"))),
-                DataCell(
-                  Center(
-                    child: Text(
-                      DateFormat(
-                        'dd/MM/yyyy',
-                      ).format(pack.createdAt ?? DateTime.now()),
-                    ),
-                  ),
-                ),
-                DataCell(
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.edit_note_rounded,
-                          color: Colors.blue,
-                        ),
-                        onPressed: () {}, // Edit Pack logic
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.link_off_rounded,
-                          color: Colors.redAccent,
-                        ),
-                        tooltip: "Gỡ khỏi Level",
-                        onPressed: () {},
-                        // controller.removePackFromLevel(pack.id),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
-
-  DataColumn _buildHeader(
-    String text, {
-    bool alignEnd = false,
-    bool alignCenter = false,
-  }) {
-    return DataColumn(
-      numeric: alignEnd,
-      label: Expanded(
-        child: Text(
-          text.toUpperCase(),
-          textAlign: alignCenter
-              ? TextAlign.center
-              : (alignEnd ? TextAlign.end : TextAlign.start),
-          style: TextStyle(
-            color: Colors.grey[500],
-            fontWeight: FontWeight.w700,
-            fontSize: 12,
-            letterSpacing: 0.5,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickStats(BuildContext context, int packCount) {
+  Widget _buildQuickStats(BuildContext context, int count) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: const Color(0xFF909CC2).withOpacity(0.08),
             offset: const Offset(0, 4),
-            blurRadius: 10,
+            blurRadius: 24,
           ),
         ],
       ),
@@ -330,38 +320,42 @@ class LevelDetailView extends GetView<LevelDetailController> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            "Thống kê nhanh",
+            "Tổng quan",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
           ),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "Tổng số bộ đề",
-                style: TextStyle(color: Colors.grey[600], fontSize: 13),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.blueAccent.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  "$packCount",
-                  style: const TextStyle(
-                    color: Colors.blueAccent,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
+          _statItem("Tổng bộ đề", "$count", Colors.blue),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Divider(height: 1),
           ),
+          _statItem("Đang hoạt động", "$count", Colors.green),
         ],
       ),
+    );
+  }
+
+  Widget _statItem(String label, String value, Color color) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

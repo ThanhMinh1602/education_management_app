@@ -3,7 +3,13 @@ import 'package:blooket/app/modules/admin/assignment/views/assignment_view.dart'
 import 'package:blooket/app/modules/admin/assignment_results/binding/assignment_results_binding.dart';
 import 'package:blooket/app/modules/admin/assignment_results/views/assignment_results_view.dart';
 import 'package:blooket/app/modules/admin/question_management/binding/level_binding.dart';
+import 'package:blooket/app/modules/admin/question_management/binding/level_detail_binding.dart';
+import 'package:blooket/app/modules/admin/question_management/binding/question_pack_detail_binding.dart';
+import 'package:blooket/app/modules/admin/question_management/views/level_detail_view.dart';
 import 'package:blooket/app/modules/admin/question_management/views/level_view.dart';
+import 'package:blooket/app/modules/admin/question_management/views/question_pack_detail_view.dart';
+import 'package:blooket/app/modules/auth/binding/auth_binding.dart';
+import 'package:blooket/app/modules/auth/view/login_view.dart';
 import 'package:blooket/app/modules/user/assignments/binding/assignments_binding.dart';
 import 'package:blooket/app/modules/user/assignments/views/assignments_view.dart';
 import 'package:blooket/app/modules/user/do_assignment/binding/do_assignment_binding.dart';
@@ -19,16 +25,9 @@ import 'package:blooket/app/modules/admin/class_management/binding/class_managem
 import 'package:blooket/app/modules/admin/class_management/binding/class_management_detail_binding.dart';
 import 'package:blooket/app/modules/admin/class_management/views/class_management_view.dart';
 import 'package:blooket/app/modules/admin/class_management/views/class_management_detail_view.dart';
-import 'package:blooket/app/modules/admin/question_management/binding/question_management_binding.dart';
-import 'package:blooket/app/modules/admin/question_management/binding/question_management_detail_binding.dart';
-import 'package:blooket/app/modules/admin/question_management/views/question_management_detail_view.dart';
-import 'package:blooket/app/modules/admin/question_management/views/question_management_view.dart';
 import 'package:blooket/app/modules/admin/student_management/binding/student_management_binding.dart';
 import 'package:blooket/app/modules/admin/student_management/views/student_management_view.dart';
 import 'package:get/get.dart';
-
-import '../modules/auth/binding/auth_binding.dart';
-import '../modules/auth/view/login_view.dart';
 
 class AppPages {
   static const INITIAL = AppRoutes.LOGIN;
@@ -68,16 +67,16 @@ class AppPages {
       binding: LevelBinding(),
       children: [
         GetPage(
-          name: AppRoutes.QUESTION_PACKS,
-          page: () => const QuestionManagementDetailView(),
+          name: AppRoutes.LEVEL_DETAIL,
+          page: () => const LevelDetailView(),
           transition: Transition.rightToLeft,
-          binding: QuestionManagementDetailBinding(),
+          binding: LevelDetailBinding(),
           children: [
             GetPage(
-              name: AppRoutes.QUESTION_MANAGEMENT_DETAIL,
-              page: () => const QuestionManagementDetailView(),
+              name: AppRoutes.QUESTION_PACK_DETAIL,
+              page: () => const QuestionPackDetailView(),
               transition: Transition.rightToLeft,
-              binding: QuestionManagementDetailBinding(),
+              binding: QuestionPackDetailBinding(),
             ),
           ],
         ),

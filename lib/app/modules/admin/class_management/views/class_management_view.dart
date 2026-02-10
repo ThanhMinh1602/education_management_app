@@ -2,7 +2,7 @@ import 'package:blooket/app/core/components/appbar/app_header.dart';
 import 'package:blooket/app/core/components/header/custom_page_header.dart';
 import 'package:blooket/app/core/components/sidebar/side_bar.dart';
 import 'package:blooket/app/modules/admin/class_management/controller/class_management_controller.dart';
-import 'package:blooket/app/modules/admin/class_management/widgets/class_form_dialog.dart';
+import 'package:blooket/app/modules/admin/class_management/widgets/class_form_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../widgets/class_card.dart';
@@ -33,12 +33,7 @@ class ClassManagementView extends GetView<ClassManagementController> {
                     subtitle: 'Danh sách lớp học hiện có',
                     buttonLabel: 'Thêm mới',
                     onButtonPressed: () async {
-                      Get.dialog(
-                        ClassFormWidget(
-                          title: 'THÊM LỚP MỚI',
-                          controller: controller,
-                        ),
-                      );
+                      Get.dialog(ClassFormWidget(controller: controller));
                     },
                   ),
 
