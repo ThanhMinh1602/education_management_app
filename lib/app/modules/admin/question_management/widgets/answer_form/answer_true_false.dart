@@ -2,10 +2,7 @@ import 'package:blooket/app/core/constants/app_color.dart';
 import 'package:flutter/material.dart';
 
 class AnswerTrueFalse extends StatefulWidget {
-  // Callback trả về giá trị đúng (true) hoặc sai (false)
   final Function(bool isTrue)? onChanged;
-
-  // Giá trị ban đầu (nếu đang edit)
   final bool? initialValue;
 
   const AnswerTrueFalse({super.key, this.onChanged, this.initialValue});
@@ -15,7 +12,6 @@ class AnswerTrueFalse extends StatefulWidget {
 }
 
 class _AnswerTrueFalseState extends State<AnswerTrueFalse> {
-  // null: chưa chọn, true: Chọn Đúng, false: Chọn Sai
   bool? _selectedAnswer;
 
   @override
@@ -36,11 +32,9 @@ class _AnswerTrueFalseState extends State<AnswerTrueFalse> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      // Padding này nên để widget cha quản lý, nhưng thêm vào đây để demo cho đẹp
       padding: const EdgeInsets.symmetric(horizontal: 0),
       child: Row(
         children: [
-          // --- CARD TRUE ---
           Expanded(
             child: _buildOptionCard(
               label: "TRUE",
@@ -50,8 +44,8 @@ class _AnswerTrueFalseState extends State<AnswerTrueFalse> {
             ),
           ),
 
-          const SizedBox(width: 20), // Khoảng cách giữa 2 nút
-          // --- CARD FALSE ---
+          const SizedBox(width: 20),
+
           Expanded(
             child: _buildOptionCard(
               label: "FALSE",
@@ -81,14 +75,14 @@ class _AnswerTrueFalseState extends State<AnswerTrueFalse> {
         onTap: () => _onSelect(value),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          height: 200, // Chiều cao cố định cho đẹp
+          height: 200,
           decoration: BoxDecoration(
             color: color.withOpacity(
               isSelected ? 1.0 : (isNotSelectedButHasValue ? 0.3 : 0.8),
             ),
             borderRadius: BorderRadius.circular(16),
             border: isSelected
-                ? Border.all(color: Colors.black, width: 4) // Viền đậm khi chọn
+                ? Border.all(color: Colors.black, width: 4)
                 : Border.all(color: Colors.transparent, width: 4),
             boxShadow: isSelected
                 ? [
@@ -102,7 +96,6 @@ class _AnswerTrueFalseState extends State<AnswerTrueFalse> {
           ),
           child: Stack(
             children: [
-              // Icon nền mờ (Trang trí)
               Positioned(
                 right: -20,
                 bottom: -20,
@@ -113,7 +106,6 @@ class _AnswerTrueFalseState extends State<AnswerTrueFalse> {
                 ),
               ),
 
-              // Nội dung chính
               Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -140,7 +132,6 @@ class _AnswerTrueFalseState extends State<AnswerTrueFalse> {
                 ),
               ),
 
-              // Checkbox icon xác nhận đã chọn (Góc trên)
               if (isSelected)
                 Positioned(
                   top: 12,

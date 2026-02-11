@@ -6,15 +6,12 @@
 
 #include "generated_plugin_registrant.h"
 
-#include <cloud_firestore/cloud_firestore_plugin_c_api.h>
-#include <firebase_core/firebase_core_plugin_c_api.h>
+#include <file_selector_windows/file_selector_windows.h>
 #include <rive_native/rive_native_plugin.h>
 
 void RegisterPlugins(flutter::PluginRegistry* registry) {
-  CloudFirestorePluginCApiRegisterWithRegistrar(
-      registry->GetRegistrarForPlugin("CloudFirestorePluginCApi"));
-  FirebaseCorePluginCApiRegisterWithRegistrar(
-      registry->GetRegistrarForPlugin("FirebaseCorePluginCApi"));
+  FileSelectorWindowsRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("FileSelectorWindows"));
   RiveNativePluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("RiveNativePlugin"));
 }

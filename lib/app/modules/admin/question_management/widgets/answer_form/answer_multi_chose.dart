@@ -3,12 +3,19 @@ import 'package:flutter/material.dart';
 
 class AnswerMultiChose extends StatefulWidget {
   final Function(List<String> options, List<String> correctAnswers)? onChanged;
+
+  /// ✅ Chỉ lưu link ảnh để gửi lên API
+  final void Function(String? imageUrl)? onQuestionImageUrlChanged;
+  final String? initialQuestionImageUrl;
+
   final List<String>? initialOptions;
   final List<String>? initialCorrectAnswers;
 
   const AnswerMultiChose({
     super.key,
     this.onChanged,
+    this.onQuestionImageUrlChanged,
+    this.initialQuestionImageUrl,
     this.initialOptions,
     this.initialCorrectAnswers,
   });
@@ -19,100 +26,251 @@ class AnswerMultiChose extends StatefulWidget {
 
 class _AnswerMultiChoseState extends State<AnswerMultiChose> {
   int _selectedAnswerIndex = 0;
-  late List<TextEditingController> _controllers;
+  late final List<TextEditingController> _controllers;
 
-  // Biến lưu trạng thái hover
-  final List<bool> _isHovering = List.generate(4, (index) => false);
+  // hover
+  final List<bool> _isHovering = List.generate(4, (_) => false);
+
+  // ✅ Image URL
+  late final TextEditingController _imageUrlController;
+  String? _questionImageUrl;
+
+  bool _urlFormatError = false; // lỗi format url (không phải http/https)
+  bool _urlLoadError = false; // lỗi load ảnh (Image.network fail)
 
   @override
   void initState() {
     super.initState();
 
-    // 1. Khởi tạo Controllers với dữ liệu cũ (nếu có)
+    _imageUrlController = TextEditingController(
+      text: widget.initialQuestionImageUrl?.trim() ?? '',
+    );
+
+    _questionImageUrl = _normalizeUrl(_imageUrlController.text);
+
     _controllers = List.generate(4, (index) {
-      String text = '';
-      if (widget.initialOptions != null &&
-          index < widget.initialOptions!.length) {
-        text = widget.initialOptions![index];
-      }
+      final text =
+          (widget.initialOptions != null &&
+              index < widget.initialOptions!.length)
+          ? widget.initialOptions![index]
+          : '';
       return TextEditingController(text: text);
     });
 
-    // 2. Xác định đáp án đúng ban đầu (nếu có)
     if (widget.initialCorrectAnswers != null &&
         widget.initialCorrectAnswers!.isNotEmpty &&
         widget.initialOptions != null) {
-      // Tìm xem đáp án đúng nằm ở index nào trong options
       final correctText = widget.initialCorrectAnswers!.first;
       final index = widget.initialOptions!.indexOf(correctText);
-      if (index != -1) {
-        _selectedAnswerIndex = index;
-      }
+      if (index != -1) _selectedAnswerIndex = index;
     }
 
-    // 3. Lắng nghe thay đổi text
-    for (var controller in _controllers) {
-      controller.addListener(_notifyChange);
+    for (final c in _controllers) {
+      c.addListener(_notifyChange);
     }
-  }
 
-  // Hàm notify cập nhật dữ liệu ra bên ngoài
-  void _notifyChange() {
-    if (widget.onChanged != null) {
-      // Lấy toàn bộ text từ 4 ô nhập
-      final options = _controllers.map((e) => e.text).toList();
-
-      // Lấy text của ô đang được chọn làm đáp án đúng
-      final correctAnswerText = options[_selectedAnswerIndex];
-
-      // Trả về dữ liệu
-      widget.onChanged!(options, [correctAnswerText]);
+    // emit initial url nếu hợp lệ
+    if (_questionImageUrl != null) {
+      widget.onQuestionImageUrlChanged?.call(_questionImageUrl);
     }
-  }
-
-  void _onSelectAnswer(int index) {
-    setState(() {
-      _selectedAnswerIndex = index;
-    });
-    _notifyChange(); // Gọi callback khi đổi đáp án đúng
   }
 
   @override
   void dispose() {
-    for (var controller in _controllers) {
-      controller.dispose();
+    for (final c in _controllers) {
+      c.dispose();
     }
+    _imageUrlController.dispose();
     super.dispose();
+  }
+
+  void _notifyChange() {
+    if (widget.onChanged == null) return;
+    final options = _controllers.map((e) => e.text).toList();
+    final correct = options[_selectedAnswerIndex];
+    widget.onChanged!(options, [correct]);
+  }
+
+  void _onSelectAnswer(int index) {
+    setState(() => _selectedAnswerIndex = index);
+    _notifyChange();
+  }
+
+  String? _normalizeUrl(String raw) {
+    final url = raw.trim();
+    if (url.isEmpty) return null;
+
+    final uri = Uri.tryParse(url);
+    final ok =
+        uri != null &&
+        (uri.scheme == 'http' || uri.scheme == 'https') &&
+        uri.host.isNotEmpty;
+
+    return ok ? url : null;
+  }
+
+  void _onUrlChanged(String raw) {
+    final normalized = _normalizeUrl(raw);
+
+    setState(() {
+      _questionImageUrl = normalized;
+      _urlFormatError = (raw.trim().isNotEmpty && normalized == null);
+      _urlLoadError = false; // reset lỗi load khi user sửa url
+    });
+
+    // Gửi link hợp lệ lên ngoài để bạn dùng call API
+    widget.onQuestionImageUrlChanged?.call(_questionImageUrl);
+  }
+
+  void _clearUrl() {
+    setState(() {
+      _imageUrlController.clear();
+      _questionImageUrl = null;
+      _urlFormatError = false;
+      _urlLoadError = false;
+    });
+    widget.onQuestionImageUrlChanged?.call(null);
   }
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final crossAxisCount = 2;
-        final spacing = 20.0;
-        final totalSpacing = spacing * (crossAxisCount - 1);
-        final itemWidth =
-            (constraints.maxWidth - totalSpacing) / crossAxisCount;
-        const itemHeight = 80.0;
-        final ratio = itemWidth / itemHeight;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildQuestionImageUrl(context),
+        const SizedBox(height: 16),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            const crossAxisCount = 2;
+            const spacing = 20.0;
+            final totalSpacing = spacing * (crossAxisCount - 1);
+            final itemWidth =
+                (constraints.maxWidth - totalSpacing) / crossAxisCount;
+            const itemHeight = 80.0;
+            final ratio = itemWidth / itemHeight;
 
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: EdgeInsets.zero,
-          itemCount: 4,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            childAspectRatio: ratio,
-            crossAxisSpacing: spacing,
-            mainAxisSpacing: spacing,
-          ),
-          itemBuilder: (context, index) {
-            return _buildWebAnswerItem(index);
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: EdgeInsets.zero,
+              itemCount: 4,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                childAspectRatio: ratio,
+                crossAxisSpacing: spacing,
+                mainAxisSpacing: spacing,
+              ),
+              itemBuilder: (context, index) => _buildWebAnswerItem(index),
+            );
           },
-        );
-      },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuestionImageUrl(BuildContext context) {
+    final hasUrl = _questionImageUrl != null;
+
+    final showErrorText = _urlFormatError || _urlLoadError;
+    final errorText = _urlFormatError
+        ? 'URL không hợp lệ. Vui lòng dùng http/https.'
+        : 'URL hợp lệ nhưng không tải được ảnh.';
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.white,
+      ),
+      child: Row(
+        children: [
+          // Preview
+          Container(
+            width: 92,
+            height: 92,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: Colors.grey.shade50,
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: !hasUrl
+                ? Icon(
+                    Icons.image_outlined,
+                    color: Colors.grey.shade400,
+                    size: 32,
+                  )
+                : Image.network(
+                    _questionImageUrl!,
+                    fit: BoxFit.cover,
+                    // ✅ Nếu link chết / không phải ảnh -> báo lỗi UI
+                    errorBuilder: (_, __, ___) {
+                      // tránh setState liên tục khi rebuild:
+                      if (!_urlLoadError) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) setState(() => _urlLoadError = true);
+                        });
+                      }
+                      return Icon(
+                        Icons.broken_image_outlined,
+                        color: Colors.red.shade300,
+                        size: 32,
+                      );
+                    },
+                  ),
+          ),
+          const SizedBox(width: 12),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Ảnh cho câu hỏi',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                TextField(
+                  controller: _imageUrlController,
+                  onChanged: _onUrlChanged,
+                  keyboardType: TextInputType.url,
+                  textInputAction: TextInputAction.done,
+                  decoration: InputDecoration(
+                    hintText: 'Dán URL ảnh (https://...)',
+                    isDense: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    suffixIcon: _imageUrlController.text.trim().isEmpty
+                        ? null
+                        : IconButton(
+                            tooltip: 'Xóa',
+                            onPressed: _clearUrl,
+                            icon: const Icon(Icons.close),
+                          ),
+                  ),
+                ),
+
+                if (showErrorText)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      errorText,
+                      style: TextStyle(
+                        color: Colors.red.shade600,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

@@ -77,7 +77,7 @@ class LevelDetailController extends BaseController {
       Get.back(result: true);
     } catch (e) {
       hideLoading();
-      print(e);
+      showError(e.toString());
     }
   }
 

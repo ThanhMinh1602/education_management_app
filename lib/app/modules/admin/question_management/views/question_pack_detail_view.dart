@@ -1,8 +1,10 @@
 import 'dart:ui';
 
+import 'package:blooket/app/core/components/button/custom_icon_button.dart';
+import 'package:blooket/app/core/components/dropdown/custom_dropdown_field.dart';
 import 'package:blooket/app/core/components/header/custom_page_header.dart';
 import 'package:blooket/app/core/utils/dialogs.dart';
-import 'package:blooket/app/core/utils/ui_dialogs.dart';
+import 'package:blooket/app/data/enum/question_type.dart';
 import 'package:blooket/app/modules/admin/question_management/views/question_dialog_view.dart';
 import 'package:blooket/app/modules/admin/question_management/widgets/question_list_item.dart';
 import 'package:flutter/material.dart';
@@ -38,47 +40,51 @@ class QuestionPackDetailView extends GetView<QuestionPackDetailController> {
 
   Widget _buildRightWidget() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CustomPageHeader(
-          extraWidget: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: Colors.white,
-            ),
-            child: Obx(
-              () => Text(
-                '${controller.questions.length} câu hỏi',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ),
-          subtitle: 'Quản lý các câu hỏi trong bộ đề',
-          buttonLabel: 'Thêm câu hỏi mới',
-          onButtonPressed: () {
-            // SHOW DIALOG TẠO MỚI
-            Get.dialog(
-              barrierDismissible: false,
-              QuestionDialogView(
-                packId: controller.packsId,
-                onSave: (request) async {
-                  await controller.addQuestion(request);
-                },
-              ),
-            );
-          },
-        ),
-        const SizedBox(height: 20),
-        Expanded(
-          child: Obx(
-            () => ListView.separated(
-              itemCount: controller.questions.length,
-              itemBuilder: (context, index) {
-                final question = controller.questions[index];
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            _buildTotalCounter(),
+            const SizedBox(width: 16),
+            _buildFilterDropdown(),
 
+            const SizedBox(width: 16),
+            Spacer(),
+            const SizedBox(width: 16),
+
+            _buildAddButton(),
+          ],
+        ),
+
+        const SizedBox(height: 16),
+
+        Expanded(
+          child: Obx(() {
+            if (controller.filteredQuestions.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.filter_list_off,
+                      size: 48,
+                      color: Colors.grey.shade300,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "Không tìm thấy câu hỏi nào.",
+                      style: TextStyle(color: Colors.grey.shade500),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return ListView.separated(
+              itemCount: controller.filteredQuestions.length,
+              itemBuilder: (context, index) {
+                final question = controller.filteredQuestions[index];
                 return QuestionListItem(
                   index: index,
                   questionModel: question,
@@ -86,11 +92,8 @@ class QuestionPackDetailView extends GetView<QuestionPackDetailController> {
                     Get.dialog(
                       QuestionDialogView(
                         packId: controller.packsId,
-
-                        initialData: question, // TRUYỀN DỮ LIỆU CŨ VÀO ĐÂY
-
+                        initialData: question,
                         onSave: (request) async {
-                          // request lúc này là UpdateQuestionRequest
                           await controller.updateQuestion(request, question.id);
                         },
                       ),
@@ -102,16 +105,99 @@ class QuestionPackDetailView extends GetView<QuestionPackDetailController> {
                       onConfirm: () => controller.deleteQuestion(question.id),
                     );
                   },
-                  onCopy: () {}, // Logic copy nếu cần
-                  onUp: () {}, // Logic sắp xếp nếu cần
+                  onCopy: () {},
+                  onUp: () {},
                   onDown: () {},
                 );
               },
               separatorBuilder: (_, __) => const SizedBox(height: 12),
-            ),
-          ),
+            );
+          }),
         ),
       ],
+    );
+  }
+
+  Widget _buildTotalCounter() {
+    return Container(
+      height: 50, // Cao bằng Dropdown/Button
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14), // Bo góc 14 giống Dropdown
+        border: Border.all(color: Colors.grey), // Viền xám giống Dropdown
+      ),
+      alignment: Alignment.center, // Căn giữa nội dung
+      child: Obx(
+        () => Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.format_list_numbered_rounded,
+              color: AppColor.primary,
+              size: 22,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              // Hiển thị: "Tổng: 15"
+              "Tổng: ${controller.questions.length}",
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterDropdown() {
+    return SizedBox(
+      width: 250,
+      child: Obx(
+        () => CustomDropdownField<QuestionType?>(
+          labelText: "Lọc theo loại",
+          prefixIcon: Icons.filter_alt_outlined,
+          value: controller.filterType.value,
+
+          items: [
+            const DropdownMenuItem(
+              value: null,
+              child: Text(
+                "Tất cả",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            ...QuestionType.values.where((e) => e != QuestionType.unknown).map((
+              type,
+            ) {
+              return DropdownMenuItem(value: type, child: Text(type.label));
+            }),
+          ],
+          onChanged: (newValue) => controller.setFilter(newValue),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAddButton() {
+    return CustomIconButton(
+      onTap: () {
+        Get.dialog(
+          barrierDismissible: false,
+          QuestionDialogView(
+            packId: controller.packsId,
+            initialType: controller.filterType.value,
+            onSave: (request) async {
+              await controller.addQuestion(request);
+            },
+          ),
+        );
+      },
+      icon: Icons.add,
+      label: 'Thêm câu hỏi',
     );
   }
 
@@ -119,7 +205,6 @@ class QuestionPackDetailView extends GetView<QuestionPackDetailController> {
     return Obx(() {
       final pack = controller.questionPackModel.value;
 
-      // Nếu chưa load xong data thì hiện loading hoặc rỗng
       if (pack == null) {
         return const Center(
           child: CircularProgressIndicator(color: AppColor.primary),
@@ -143,38 +228,6 @@ class QuestionPackDetailView extends GetView<QuestionPackDetailController> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Thumbnail Image
-            Center(
-              child: Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(16),
-                  image: pack.thumbnail.isNotEmpty
-                      ? DecorationImage(
-                          image: NetworkImage(pack.thumbnail),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.3),
-                    width: 2,
-                  ),
-                ),
-                child: pack.thumbnail.isEmpty
-                    ? const Icon(
-                        Icons.image_not_supported_outlined,
-                        color: Colors.white70,
-                        size: 40,
-                      )
-                    : null,
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // 2. Title & Status
             Center(
               child: Column(
                 children: [
@@ -198,7 +251,6 @@ class QuestionPackDetailView extends GetView<QuestionPackDetailController> {
             const Divider(color: Colors.white24, height: 1),
             const SizedBox(height: 20),
 
-            // 3. Metadata Info (Level, Teacher, Date)
             _buildInfoRow(Icons.layers_rounded, "Level:", pack.levelName),
             const SizedBox(height: 12),
             _buildInfoRow(Icons.person_rounded, "Giáo viên:", pack.teacherName),
@@ -207,7 +259,7 @@ class QuestionPackDetailView extends GetView<QuestionPackDetailController> {
               _buildInfoRow(
                 Icons.calendar_month_rounded,
                 "Ngày tạo:",
-                // Cần import 'package:intl/intl.dart';
+
                 DateFormat('dd/MM/yyyy').format(pack.createdAt!),
               ),
 
@@ -215,7 +267,6 @@ class QuestionPackDetailView extends GetView<QuestionPackDetailController> {
             const Divider(color: Colors.white24, height: 1),
             const SizedBox(height: 20),
 
-            // 4. Description
             const Text(
               "MÔ TẢ",
               style: TextStyle(
@@ -240,12 +291,11 @@ class QuestionPackDetailView extends GetView<QuestionPackDetailController> {
 
             const SizedBox(height: 32),
 
-            // 5. Actions Buttons (Giữ nguyên logic cũ)
             CustomActionButton(
               width: double.infinity,
               onTap: () => Get.back<bool>(result: controller.isDataChanged),
               icon: Icons.save_outlined,
-              text: 'SAVE & CLOSE', // Đổi tên cho rõ nghĩa
+              text: 'SAVE & CLOSE',
             ),
 
             const SizedBox(height: 12),
@@ -277,7 +327,6 @@ class QuestionPackDetailView extends GetView<QuestionPackDetailController> {
     });
   }
 
-  // --- Widget phụ: Dòng thông tin (Icon - Label - Value) ---
   Widget _buildInfoRow(IconData icon, String label, String value) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -305,7 +354,6 @@ class QuestionPackDetailView extends GetView<QuestionPackDetailController> {
     );
   }
 
-  // --- Widget phụ: Badge trạng thái Public/Private ---
   Widget _buildStatusBadge(bool isPublic) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

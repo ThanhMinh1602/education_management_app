@@ -1,3 +1,4 @@
+import 'package:blooket/app/data/enum/question_type.dart';
 import 'package:blooket/app/data/model/question_pack_model.dart';
 import 'package:blooket/app/data/model/request/content/create_question_request.dart';
 import 'package:blooket/app/data/model/request/content/question_pack_request.dart';
@@ -19,6 +20,7 @@ class QuestionPackDetailController extends BaseController {
 
   final questions = <QuestionModel>[].obs;
   final questionPackModel = Rxn<QuestionPackModel>();
+  final filterType = Rxn<QuestionType>();
   late String packsId;
   bool isDataChanged = false;
 
@@ -29,7 +31,6 @@ class QuestionPackDetailController extends BaseController {
   @override
   void onInit() async {
     super.onInit();
-    // Đảm bảo param 'id' trùng với route (/:id hoặc /:packId)
     packsId = Get.parameters['packId'] ?? '';
 
     if (packsId.isNotEmpty) {
@@ -37,6 +38,18 @@ class QuestionPackDetailController extends BaseController {
       fetchQuestions();
       getPackById();
     }
+  }
+
+  List<QuestionModel> get filteredQuestions {
+    if (filterType.value == null) {
+      return questions;
+    }
+    return questions.where((q) => q.type == filterType.value).toList();
+  }
+
+  // 3. Hàm set filter
+  void setFilter(QuestionType? type) {
+    filterType.value = type;
   }
 
   Future<void> fetchQuestions() async {

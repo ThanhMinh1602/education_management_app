@@ -1,4 +1,4 @@
-import 'package:blooket/app/core/common/app_tooltip.dart';
+import 'package:blooket/app/core/components/common/app_tooltip.dart';
 import 'package:blooket/app/core/components/button/custom_delete_button.dart';
 import 'package:blooket/app/core/utils/dialogs.dart';
 import 'package:blooket/app/data/model/question_pack_model.dart';

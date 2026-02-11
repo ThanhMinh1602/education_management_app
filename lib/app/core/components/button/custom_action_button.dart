@@ -27,6 +27,7 @@ class CustomActionButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: Container(
           width: width,
+          height: 50,
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
           decoration: BoxDecoration(
             // Dùng màu truyền vào, nếu không có thì dùng màu hồng gốc

@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:blooket/app/core/constants/app_colors.dart'; // Đảm bảo import đúng
 
 class CustomIconButton extends StatelessWidget {
   final VoidCallback? onTap;
   final IconData icon;
   final Color? backgroundColor;
-  final Color? iconColor;
+  final Color? iconColor; // Đóng vai trò là foregroundColor
   final double iconSize;
   final double borderRadius;
   final String? label;
+  final EdgeInsetsGeometry? padding; // Thêm để tùy chỉnh padding nếu cần
 
   const CustomIconButton({
     super.key,
@@ -16,43 +18,51 @@ class CustomIconButton extends StatelessWidget {
     this.backgroundColor,
     this.iconColor,
     this.iconSize = 20.0,
-    this.borderRadius = 8.0,
+    this.borderRadius = 14.0, // Đồng bộ với CustomButton (14.0)
     this.label,
+    this.padding,
   });
 
   @override
   Widget build(BuildContext context) {
-    // 1. Định nghĩa Style chung để tránh viết lặp lại
+    // Màu mặc định giống CustomButton
+    final finalBgColor = backgroundColor ?? AppColors.primary;
+    final finalFgColor = iconColor ?? AppColors.white;
+
     final buttonStyle = ElevatedButton.styleFrom(
-      backgroundColor: backgroundColor ?? Colors.grey[200],
-      elevation: 0, // Thường nút kiểu này sẽ phẳng (flat), bỏ bóng đổ
+      backgroundColor: finalBgColor,
+      foregroundColor: finalFgColor,
+      fixedSize: Size(double.infinity, 50),
+      elevation:
+          0, // CustomButton mặc định có thể có elevation, ở đây set 0 cho phẳng hoặc tùy chỉnh
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(borderRadius)),
       ),
-      // Mẹo nhỏ: Nếu chỉ có icon, ta nên fix padding để nút vuông vắn hơn
-      padding: label == null ? const EdgeInsets.all(12) : null,
+      // Padding mặc định: Nếu có label thì rộng hơn, nếu chỉ có icon thì vừa phải
+      padding:
+          padding ??
+          (label != null
+              ? const EdgeInsets.symmetric(horizontal: 12, vertical: 10)
+              : const EdgeInsets.all(10)),
+      // TextStyle cho Label
+      textStyle: Theme.of(
+        context,
+      ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
     );
 
-    // 2. Màu sắc chung
-    final finalIconColor = iconColor ?? Colors.black87;
-
-    // 3. Logic hiển thị
     if (label != null && label!.isNotEmpty) {
-      // TRƯỜNG HỢP CÓ LABEL -> Dùng .icon
       return ElevatedButton.icon(
         style: buttonStyle,
         onPressed: onTap,
-        icon: Icon(icon, size: iconSize, color: finalIconColor),
-        label: Text(
-          label!,
-          style: TextStyle(color: finalIconColor, fontWeight: FontWeight.w500),
-        ),
+        icon: Icon(icon, size: iconSize, color: finalFgColor),
+        label: Text(label!),
       );
     } else {
       return ElevatedButton(
         style: buttonStyle,
         onPressed: onTap,
-        child: Icon(icon, size: iconSize, color: finalIconColor),
+        // Dùng SizedBox để đảm bảo nút vuông vắn hơn nếu cần, hoặc để mặc định
+        child: Icon(icon, size: iconSize, color: finalFgColor),
       );
     }
   }

@@ -1,4 +1,4 @@
-import 'package:blooket/app/core/common/app_tooltip.dart';
+import 'package:blooket/app/core/components/common/app_tooltip.dart';
 import 'package:blooket/app/core/components/appbar/app_header.dart';
 import 'package:blooket/app/core/components/header/custom_page_header.dart';
 import 'package:blooket/app/core/components/sidebar/side_bar.dart';

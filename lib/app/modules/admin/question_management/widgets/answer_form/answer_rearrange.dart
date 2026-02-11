@@ -1,29 +1,59 @@
-import 'package:blooket/app/core/constants/app_color.dart';
 import 'package:flutter/material.dart';
 
-class AnswerRearrange extends StatefulWidget {
-  // Callback trả về danh sách từ theo thứ tự hiện tại
-  final Function(List<String> orderedWords)? onChanged;
-  final List<String>? initialWords;
+// Import file chứa SegmentRequest của bạn
+import 'package:blooket/app/data/model/request/content/question_content_request.dart';
+import 'package:blooket/app/core/constants/app_color.dart';
 
-  const AnswerRearrange({super.key, this.onChanged, this.initialWords});
+class AnswerRearrange extends StatefulWidget {
+  /// Trả về 2 danh sách:
+  /// 1. correctWords: Thứ tự đúng (để lưu vào correctText/Order)
+  /// 2. previewWords: Thứ tự hiển thị hiện tại (để lưu vào segments)
+  final Function(List<String> correctWords, List<String> previewWords)?
+  onChanged;
+
+  final List<String>? initialCorrectWords;
+  final List<String>? initialPreviewWords;
+
+  const AnswerRearrange({
+    super.key,
+    this.onChanged,
+    this.initialCorrectWords,
+    this.initialPreviewWords,
+  });
 
   @override
   State<AnswerRearrange> createState() => _AnswerRearrangeState();
 }
 
 class _AnswerRearrangeState extends State<AnswerRearrange> {
-  List<String> words = [];
-  final TextEditingController _sentenceController = TextEditingController();
+  // [THAY ĐỔI] Dùng SegmentRequest thay cho _Seg
+  List<SegmentRequest> _correctSegs = [];
+  List<SegmentRequest> _previewSegs = [];
+
+  late final TextEditingController _sentenceController;
   bool _isDragging = false;
 
   @override
   void initState() {
     super.initState();
-    if (widget.initialWords != null && widget.initialWords!.isNotEmpty) {
-      words = List.from(widget.initialWords!);
-      // Tự điền vào input để user dễ sửa (nối lại thành chuỗi)
-      _sentenceController.text = words.join(" ");
+    _sentenceController = TextEditingController();
+
+    final correctWords = widget.initialCorrectWords ?? const <String>[];
+    if (correctWords.isNotEmpty) {
+      _setCorrectFromWords(correctWords);
+
+      // Input luôn hiển thị câu đúng
+      _sentenceController.text = correctWords.join(' ');
+
+      final previewWords = widget.initialPreviewWords;
+      if (previewWords != null && previewWords.isNotEmpty) {
+        _setPreviewFromWords(previewWords);
+      } else {
+        _previewSegs = List<SegmentRequest>.from(_correctSegs);
+      }
+
+      // Emit dữ liệu ban đầu
+      WidgetsBinding.instance.addPostFrameCallback((_) => _emitChange());
     }
   }
 
@@ -33,68 +63,136 @@ class _AnswerRearrangeState extends State<AnswerRearrange> {
     super.dispose();
   }
 
-  // --- LOGIC ---
+  // --- Logic Helper ---
 
-  void _notifyChange() {
-    if (widget.onChanged != null) {
-      widget.onChanged!(words);
-    }
+  void _emitChange() {
+    widget.onChanged?.call(
+      _correctSegs.map((e) => e.text).toList(),
+      _previewSegs.map((e) => e.text).toList(),
+    );
   }
 
-  void _generateChips() {
-    final text = _sentenceController.text.trim();
-    if (text.isEmpty) return;
+  void _setCorrectFromWords(List<String> words) {
+    // Tạo SegmentRequest với id tăng dần
+    _correctSegs = [
+      for (int i = 0; i < words.length; i++)
+        SegmentRequest(id: i, text: words[i]),
+    ];
+  }
 
-    List<String> tempWords = [];
-    // Regex: Bắt cụm trong [] HOẶC bắt từ đơn không chứa khoảng trắng
-    final RegExp regExp = RegExp(r'\[([^\]]*)\]|(\S+)');
-    final matches = regExp.allMatches(text);
+  void _setPreviewFromWords(List<String> previewWords) {
+    // Map text -> danh sách các ID tương ứng trong câu đúng
+    final map = <String, List<int>>{};
+    for (final seg in _correctSegs) {
+      (map[seg.text] ??= []).add(int.parse(seg.id.toString()));
+    }
 
-    for (final match in matches) {
-      if (match.group(1) != null) {
-        String content = match.group(1)!.trim();
-        if (content.isNotEmpty) tempWords.add(content);
-      } else {
-        tempWords.add(match.group(0)!);
+    final built = <SegmentRequest>[];
+    for (final w in previewWords) {
+      final queue = map[w];
+      if (queue == null || queue.isEmpty) continue;
+
+      final id = queue.removeAt(0);
+      built.add(SegmentRequest(id: id, text: w));
+    }
+
+    // Fallback: Nếu preview thiếu từ nào đó trong correct, thêm nó vào cuối
+    if (built.length != _correctSegs.length) {
+      final usedIds = built.map((e) => e.id).toSet();
+      for (final seg in _correctSegs) {
+        if (!usedIds.contains(seg.id)) built.add(seg);
       }
     }
-
-    setState(() {
-      words = tempWords;
-    });
-    _notifyChange();
+    _previewSegs = built;
   }
 
-  void _shuffleChips() {
-    setState(() {
-      words.shuffle();
-    });
-    _notifyChange();
+  List<String> _splitSentenceToWords(String text) {
+    final t = text.trim();
+    if (t.isEmpty) return [];
+
+    final temp = <String>[];
+    // Regex để giữ cụm từ trong ngoặc [] hoặc tách theo khoảng trắng
+    final regExp = RegExp(r'\[([^\]]*)\]|(\S+)');
+
+    for (final m in regExp.allMatches(t)) {
+      if (m.group(1) != null) {
+        final content = m.group(1)!.trim();
+        if (content.isNotEmpty) temp.add(content);
+      } else {
+        temp.add(m.group(0)!);
+      }
+    }
+    return temp;
   }
 
-  void _onSwap(int oldIndex, int newIndex) {
+  // --- Actions ---
+
+  void _generateChipsFromSentence() {
+    final words = _splitSentenceToWords(_sentenceController.text);
+    if (words.length < 2) return;
+
+    setState(() {
+      _setCorrectFromWords(words);
+      // Khi tách lại từ input, reset preview giống hệt correct
+      _previewSegs = List<SegmentRequest>.from(_correctSegs);
+    });
+    _emitChange();
+  }
+
+  void _shufflePreview() {
+    if (_previewSegs.length < 2) return;
+    setState(() => _previewSegs.shuffle());
+    _emitChange(); // Cập nhật lại thứ tự preview cho cha
+  }
+
+  void _onSwapPreview(int oldIndex, int newIndex) {
     if (oldIndex == newIndex) return;
     setState(() {
-      final temp = words[oldIndex];
-      words[oldIndex] = words[newIndex];
-      words[newIndex] = temp;
+      final temp = _previewSegs[oldIndex];
+      _previewSegs[oldIndex] = _previewSegs[newIndex];
+      _previewSegs[newIndex] = temp;
     });
-    _notifyChange();
+    _emitChange(); // Cập nhật lại thứ tự sau khi kéo thả
   }
 
-  // --- UI BUILDER ---
+  void _usePreviewAsCorrect() {
+    if (_previewSegs.length < 2) return;
+
+    // Lấy thứ tự text hiện tại làm chuẩn
+    final newWords = _previewSegs.map((e) => e.text).toList();
+
+    setState(() {
+      _setCorrectFromWords(newWords);
+      _previewSegs = List<SegmentRequest>.from(_correctSegs);
+      _sentenceController.text = newWords.join(' ');
+    });
+    _emitChange();
+  }
+
+  // --- UI ---
 
   @override
   Widget build(BuildContext context) {
+    final hasWords = _previewSegs.isNotEmpty;
+
     return Column(
       children: [
-        // 1. Khu vực hiển thị Chip (Result Area)
         _buildChipDisplayArea(),
-
         const SizedBox(height: 20),
-
-        // 2. Khu vực nhập liệu (Input Area)
         _buildInputArea(),
+
+        if (hasWords) ...[
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: _usePreviewAsCorrect,
+              icon: const Icon(Icons.check_circle_outline),
+              label: const Text("Dùng thứ tự hiện tại làm đáp án đúng"),
+              style: TextButton.styleFrom(foregroundColor: AppColor.pink),
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -103,7 +201,7 @@ class _AnswerRearrangeState extends State<AnswerRearrange> {
     return Container(
       width: double.infinity,
       constraints: const BoxConstraints(minHeight: 120),
-      padding: const EdgeInsets.all(20.0),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -116,7 +214,7 @@ class _AnswerRearrangeState extends State<AnswerRearrange> {
           ),
         ],
       ),
-      child: words.isEmpty
+      child: _previewSegs.isEmpty
           ? Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -138,15 +236,14 @@ class _AnswerRearrangeState extends State<AnswerRearrange> {
                 ],
               ),
             )
-          // SelectionContainer.disabled quan trọng cho Web để tránh bôi đen text khi kéo
           : SelectionContainer.disabled(
               child: Wrap(
-                spacing: 12.0,
-                runSpacing: 12.0,
-                alignment: WrapAlignment.start,
-                children: List.generate(words.length, (index) {
-                  return _buildDraggableChip(index);
-                }),
+                spacing: 12,
+                runSpacing: 12,
+                children: List.generate(
+                  _previewSegs.length,
+                  (index) => _buildDraggableChip(index),
+                ),
               ),
             ),
     );
@@ -177,15 +274,6 @@ class _AnswerRearrangeState extends State<AnswerRearrange> {
               hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Colors.grey.shade300),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Colors.grey.shade300),
-              ),
-              focusedBorder: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(8)),
-                borderSide: BorderSide(color: AppColor.primary),
               ),
               filled: true,
               fillColor: Colors.white,
@@ -206,9 +294,8 @@ class _AnswerRearrangeState extends State<AnswerRearrange> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    elevation: 1,
                   ),
-                  onPressed: _generateChips,
+                  onPressed: _generateChipsFromSentence,
                 ),
               ),
               const SizedBox(width: 12),
@@ -224,9 +311,8 @@ class _AnswerRearrangeState extends State<AnswerRearrange> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    elevation: 0,
                   ),
-                  onPressed: words.isNotEmpty ? _shuffleChips : null,
+                  onPressed: _previewSegs.isNotEmpty ? _shufflePreview : null,
                 ),
               ),
             ],
@@ -237,16 +323,15 @@ class _AnswerRearrangeState extends State<AnswerRearrange> {
   }
 
   Widget _buildDraggableChip(int index) {
-    final word = words[index];
+    final seg = _previewSegs[index];
 
     return DragTarget<int>(
       onWillAccept: (data) => data != null && data != index,
-      onAccept: (sourceIndex) => _onSwap(sourceIndex, index),
+      onAccept: (sourceIndex) => _onSwapPreview(sourceIndex, index),
       builder: (context, candidateData, rejectedData) {
         final isHovering = candidateData.isNotEmpty;
 
         return MouseRegion(
-          // Đổi con trỏ chuột: nắm tay khi kéo, bàn tay mở khi hover
           cursor: _isDragging
               ? SystemMouseCursors.grabbing
               : SystemMouseCursors.grab,
@@ -254,40 +339,33 @@ class _AnswerRearrangeState extends State<AnswerRearrange> {
             data: index,
             onDragStarted: () => setState(() => _isDragging = true),
             onDragEnd: (_) => setState(() => _isDragging = false),
-
-            // 1. Feedback: Widget đi theo con trỏ chuột
             feedback: Material(
               color: Colors.transparent,
               child: Opacity(
                 opacity: 0.9,
                 child: Transform.scale(
-                  scale: 1.05, // Phóng to nhẹ tạo cảm giác đang nhấc lên
+                  scale: 1.05,
                   child: _buildChipUI(
-                    word,
+                    seg.text,
                     color: AppColor.pink,
                     isFeedback: true,
                   ),
                 ),
               ),
             ),
-
-            // 2. ChildWhenDragging: Widget ở vị trí cũ khi đang kéo đi (làm mờ)
             childWhenDragging: Opacity(
               opacity: 0.3,
-              child: _buildChipUI(word, color: Colors.grey.shade500),
+              child: _buildChipUI(seg.text, color: Colors.grey.shade500),
             ),
-
-            // 3. Child: Widget hiển thị bình thường
             child: isHovering
-                ? _buildSwapTargetUI(word) // Hiệu ứng khi sắp thả vào đây
-                : _buildChipUI(word, color: AppColor.primary),
+                ? _buildSwapTargetUI(seg.text)
+                : _buildChipUI(seg.text, color: AppColor.primary),
           ),
         );
       },
     );
   }
 
-  // UI Chip cơ bản
   Widget _buildChipUI(
     String label, {
     required Color color,
@@ -297,9 +375,7 @@ class _AnswerRearrangeState extends State<AnswerRearrange> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(
-          8,
-        ), // Bo góc vừa phải trông hiện đại hơn
+        borderRadius: BorderRadius.circular(8),
         boxShadow: isFeedback
             ? [
                 BoxShadow(
@@ -327,7 +403,6 @@ class _AnswerRearrangeState extends State<AnswerRearrange> {
     );
   }
 
-  // UI khi có item khác kéo đè lên (Drop Target)
   Widget _buildSwapTargetUI(String label) {
     return DottedBorderContainer(
       child: Container(
@@ -349,7 +424,7 @@ class _AnswerRearrangeState extends State<AnswerRearrange> {
   }
 }
 
-// Widget phụ để vẽ viền nét đứt (Dotted Border) cho Target Swap
+// Widget vẽ viền đứt nét (dùng lại code cũ của bạn)
 class DottedBorderContainer extends StatelessWidget {
   final Widget child;
   const DottedBorderContainer({super.key, required this.child});
@@ -364,27 +439,18 @@ class _DottedBorderPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColor.pink
+      ..color = AppColor.pink.withOpacity(0.5)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 
-    final path = Path()
-      ..addRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(0, 0, size.width, size.height),
-          const Radius.circular(8),
-        ),
-      );
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      const Radius.circular(8),
+    );
 
-    // Vẽ nét đứt thủ công đơn giản
-    const dashWidth = 5.0;
-    const dashSpace = 3.0;
-    double distance = 0.0;
-
-    // Lưu ý: Để vẽ nét đứt bo góc hoàn hảo cần path metric phức tạp
-    // Ở đây vẽ viền liền mờ làm nền cho đơn giản và hiệu năng cao
-    paint.color = AppColor.pink.withOpacity(0.5);
-    canvas.drawPath(path, paint);
+    // Vẽ nét đứt thủ công đơn giản (hoặc dùng thư viện dotted_border)
+    // Ở đây vẽ liền cho đơn giản, nếu muốn nét đứt cần PathMetric
+    canvas.drawRRect(rrect, paint);
   }
 
   @override

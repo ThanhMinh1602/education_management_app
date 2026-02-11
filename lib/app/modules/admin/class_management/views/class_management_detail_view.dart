@@ -1,4 +1,4 @@
-import 'package:blooket/app/core/common/app_tooltip.dart';
+import 'package:blooket/app/core/components/common/app_tooltip.dart';
 import 'package:blooket/app/core/components/appbar/custom_app_bar.dart';
 import 'package:blooket/app/core/components/button/custom_delete_button.dart';
 import 'package:blooket/app/core/components/table/admin_table.dart';

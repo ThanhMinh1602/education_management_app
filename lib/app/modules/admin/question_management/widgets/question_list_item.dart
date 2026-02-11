@@ -1,9 +1,10 @@
+import 'package:blooket/app/core/components/common/app_tooltip.dart';
 import 'package:flutter/material.dart';
+
 import 'package:blooket/app/core/components/button/custom_icon_button.dart';
 import 'package:blooket/app/core/constants/app_color.dart';
 import 'package:blooket/app/core/constants/app_colors.dart';
 import 'package:blooket/app/data/model/question_model.dart';
-import 'package:blooket/app/modules/admin/question_management/widgets/up_down_controls.dart';
 
 class QuestionListItem extends StatelessWidget {
   const QuestionListItem({
@@ -26,167 +27,262 @@ class QuestionListItem extends StatelessWidget {
   final VoidCallback? onUp;
   final VoidCallback? onDown;
 
+  bool get _hasImage {
+    final url = questionModel.mediaUrl?.trim();
+    return url != null && url.isNotEmpty;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16), // Bo góc mềm hơn chút
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            offset: const Offset(0, 4),
-            blurRadius: 8,
-          ),
-        ],
-      ),
-      child: Row(
-        spacing: 16.0,
-        crossAxisAlignment:
-            CrossAxisAlignment.start, // Căn lề trên để đẹp hơn khi nội dung dài
-        children: [
-          // --- CỘT 1: CÁC NÚT THAO TÁC (Đã tăng Flex để nút rộng rãi hơn) ---
-          Expanded(
-            flex: 1,
-            child: Column(
-              spacing: 8, // Khoảng cách giữa nút Edit và hàng dưới
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+    final q = questionModel.content.question.trim();
+    final questionText = q.isEmpty ? 'Nội dung câu hỏi đang trống...' : q;
+
+    return Material(
+      color: Colors.white,
+      elevation: 0,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              offset: const Offset(0, 6),
+              blurRadius: 14,
+            ),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // LEFT: content + image
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Content
+                  Expanded(
+                    child: _QuestionContent(
+                      index: index,
+                      questionText: questionText,
+                      typeLabel: questionModel.type.label,
+                      typeColor: questionModel.type.color,
+                      answers: questionModel.content.answersDisplay.join(', '),
+                    ),
+                  ),
+
+                  if (_hasImage) ...[
+                    const SizedBox(width: 12),
+                    _QuestionThumb(url: questionModel.mediaUrl!.trim()),
+                  ],
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 14),
+
+            // ACTIONS (edit + delete/copy)
+            SizedBox(
+              width: 124,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  CustomIconButton(
+                    icon: Icons.edit_note_rounded,
+                    label: 'Sửa',
+                    iconColor: Colors.white,
+                    backgroundColor: AppColor.pink,
+                    onTap: onEdit,
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: CustomIconButton(
+                          icon: Icons.delete_outline_rounded,
+                          iconColor: Colors.white,
+                          backgroundColor: Colors.redAccent,
+                          onTap: onDelete,
+                          iconSize: 18,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: CustomIconButton(
+                          icon: Icons.copy_rounded,
+                          iconColor: Colors.white,
+                          backgroundColor: AppColors.primary,
+                          onTap: onCopy,
+                          iconSize: 18,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 12),
+
+            // RIGHT: up/down
+            Column(
               children: [
-                // 1. Nút Edit
                 CustomIconButton(
-                  icon: Icons.edit_note_rounded, // Icon đẹp hơn
-                  iconColor: Colors.white,
-                  backgroundColor: AppColor.pink,
-                  label: 'Sửa', // Tiếng Việt
-                  onTap: onEdit,
+                  onTap: onUp,
+                  icon: Icons.keyboard_arrow_up_rounded,
+                  backgroundColor: Colors.grey.shade100,
+                  iconColor: Colors.grey.shade700,
+                  iconSize: 22,
+                  borderRadius: 10,
                 ),
-
-                // 2. Hàng nút Xóa/Copy
-                Row(
-                  spacing: 8,
-                  children: [
-                    Expanded(
-                      child: CustomIconButton(
-                        icon: Icons.delete_outline_rounded,
-                        iconColor: Colors.white,
-                        backgroundColor:
-                            AppColors.primary, // Hoặc màu đỏ nhạt nếu muốn
-                        onTap: onDelete,
-                        // height: 36,
-                      ),
-                    ),
-                    Expanded(
-                      child: CustomIconButton(
-                        icon: Icons.copy_rounded,
-                        iconColor: Colors.white,
-                        backgroundColor: AppColors.primary,
-                        onTap: onCopy,
-                        // height: 36,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // --- CỘT 2: NỘI DUNG CÂU HỎI ---
-          Expanded(
-            flex: 13, // Giảm flex xuống để chia sẻ không gian
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Số thứ tự + Nội dung
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "${index + 1}. ",
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: AppColor.primary,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        // FIX LOGIC: Lấy từ content.question
-                        questionModel.content.question.isEmpty
-                            ? 'Nội dung câu hỏi đang trống...'
-                            : questionModel.content.question,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16, // Font to hơn dễ đọc
-                          color: Color(0xFF2D3436),
-                          height: 1.3, // Giãn dòng nhẹ
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-
                 const SizedBox(height: 8),
-
-                // Loại câu hỏi + Đáp án (Hiển thị nhỏ bên dưới)
-                Wrap(
-                  spacing: 12,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: Text(
-                        // FIX LOGIC: Lấy tên Enum
-                        questionModel.type.label.toUpperCase(),
-                        style: TextStyle(
-                          color: Colors.grey.shade700,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-
-                    // Hiển thị sơ lược đáp án
-                    Text(
-                      "•  Đáp án: ${questionModel.content.answersDisplay.join(', ')}",
-                      style: const TextStyle(
-                        color: Colors.grey,
-                        fontSize: 13,
-                        fontStyle: FontStyle.italic,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                CustomIconButton(
+                  onTap: onDown,
+                  icon: Icons.keyboard_arrow_down_rounded,
+                  backgroundColor: Colors.grey.shade100,
+                  iconColor: Colors.grey.shade700,
+                  iconSize: 22,
+                  borderRadius: 10,
                 ),
               ],
             ),
-          ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-          // --- CỘT 3: ĐIỀU KHIỂN LÊN/XUỐNG ---
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            decoration: BoxDecoration(
-              border: Border(left: BorderSide(color: Colors.grey.shade100)),
+class _QuestionContent extends StatelessWidget {
+  const _QuestionContent({
+    required this.index,
+    required this.questionText,
+    required this.typeLabel,
+    required this.typeColor,
+    required this.answers,
+  });
+
+  final int index;
+  final String questionText;
+  final String typeLabel;
+  final Color typeColor;
+  final String answers;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Title row
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${index + 1}. ',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: AppColor.primary,
+              ),
             ),
-            child: UpDownControls(
-              onUp: onUp,
-              onDown: onDown,
-              iconSize: 20, // Icon nhỏ gọn lại
-              iconColor: Colors.grey.shade600,
+            Expanded(
+              child: Text(
+                questionText,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                  color: Color(0xFF2D3436),
+                  height: 1.3,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 10),
+
+        // Type pill
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: typeColor.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: typeColor.withOpacity(0.45)),
+          ),
+          child: Text(
+            typeLabel.toUpperCase(),
+            style: TextStyle(
+              color: typeColor,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.4,
             ),
           ),
-        ],
+        ),
+
+        const SizedBox(height: 8),
+
+        // Answers
+        Text(
+          '• Đáp án: $answers',
+          style: TextStyle(
+            color: Colors.grey.shade700,
+            fontSize: 13,
+            fontStyle: FontStyle.italic,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    );
+  }
+}
+
+class _QuestionThumb extends StatelessWidget {
+  const _QuestionThumb({required this.url});
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: SizedBox(
+        width: 76,
+        height: 76,
+        child: Image.network(
+          url,
+          fit: BoxFit.cover,
+          loadingBuilder: (context, child, progress) {
+            if (progress == null) return child;
+            return Container(
+              color: Colors.grey.shade100,
+              alignment: Alignment.center,
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  value: progress.expectedTotalBytes == null
+                      ? null
+                      : progress.cumulativeBytesLoaded /
+                            (progress.expectedTotalBytes ?? 1),
+                ),
+              ),
+            );
+          },
+          errorBuilder: (_, __, ___) => Container(
+            color: Colors.grey.shade100,
+            alignment: Alignment.center,
+            child: Icon(
+              Icons.broken_image_outlined,
+              color: Colors.grey.shade500,
+              size: 28,
+            ),
+          ),
+        ),
       ),
     );
   }

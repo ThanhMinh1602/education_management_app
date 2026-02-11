@@ -149,33 +149,41 @@ class ApiClient {
 
   // ============================ REST METHODS ============================
 
-  Future<Response> get(String path, {Map<String, dynamic>? query}) async {
+  Future<Response> post(String path, {dynamic data, Options? options}) async {
     try {
-      return await _dio.get(path, queryParameters: query);
+      return await _dio.post(path, data: data, options: options);
     } on DioException catch (e) {
       throw _handleError(e);
     }
   }
 
-  Future<Response> post(String path, {dynamic data}) async {
+  Future<Response> put(String path, {dynamic data, Options? options}) async {
     try {
-      return await _dio.post(path, data: data);
+      return await _dio.put(path, data: data, options: options);
     } on DioException catch (e) {
       throw _handleError(e);
     }
   }
 
-  Future<Response> put(String path, {dynamic data}) async {
+  Future<Response> get(
+    String path, {
+    Map<String, dynamic>? query,
+    Options? options,
+  }) async {
     try {
-      return await _dio.put(path, data: data);
+      return await _dio.get(path, queryParameters: query, options: options);
     } on DioException catch (e) {
       throw _handleError(e);
     }
   }
 
-  Future<Response> delete(String path, {Map<String, dynamic>? query}) async {
+  Future<Response> delete(
+    String path, {
+    Map<String, dynamic>? query,
+    Options? options,
+  }) async {
     try {
-      return await _dio.delete(path, queryParameters: query);
+      return await _dio.delete(path, queryParameters: query, options: options);
     } on DioException catch (e) {
       throw _handleError(e);
     }

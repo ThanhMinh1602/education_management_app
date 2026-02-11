@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 enum QuestionType {
   multipleChoice('MULTIPLE_CHOICE', 'Trắc nghiệm'),
   arrange('ARRANGE', 'Sắp xếp'),
@@ -18,4 +20,20 @@ enum QuestionType {
   }
 
   String toJson() => value;
+
+  /// 🎨 Theme color cho từng loại câu hỏi
+  Color get color {
+    switch (this) {
+      case QuestionType.multipleChoice:
+        return Colors.blue;
+      case QuestionType.arrange:
+        return Colors.orange;
+      case QuestionType.trueFalse:
+        return Colors.green;
+      case QuestionType.typing:
+        return Colors.purple;
+      case QuestionType.unknown:
+        return Colors.grey;
+    }
+  }
 }
