@@ -1,5 +1,6 @@
 import 'package:blooket/app/config/network/api_endpoints.dart';
 import 'package:blooket/app/data/model/assignment_model.dart';
+import 'package:blooket/app/data/model/assignment_result_model.dart';
 import 'package:blooket/app/data/model/request/assignments/create_assignment_request.dart';
 import 'package:blooket/app/data/model/request/assignments/submit_assignment_request.dart';
 import 'package:blooket/app/data/model/request/assignments/update_assignment_request.dart';
@@ -107,16 +108,16 @@ class AssignmentService extends BaseService {
     );
   }
 
-  Future<ApiResponseList<SubmissionModel>> getClassSubmissions(
+  Future<ApiResponse<AssignmentResultModel>> getClassSubmissions(
     String assignmentId,
   ) async {
     final response = await apiClient.get(
       ApiEndpoints.assignmentSubmissions(assignmentId),
     );
 
-    return ApiResponseList<SubmissionModel>.fromJson(
+    return ApiResponse.fromJson(
       response.data,
-      (json) => SubmissionModel.fromJson(json as Map<String, dynamic>),
+      (json) => AssignmentResultModel.fromJson(json as Map<String, dynamic>),
     );
   }
 }

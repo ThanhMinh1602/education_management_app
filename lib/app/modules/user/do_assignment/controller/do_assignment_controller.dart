@@ -1,23 +1,36 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+// Imports Model & Service
 import 'package:blooket/app/core/base/base_controller.dart';
+import 'package:blooket/app/core/constants/app_color.dart';
 import 'package:blooket/app/data/model/assignment_model.dart';
 import 'package:blooket/app/data/model/question_model.dart';
+import 'package:blooket/app/data/model/request/assignments/submit_assignment_request.dart';
+import 'package:blooket/app/data/model/submission_model.dart';
+import 'package:blooket/app/data/service/assignment_service.dart';
 import 'package:blooket/app/data/service/question_service.dart';
-import 'package:get/get.dart';
 
 class DoAssignmentController extends BaseController {
   final QuestionService _questionService;
+  final AssignmentService _assignmentService;
 
-  DoAssignmentController(this._questionService);
+  DoAssignmentController(this._questionService, this._assignmentService);
 
-  // Data
+  // --- Data ---
   final assignment = Rxn<AssignmentModel>();
   final questions = <QuestionModel>[].obs;
   final currentQuestionIndex = 0.obs;
-  final answers = <String, String>{}.obs; // questionId -> selectedAnswer
-  final isLoading = false.obs;
 
-  // Timer
+  // Lưu câu trả lời: Map<QuestionId, AnswerContent>
+  // AnswerContent là class cha của SelectionAnswer, TextAnswer, OrderedAnswer
+  final userAnswers = <String, AnswerContent>{}.obs;
+
+  final isLoading = false.obs;
+  final isSubmitting = false.obs;
+
+  // --- Timer ---
   final timeRemaining = 0.obs;
   Timer? _timer;
   final isTimeUp = false.obs;
@@ -33,174 +46,270 @@ class DoAssignmentController extends BaseController {
     }
   }
 
-  /// Load câu hỏi từ bộ đề
+  @override
+  void onClose() {
+    _timer?.cancel();
+    super.onClose();
+  }
+
+  // --- 1. Load Data ---
   Future<void> loadQuestions() async {
     isLoading.value = true;
     try {
-      final assignment = this.assignment.value;
-      if (assignment == null) return;
+      final item = assignment.value;
+      if (item == null || item.pack == null) return;
 
-      // Lấy setId từ assignment (nếu không có thì dùng setName)
-      final setId = assignment.id; // Hoặc có thể lấy từ assignment.setId nếu có
+      // Lấy câu hỏi từ packId
+      final res = await _questionService.getQuestionsByPack(item.pack!.id);
 
-      // Gọi API để lấy câu hỏi từ setId
-      final res = await _questionService.getQuestionsByPack(setId);
       if (res.success) {
-        questions.value = res.data;
-        // Update trạng thái bài tập thành 'started'
-        updateAssignmentStatus('started');
+        questions.assignAll(res.data ?? []);
       } else {
         showError(res.message);
       }
     } catch (e) {
-      showError('Lỗi: $e');
+      showError('Lỗi tải câu hỏi: $e');
     } finally {
       isLoading.value = false;
     }
   }
 
-  /// Bắt đầu timer
+  // --- 2. Timer Logic ---
   void startTimer() {
-    final assignment = this.assignment.value;
-    if (assignment == null) return;
+    final item = assignment.value;
+    if (item == null) return;
 
-    final dueDate = assignment.dueDate;
-    final now = DateTime.now();
-    final duration = dueDate?.difference(now);
+    // Ưu tiên dùng settings.durationMinutes, nếu không có thì dùng dueDate
+    // Giả sử settings là Map<String, dynamic>
+    final int durationMinutes = item.settings['durationMinutes'] ?? 0;
 
-    if (duration == null || duration.isNegative) {
-      isTimeUp.value = true;
+    if (durationMinutes > 0) {
+      timeRemaining.value = durationMinutes * 60;
+    } else if (item.dueDate != null) {
+      final diff = item.dueDate!.difference(DateTime.now()).inSeconds;
+      timeRemaining.value = diff > 0 ? diff : 0;
+    } else {
+      timeRemaining.value = -1; // Không giới hạn
       return;
     }
 
-    timeRemaining.value = duration.inSeconds;
-
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      timeRemaining.value--;
-
-      if (timeRemaining.value <= 0) {
-        isTimeUp.value = true;
+      if (timeRemaining.value > 0) {
+        timeRemaining.value--;
+      } else {
         timer.cancel();
-        autoSubmit();
+        isTimeUp.value = true;
+        autoSubmit(); // Hết giờ tự nộp
       }
     });
   }
 
-  /// Chọn đáp án
-  void selectAnswer(String questionId, String answer) {
-    answers[questionId] = answer;
+  String get formattedTime {
+    if (timeRemaining.value < 0) return "--:--";
+    final m = (timeRemaining.value ~/ 60).toString().padLeft(2, '0');
+    final s = (timeRemaining.value % 60).toString().padLeft(2, '0');
+    return "$m:$s";
   }
 
-  /// Kiểm tra câu hỏi hiện tại
-  QuestionModel? getCurrentQuestion() {
-    if (currentQuestionIndex.value >= questions.length) {
+  // --- 3. Navigation & Helper ---
+  QuestionModel? get currentQuestion {
+    if (questions.isEmpty || currentQuestionIndex.value >= questions.length)
       return null;
-    }
     return questions[currentQuestionIndex.value];
   }
 
-  /// Chuyển sang câu tiếp theo
   void nextQuestion() {
     if (currentQuestionIndex.value < questions.length - 1) {
       currentQuestionIndex.value++;
     }
   }
 
-  /// Quay lại câu trước
   void previousQuestion() {
     if (currentQuestionIndex.value > 0) {
       currentQuestionIndex.value--;
     }
   }
 
-  /// Nộp bài tập
-  Future<bool> submitAssignment() async {
-    showLoading();
+  // --- 4. Handle Answers (Logic đa hình) ---
+
+  // Gọi khi chọn trắc nghiệm / đúng sai
+  void onSelectOption(String questionId, String optionIdOrText) {
+    userAnswers[questionId] = SelectionAnswer(optionIdOrText);
+  }
+
+  // Gọi khi nhập văn bản
+  void onTypeAnswer(String questionId, String text) {
+    userAnswers[questionId] = TextAnswer(text);
+  }
+
+  // Gọi khi sắp xếp
+  void onArrangeAnswer(String questionId, List<int> orderedIds) {
+    userAnswers[questionId] = OrderedAnswer(orderedIds);
+  }
+
+  // --- 5. Submit ---
+  Future<void> submitAssignment() async {
+    // Check nếu chưa làm hết (Optional warning)
+    if (userAnswers.length < questions.length) {
+      // Có thể hiện dialog cảnh báo: "Bạn chưa làm hết câu hỏi..."
+    }
+
+    isSubmitting.value = true;
+    showLoading(); // Show loading global hoặc local
+
     try {
-      final assignment = this.assignment.value;
-      if (assignment == null) {
-        showError('Không tìm thấy bài tập');
-        return false;
-      }
-
-      // Tính điểm
-      int correctCount = 0;
-      for (var question in questions) {
-        final selectedAnswer = answers[question.id];
-        // if (selectedAnswer != null &&
-        //     question.answers.contains(selectedAnswer)) {
-        //   correctCount++;
-        // }
-      }
-
-      final score = (correctCount / questions.length * 100).toInt();
-
-      // TODO: Call API to submit assignment
-      // final submissionData = {
-      //   'assignmentId': assignment.id,
-      //   'answers': answers,
-      //   'score': score,
-      //   'totalCorrect': correctCount,
-      // };
-      // await _assignmentService.submitAssignment(submissionData);
-
-      showSuccess('Nộp bài thành công! Điểm: $score/100');
-
-      // Quay lại danh sách bài tập
-      Future.delayed(const Duration(seconds: 1), () {
-        Get.back();
+      // Build Request
+      final List<StudentAnswerItem> items = [];
+      userAnswers.forEach((qId, content) {
+        items.add(StudentAnswerItem(questionId: qId, answer: content));
       });
 
-      return true;
-    } catch (e) {
-      showError('Lỗi: $e');
-      return false;
-    } finally {
+      final request = SubmitAssignmentRequest(answers: items);
+
+      // Call API
+      final res = await _assignmentService.submitAssignment(
+        assignment.value!.id,
+        request,
+      );
+
       hideLoading();
+      isSubmitting.value = false;
+
+      if (res.success && res.data != null) {
+        _timer?.cancel(); // Dừng timer
+        _showResultDialog(res.data!); // Hiển thị kết quả từ API
+      } else {
+        showError(res.message);
+      }
+    } catch (e) {
+      hideLoading();
+      isSubmitting.value = false;
+      showError("Lỗi nộp bài: $e");
     }
   }
 
-  /// Tự động nộp khi hết thời gian
   Future<void> autoSubmit() async {
-    showError('Hết thời gian làm bài! Bài tập sẽ được nộp tự động.');
-    await Future.delayed(const Duration(seconds: 2));
+    Get.snackbar(
+      "Hết giờ!",
+      "Hệ thống đang tự động nộp bài...",
+      backgroundColor: Colors.orange,
+      colorText: Colors.white,
+    );
     await submitAssignment();
   }
 
-  /// Cập nhật trạng thái bài tập
-  Future<void> updateAssignmentStatus(String status) async {
-    try {
-      final assignment = this.assignment.value;
-      if (assignment == null) return;
+  // --- 6. Show Result Dialog ---
+  void _showResultDialog(SubmissionModel result) {
+    Get.dialog(
+      WillPopScope(
+        onWillPop: () async => false, // Không cho back
+        child: Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Icon Trophy
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.yellow.shade100,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.emoji_events,
+                    size: 48,
+                    color: Colors.orange,
+                  ),
+                ),
+                const SizedBox(height: 16),
 
-      // TODO: Gọi API để cập nhật trạng thái
-      // await _assignmentService.updateStudentAssignmentStatus(
-      //   assignment.id,
-      //   status,
-      // );
-    } catch (e) {
-      print('Error updating assignment status: $e');
-    }
+                const Text(
+                  "Hoàn thành!",
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+
+                Text(
+                  "Bạn đã nộp bài thành công.",
+                  style: TextStyle(color: Colors.grey.shade600),
+                ),
+                const SizedBox(height: 24),
+
+                // Score Info
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColor.secondary,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildResultItem(
+                        "Điểm số",
+                        "${result.score}",
+                        Colors.blue,
+                      ),
+                      // Nếu API trả về số câu đúng (tuỳ model SubmissionModel của bạn)
+                      // _buildResultItem("Câu đúng", "${result.totalCorrect}", Colors.green),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Get.back(); // Đóng dialog
+                      Get.back(); // Quay về màn hình danh sách bài tập
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColor.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text(
+                      "Quay về danh sách",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
   }
 
-  /// Tính phần trăm hoàn thành
-  double getCompletionPercentage() {
-    if (questions.isEmpty) return 0;
-    return (answers.length / questions.length * 100);
-  }
-
-  /// Format thời gian còn lại
-  String getFormattedTime() {
-    final hours = timeRemaining.value ~/ 3600;
-    final minutes = (timeRemaining.value % 3600) ~/ 60;
-    final seconds = timeRemaining.value % 60;
-
-    return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-  }
-
-  @override
-  void onClose() {
-    _timer?.cancel();
-    super.onClose();
+  Widget _buildResultItem(String label, String value, Color color) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+        ),
+      ],
+    );
   }
 }

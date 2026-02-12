@@ -5,7 +5,7 @@ class AssignmentBinding extends Bindings {
   @override
   void dependencies() {
     Get.lazyPut<AssignmentController>(
-      () => AssignmentController(Get.find(), Get.find()),
+      () => AssignmentController(Get.find(), Get.find(), Get.find()),
     );
   }
 }

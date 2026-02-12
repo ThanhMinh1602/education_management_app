@@ -1,51 +1,78 @@
+import 'package:blooket/app/modules/user/assignments/controller/user_assignments_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:blooket/app/core/constants/app_color.dart';
-import '../controller/assignments_controller.dart';
 
-class AssignmentFilter extends GetView<AssignmentsController> {
+class AssignmentFilter extends GetView<UserAssignmentsController> {
   const AssignmentFilter({super.key});
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(
+        vertical: 8,
+      ), // Thêm padding để shadow không bị cắt
       child: Row(
-        children: controller.filterOptions
-            .map(
-              (status) => Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: Obx(() {
-                  final isSelected = controller.selectedStatus.value == status;
-                  return FilterChip(
-                    label: Text(
-                      status == 'all'
-                          ? 'Tất cả'
-                          : status == 'assigned'
-                          ? 'Chưa làm'
-                          : status == 'started'
-                          ? 'Đang làm'
-                          : status == 'submitted'
-                          ? 'Đã nộp'
-                          : 'Quá hạn',
+        children: controller.filterOptions.map((status) {
+          return Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Obx(() {
+              final isSelected = controller.selectedStatus.value == status;
+              return InkWell(
+                onTap: () => controller.changeFilter(status),
+                borderRadius: BorderRadius.circular(20),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected ? AppColor.primary : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isSelected ? AppColor.primary : Colors.transparent,
                     ),
-                    selected: isSelected,
-                    onSelected: (_) => controller.changeFilter(status),
-                    selectedColor: AppColor.pink.withOpacity(0.8),
-                    backgroundColor: Colors.grey[300],
-                    labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : Colors.black87,
-                      fontWeight: FontWeight.w500,
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: AppColor.primary.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ]
+                        : [],
+                  ),
+                  child: Text(
+                    _getLabel(status),
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.grey.shade600,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
                     ),
-                    side: BorderSide(
-                      color: isSelected ? AppColor.pink : Colors.transparent,
-                    ),
-                  );
-                }),
-              ),
-            )
-            .toList(),
+                  ),
+                ),
+              );
+            }),
+          );
+        }).toList(),
       ),
     );
+  }
+
+  String _getLabel(String status) {
+    switch (status) {
+      case 'all':
+        return 'Tất cả';
+      case 'todo':
+        return 'Cần làm';
+      case 'submitted':
+        return 'Đã nộp';
+      case 'late':
+        return 'Quá hạn';
+      default:
+        return status;
+    }
   }
 }

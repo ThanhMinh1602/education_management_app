@@ -27,11 +27,7 @@ class _ExercisesViewState extends State<ExercisesView> {
 
     return Scaffold(
       backgroundColor: AppColor.secondary,
-      appBar: CustomAppBar(
-        title: 'Exercises',
-        showBackButton: false,
-        actions: [const _UserAvatar()],
-      ),
+      appBar: CustomAppBar(title: 'Exercises', actions: [const _UserAvatar()]),
       body: Center(
         // Căn giữa để trên màn hình lớn không bị lệch
         child: Container(

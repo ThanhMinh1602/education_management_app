@@ -1,7 +1,7 @@
 import 'package:blooket/app/modules/admin/assignment/bindings/assignment_binding.dart';
 import 'package:blooket/app/modules/admin/assignment/views/assignment_view.dart';
-import 'package:blooket/app/modules/admin/assignment_results/binding/assignment_results_binding.dart';
-import 'package:blooket/app/modules/admin/assignment_results/views/assignment_results_view.dart';
+import 'package:blooket/app/modules/admin/assignment/bindings/assignment_results_binding.dart';
+import 'package:blooket/app/modules/admin/assignment/views/assignment_results_view.dart';
 import 'package:blooket/app/modules/admin/question_management/binding/level_binding.dart';
 import 'package:blooket/app/modules/admin/question_management/binding/level_detail_binding.dart';
 import 'package:blooket/app/modules/admin/question_management/binding/question_pack_detail_binding.dart';
@@ -10,8 +10,8 @@ import 'package:blooket/app/modules/admin/question_management/views/level_view.d
 import 'package:blooket/app/modules/admin/question_management/views/question_pack_detail_view.dart';
 import 'package:blooket/app/modules/auth/binding/auth_binding.dart';
 import 'package:blooket/app/modules/auth/view/login_view.dart';
-import 'package:blooket/app/modules/user/assignments/binding/assignments_binding.dart';
-import 'package:blooket/app/modules/user/assignments/views/assignments_view.dart';
+import 'package:blooket/app/modules/user/assignments/binding/user_assignments_binding.dart';
+import 'package:blooket/app/modules/user/assignments/views/user_assignments_view.dart';
 import 'package:blooket/app/modules/user/do_assignment/binding/do_assignment_binding.dart';
 import 'package:blooket/app/modules/user/do_assignment/views/do_assignment_view.dart';
 import 'package:blooket/app/modules/user/user_dashboard/binding/user_dashboard_binding.dart';
@@ -108,8 +108,8 @@ class AppPages {
     ),
     GetPage(
       name: AppRoutes.ASSIGNMENTS,
-      page: () => const AssignmentsView(),
-      binding: AssignmentsBinding(),
+      page: () => const UserAssignmentsView(),
+      binding: UserAssignmentsBinding(),
     ),
     GetPage(
       name: AppRoutes.DO_ASSIGNMENT,

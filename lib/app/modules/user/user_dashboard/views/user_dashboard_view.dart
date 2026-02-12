@@ -17,51 +17,53 @@ class UserDashboardView extends GetView<UserDashboardController> {
       appBar: CustomAppBar(title: 'Học Tập', showBackButton: false),
       body: Padding(
         padding: EdgeInsetsGeometry.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            if (isDesktop)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildModuleCard(
-                    title: 'Bài Tập Luyện Tập',
-                    subtitle: 'Luyện tập các bài tập từ các bộ câu hỏi',
-                    icon: Icons.school,
-                    color: AppColor.pink,
-                    onTap: controller.goToExercises,
-                  ),
-                  const SizedBox(width: 40),
-                  _buildModuleCard(
-                    title: 'Bài Tập Giao Về Nhà',
-                    subtitle: 'Làm các bài tập được giao từ giáo viên',
-                    icon: Icons.assignment,
-                    color: const Color(0xFF6C63FF),
-                    onTap: controller.goToAssignments,
-                  ),
-                ],
-              )
-            else
-              Column(
-                children: [
-                  _buildModuleCard(
-                    title: 'Bài Tập Luyện Tập',
-                    subtitle: 'Luyện tập các bài tập từ các bộ câu hỏi',
-                    icon: Icons.school,
-                    color: AppColor.pink,
-                    onTap: controller.goToExercises,
-                  ),
-                  const SizedBox(height: 24),
-                  _buildModuleCard(
-                    title: 'Bài Tập Giao Về Nhà',
-                    subtitle: 'Làm các bài tập được giao từ giáo viên',
-                    icon: Icons.assignment,
-                    color: const Color(0xFF6C63FF),
-                    onTap: controller.goToAssignments,
-                  ),
-                ],
-              ),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (isDesktop)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildModuleCard(
+                      title: 'Bài Tập Luyện Tập',
+                      subtitle: 'Luyện tập các bài tập từ các bộ câu hỏi',
+                      icon: Icons.school,
+                      color: AppColor.pink,
+                      onTap: controller.goToExercises,
+                    ),
+                    const SizedBox(width: 40),
+                    _buildModuleCard(
+                      title: 'Bài Tập Giao Về Nhà',
+                      subtitle: 'Làm các bài tập được giao từ giáo viên',
+                      icon: Icons.assignment,
+                      color: const Color(0xFF6C63FF),
+                      onTap: controller.goToAssignments,
+                    ),
+                  ],
+                )
+              else
+                Column(
+                  children: [
+                    _buildModuleCard(
+                      title: 'Bài Tập Luyện Tập',
+                      subtitle: 'Luyện tập các bài tập từ các bộ câu hỏi',
+                      icon: Icons.school,
+                      color: AppColor.pink,
+                      onTap: controller.goToExercises,
+                    ),
+                    const SizedBox(height: 24),
+                    _buildModuleCard(
+                      title: 'Bài Tập Giao Về Nhà',
+                      subtitle: 'Làm các bài tập được giao từ giáo viên',
+                      icon: Icons.assignment,
+                      color: const Color(0xFF6C63FF),
+                      onTap: controller.goToAssignments,
+                    ),
+                  ],
+                ),
+            ],
+          ),
         ),
       ),
     );

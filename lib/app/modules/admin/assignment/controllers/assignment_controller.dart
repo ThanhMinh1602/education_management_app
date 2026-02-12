@@ -1,24 +1,33 @@
 import 'package:blooket/app/core/base/base_controller.dart';
 import 'package:blooket/app/data/model/assignment_model.dart';
 import 'package:blooket/app/data/model/class_model.dart';
+import 'package:blooket/app/data/model/question_pack_model.dart';
+import 'package:blooket/app/data/model/request/assignments/create_assignment_request.dart';
 import 'package:blooket/app/data/service/assignment_service.dart';
 import 'package:blooket/app/data/service/class_service.dart';
+import 'package:blooket/app/data/service/question_pack_service.dart';
 import 'package:get/get.dart';
 
 class AssignmentController extends BaseController {
   final AssignmentService _assignmentService;
   final ClassService _classService;
-  AssignmentController(this._assignmentService, this._classService);
+  final QuestionPackService _packService;
+  AssignmentController(
+    this._assignmentService,
+    this._classService,
+    this._packService,
+  );
 
   final assignmentList = <AssignmentModel>[].obs;
 
   final availableClasses = <ClassModel>[].obs;
+  final availablePacks = <QuestionPackModel>[].obs;
 
   @override
   void onInit() {
     super.onInit();
     fetchAllAssignments();
-    // fetchDropdownData();
+    fetchDropdownData();
   }
 
   Future<void> fetchAllAssignments() async {
@@ -35,48 +44,41 @@ class AssignmentController extends BaseController {
     }
   }
 
-  // Future<void> fetchDropdownData() async {
-  //   await Future.delayed(const Duration(milliseconds: 500));
-  //   final classRes = await _classService.getAllClasses();
-  //   final setRes = await _setService.listSets();
+  /// Lấy dữ liệu cho Dropdown (Lớp & Bộ đề)
+  Future<void> fetchDropdownData() async {
+    try {
+      final classRes = await _classService.getClasses();
+      final packRes = await _packService
+          .getPacks(); // Hàm giả định lấy tất cả bộ đề
 
-  //   if (classRes.success && setRes.success && setRes.data != null) {
-  //     availableClasses.value = classRes.data;
-  //     availableSets.value = setRes.data!;
-  //   }
-  // }
+      if (classRes.success) availableClasses.value = classRes.data;
+      if (packRes.success) availablePacks.value = packRes.data;
+    } catch (e) {
+      print("Lỗi tải dữ liệu dropdown: $e");
+    }
+  }
 
-  // Future<bool> createAssignment({
-  //   required String title,
-  //   String description = '',
-  //   required String classId,
-  //   required String setId,
-  //   required DateTime dueDate,
-  // }) async {
-  //   showLoading();
-  //   try {
-  //     final res = await _assignmentService.createAssignment(
-  //       title: title,
-  //       description: description,
-  //       classId: classId,
-  //       setId: setId,
-  //       dueDate: dueDate,
-  //     );
+  /// Tạo bài tập mới
+  Future<bool> createAssignment(CreateAssignmentRequest request) async {
+    showLoading();
+    try {
+      final res = await _assignmentService.createAssignment(request);
 
-  //     if (res.success && res.data != null) {
-  //       assignmentList.insert(0, res.data!);
-  //       return true;
-  //     } else {
-  //       showError(res.message);
-  //       return false;
-  //     }
-  //   } catch (e) {
-  //     showError("Lỗi: $e");
-  //     return false;
-  //   } finally {
-  //     hideLoading();
-  //   }
-  // }
+      if (res.success && res.data != null) {
+        assignmentList.insert(0, res.data!);
+        showSuccess("Giao bài tập thành công!");
+        return true;
+      } else {
+        showError(res.message);
+        return false;
+      }
+    } catch (e) {
+      showError("Lỗi: $e");
+      return false;
+    } finally {
+      hideLoading();
+    }
+  }
 
   Future<void> deleteAssignment(String id) async {
     showLoading();

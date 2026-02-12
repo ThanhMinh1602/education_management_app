@@ -1,5 +1,6 @@
 import 'package:blooket/app/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class CustomTextField extends StatefulWidget {
   final String labelText;
@@ -12,6 +13,7 @@ class CustomTextField extends StatefulWidget {
   final TextInputAction? textInputAction;
   final void Function(String)? onSubmitted;
   final bool autofocus;
+  final List<TextInputFormatter>? inputFormatters;
 
   const CustomTextField({
     super.key,
@@ -25,6 +27,7 @@ class CustomTextField extends StatefulWidget {
     this.textInputAction,
     this.onSubmitted,
     this.autofocus = false,
+    this.inputFormatters,
   });
 
   @override
@@ -59,12 +62,13 @@ class _CustomTextFieldState extends State<CustomTextField> {
       textInputAction: widget.textInputAction,
       onFieldSubmitted: widget.onSubmitted,
       autofocus: widget.autofocus,
-
+      inputFormatters: widget.inputFormatters,
       obscureText: _obscureText,
 
       keyboardType: widget.keyboardType,
       decoration: InputDecoration(
         labelText: widget.labelText,
+
         filled: true,
         fillColor: Colors.white,
         prefixIcon: widget.prefixIcon != null
