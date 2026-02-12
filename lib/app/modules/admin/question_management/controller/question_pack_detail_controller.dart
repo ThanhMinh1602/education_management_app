@@ -183,10 +183,10 @@ class QuestionPackDetailController extends BaseController {
     }
   }
 
-  Future<void> updateQuestionSet(String id, QuestionPackRequest request) async {
+  Future<void> updateQuestionPack(QuestionPackRequest request) async {
     showLoading();
     // Gọi API update
-    final response = await _questionPackService.updatePack(id, request);
+    final response = await _questionPackService.updatePack(packsId, request);
     hideLoading();
 
     if (response.success && response.data != null) {

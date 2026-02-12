@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class CustomActionButton extends StatelessWidget {
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final String text;
   final IconData? icon;
   final Color? color;
@@ -10,7 +10,7 @@ class CustomActionButton extends StatelessWidget {
 
   const CustomActionButton({
     super.key,
-    required this.onTap,
+    this.onTap,
     this.text = 'TẠO MỚI', // Mặc định là TẠO MỚI
     this.icon = Icons.add_circle_outline, // Mặc định icon cộng
     this.color, // Nếu không truyền sẽ dùng màu mặc định bên dưới

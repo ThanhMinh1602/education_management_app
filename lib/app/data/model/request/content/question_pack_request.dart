@@ -1,13 +1,13 @@
 class QuestionPackRequest {
   final String title;
-  final String levelId;
+  final String? levelId;
   final String? description;
   final String? thumbnail;
   final bool isPublic;
 
   QuestionPackRequest({
     required this.title,
-    required this.levelId,
+    this.levelId,
     this.description,
     this.thumbnail,
     this.isPublic = true,
